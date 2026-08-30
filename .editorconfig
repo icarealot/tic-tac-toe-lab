@@ -1,0 +1,94 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# Remove unnecessary usings
+dotnet_diagnostic.IDE0005.severity = warning
+
+# Simplify names
+dotnet_diagnostic.IDE0001.severity = warning
+
+# Use string.Empty instead of ""
+dotnet_diagnostic.SA1122.severity = warning
+
+# Naming: private fields _camelCase
+dotnet_naming_rule.private_fields_should_be_underscore_camel.severity = suggestion
+dotnet_naming_rule.private_fields_should_be_underscore_camel.symbols = private_fields
+dotnet_naming_rule.private_fields_should_be_underscore_camel.style = underscore_camel_case
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+
+# Naming: constants UPPER_SNAKE_CASE
+dotnet_naming_rule.constants_upper_snake.severity = suggestion
+dotnet_naming_rule.constants_upper_snake.symbols = constants
+dotnet_naming_rule.constants_upper_snake.style = upper_snake_case
+
+dotnet_naming_symbols.constants.applicable_kinds = field,local
+dotnet_naming_symbols.constants.required_modifiers = const
+
+dotnet_naming_style.upper_snake_case.capitalization = all_upper
+dotnet_naming_style.upper_snake_case.word_separator = _
+
+# Naming: types, methods, properties PascalCase
+dotnet_naming_rule.types_methods_properties_pascal.severity = suggestion
+dotnet_naming_rule.types_methods_properties_pascal.symbols = types_methods_properties
+dotnet_naming_rule.types_methods_properties_pascal.style = pascal_case
+
+dotnet_naming_symbols.types_methods_properties.applicable_kinds = class,struct,interface,enum,method,property,event,delegate
+dotnet_naming_symbols.types_methods_properties.applicable_accessibilities = *
+
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# Prefer explicit access modifiers
+dotnet_style_require_accessibility_modifiers = always:warning
+
+# Never use var
+csharp_style_var_for_built_in_types = false:warning
+csharp_style_var_when_type_is_apparent = false:warning
+csharp_style_var_elsewhere = false:warning
+
+# Prefer target-typed new expressions
+csharp_style_implicit_object_creation_when_type_is_apparent = true:warning
+
+# Force explicit discard for unused return values: _ = Method(); not Method();
+csharp_style_unused_value_expression_statement_preference = discard_variable:warning
+
+# Never use expression-bodied methods/constructors/operators (block bodies only)
+csharp_style_expression_bodied_methods = false:warning
+csharp_style_expression_bodied_constructors = false:warning
+csharp_style_expression_bodied_operators = false:warning
+
+# Braces on new lines (Allman style)
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_prefer_braces = true:warning
+
+# Spaces
+csharp_space_after_cast = false
+csharp_space_before_colon_in_inheritance_clause = true
+csharp_space_after_colon_in_inheritance_clause = true
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.yaml]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+  "tasks": [
+    {
+      "name": "dotnet-format",
+      "command": "dotnet",
+      "args": [
+        "format",
+        "tic-tac-toe-lab.slnx",
+        "--include",
+        "${staged}"
+      ],
+      "include": [
+        "Assets/**/*.cs"
+      ]
+    },
+    {
+      "name": "re-stage",
+      "command": "git",
+      "args": [
+        "add",
+        "${staged}"
+      ]
+    }
+  ]
+}

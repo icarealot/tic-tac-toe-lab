@@ -1,0 +1,9 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+if ! ls ./*.sln >/dev/null 2>&1 && ! ls ./*.slnx >/dev/null 2>&1; then
+  echo "No .sln/.slnx found — open Unity to generate project files. Skipping format check."
+  exit 0
+fi
+
+dotnet husky run
