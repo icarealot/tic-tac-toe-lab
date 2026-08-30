@@ -1,0 +1,65 @@
+# Unity Generated
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+.utmp/
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+
+# Build Artifacts
+/[Bb]uild/
+/[Bb]uilds/
+*.apk
+*.aab
+*.unitypackage
+*.app
+crashlytics-build.properties
+
+# IDE & Editors
+.vs/
+ExportedObj/
+.consulo/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+.vscode/
+.history/
+.ionide/
+*.vsix
+/[Aa]ssets/Plugins/Editor/JetBrains*
+.gradle/
+
+# Unity Assets
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# OS Artifacts
+.DS_Store
+nul
+
+# Secrets
+.env
+*.keystore
+*.jks
+
+# Project-Specific
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+Screenshots/
