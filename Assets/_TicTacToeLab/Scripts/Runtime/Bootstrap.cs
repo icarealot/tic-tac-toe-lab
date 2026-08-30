@@ -10,8 +10,16 @@ namespace TicTacToeLab.Runtime
         {
             Application.targetFrameRate = 60;
 
+#if UNITY_EDITOR || ENABLE_LOGGING
+            ILogService logService = new LogService();
+#else
+            ILogService logService = new NullLogService();
+#endif
+
             FactoryService factoryService = Instantiate(_factoryServicePrefab);
             _ = factoryService.Get<Camera>();
+
+            logService.Log("Setup is done!");
         }
     }
 }
