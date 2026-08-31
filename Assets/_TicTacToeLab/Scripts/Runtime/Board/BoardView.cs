@@ -1,31 +1,36 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public class BoardView : MonoBehaviour
+    public class BoardView : MonoBehaviour, IBoardView
     {
-        private const int BOARD_DIMENSION = 3;
-        private const float CELL_SIZE = 1f;
-        private const float CELL_SPACING = 0.2f;
-        private const float CELL_STEP = CELL_SIZE + CELL_SPACING;
+        private IFactoryService _factoryService;
+        private CellView[,] _cellViews;
 
-        public void Construct(IFactoryService factoryService)
+        public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
         {
-            float centerOffset = (BOARD_DIMENSION - 1) * CELL_STEP * 0.5f;
+            _factoryService = factoryService;
+            _cellViews = new CellView[dimension, dimension];
 
-            for (int row = 0; row < BOARD_DIMENSION; row++)
+            foreach (CellPlacement placement in placements)
             {
-                for (int column = 0; column < BOARD_DIMENSION; column++)
-                {
-                    CellView cellView = factoryService.Get<CellView>(transform);
-                    cellView.transform.localPosition = new Vector3(
-                        column * CELL_STEP - centerOffset,
-                        centerOffset - row * CELL_STEP,
-                        0f);
-                    cellView.transform.localScale = Vector3.one * CELL_SIZE;
-                    cellView.name = $"Cell ({row}, {column})";
-                }
+                CellView cellView = factoryService.Get<CellView>(transform);
+                cellView.transform.localPosition = placement.LocalPoint;
+                cellView.name = $"Cell ({placement.Row}, {placement.Column})";
+
+                _cellViews[placement.Row, placement.Column] = cellView;
             }
+        }
+
+        public Vector3 ToLocalPoint(Vector3 worldPoint)
+        {
+            return transform.InverseTransformPoint(worldPoint);
+        }
+
+        public void ShowMark(int row, int column, Mark mark)
+        {
+            _cellViews[row, column].ShowMark(_factoryService, mark);
         }
     }
 }

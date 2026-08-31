@@ -72,5 +72,5 @@ Matching Unity's world axes exactly, so a cell coordinate scales directly into a
 Cells numbered sequentially in reading order.
 
 - Good, because it is the most compact form and maps directly onto a flat array.
-- Bad, because `4` carries no visible meaning, where `(1, 1)` obviously names the centre.
+- Bad, because `4` carries no visible meaning, where `(1, 1)` obviously names the center.
 - Bad, because win detection has to reconstruct rows and columns via division and modulo.

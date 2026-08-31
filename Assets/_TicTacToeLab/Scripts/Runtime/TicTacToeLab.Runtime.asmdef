@@ -1,7 +1,9 @@
 {
     "name": "TicTacToeLab.Runtime",
     "rootNamespace": "TicTacToeLab.Runtime",
-    "references": [],
+    "references": [
+        "Unity.InputSystem"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

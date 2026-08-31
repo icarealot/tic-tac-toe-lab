@@ -6,6 +6,9 @@ namespace TicTacToeLab.Runtime
     {
         [SerializeField] private FactoryService _factoryServicePrefab;
 
+        private InputService _inputService;
+        private BoardPresenter _boardPresenter;
+
         public void Awake()
         {
             Application.targetFrameRate = 60;
@@ -17,12 +20,23 @@ namespace TicTacToeLab.Runtime
 #endif
 
             FactoryService factoryService = Instantiate(_factoryServicePrefab);
-            _ = factoryService.Get<Camera>();
+            Camera mainCamera = factoryService.Get<Camera>();
+            ICameraService cameraService = new CameraService(mainCamera);
 
+            InputSystem_Actions inputActions = new();
+            _inputService = new InputService(inputActions);
+
+            BoardModel boardModel = new();
             BoardView boardView = factoryService.Get<BoardView>();
-            boardView.Construct(factoryService);
+            _boardPresenter = new BoardPresenter(boardModel, boardView, factoryService, _inputService, cameraService, logService);
 
             logService.Log("Setup is done!");
+        }
+
+        public void OnDestroy()
+        {
+            _boardPresenter?.Dispose();
+            _inputService?.Dispose();
         }
     }
 }
