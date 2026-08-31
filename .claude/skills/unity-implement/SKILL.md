@@ -14,10 +14,10 @@ Implement the work described by the user in the spec or tickets.
 
 ## 2. Implement one task
 
-- Use `/unity-tdd` where possible, at pre-agreed seams.
+- Always use `/unity-tdd` if possible, at pre-agreed seams.
 - Run typechecking regularly, single test files regularly, and the full test suite once at the end by using `/unity-cli`.
 - Never trigger a Player build yourself.
 
 ## 3. Report
 
-Report to the user: Changed files, checks run, results, and any validation that remains unavailable.
+Report to the user: Changed files, checks run, results, any validation that remains unavailable, applied `/unity-tdd` or not and the reason for that decision.
