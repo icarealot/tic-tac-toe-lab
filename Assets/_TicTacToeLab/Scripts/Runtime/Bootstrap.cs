@@ -19,6 +19,9 @@ namespace TicTacToeLab.Runtime
             FactoryService factoryService = Instantiate(_factoryServicePrefab);
             _ = factoryService.Get<Camera>();
 
+            BoardView boardView = factoryService.Get<BoardView>();
+            boardView.Construct(factoryService);
+
             logService.Log("Setup is done!");
         }
     }
