@@ -52,11 +52,31 @@ namespace TicTacToeLab.Runtime
             {
                 Outcome = Outcome.Win;
             }
+            else if (IsFull())
+            {
+                Outcome = Outcome.Draw;
+            }
 
             if (Outcome == Outcome.InProgress)
             {
                 Turn = Turn == Mark.X ? Mark.O : Mark.X;
             }
+        }
+
+        private bool IsFull()
+        {
+            for (int row = 0; row < DIMENSION; row++)
+            {
+                for (int column = 0; column < DIMENSION; column++)
+                {
+                    if (IsEmpty(row, column))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         private bool HasWonLine()

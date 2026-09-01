@@ -67,6 +67,10 @@ namespace TicTacToeLab.Runtime
             {
                 _logService.Log($"{_boardModel.Turn} wins");
             }
+            else if (_boardModel.Outcome == Outcome.Draw)
+            {
+                _logService.Log("Draw");
+            }
         }
 
         private List<CellPlacement> BuildCellPlacements(int dimension)

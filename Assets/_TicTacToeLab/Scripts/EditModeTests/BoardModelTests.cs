@@ -6,6 +6,28 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class BoardModelTests
     {
+        private void FillBoardToDraw(BoardModel boardModel)
+        {
+            // This order fills the board without ever completing a row, column or diagonal.
+            (int row, int column)[] fillOrder =
+            {
+                (0, 0),
+                (0, 1),
+                (0, 2),
+                (1, 1),
+                (1, 0),
+                (1, 2),
+                (2, 1),
+                (2, 0),
+                (2, 2),
+            };
+
+            foreach ((int row, int column) in fillOrder)
+            {
+                boardModel.PlaceMark(row, column);
+            }
+        }
+
         [Test]
         public void The_local_point_of_each_cell_resolves_back_to_that_cells_own_coordinate()
         {
@@ -275,28 +297,49 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
+        public void A_full_board_with_no_line_completed_is_a_draw()
+        {
+            BoardModel boardModel = new();
+
+            FillBoardToDraw(boardModel);
+
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Draw));
+        }
+
+        [Test]
+        public void The_turn_does_not_advance_on_a_draw()
+        {
+            BoardModel boardModel = new();
+
+            FillBoardToDraw(boardModel);
+
+            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
+        }
+
+        [Test]
+        public void A_win_completed_on_the_last_empty_cell_is_a_win_not_a_draw()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 0); // X
+            boardModel.PlaceMark(2, 0); // O
+            boardModel.PlaceMark(0, 1); // X
+            boardModel.PlaceMark(1, 1); // O
+            boardModel.PlaceMark(1, 0); // X
+            boardModel.PlaceMark(1, 2); // O
+            boardModel.PlaceMark(2, 1); // X
+            boardModel.PlaceMark(2, 2); // O
+            boardModel.PlaceMark(0, 2); // X completes row 0 and fills the last empty cell
+
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
+        }
+
+        [Test]
         public void A_full_board_holds_five_Xs_and_four_Os_starting_with_X()
         {
             BoardModel boardModel = new();
 
-            // This order fills the board without ever completing a row, column or diagonal.
-            (int row, int column)[] fillOrder =
-            {
-                (0, 0),
-                (0, 1),
-                (0, 2),
-                (1, 1),
-                (1, 0),
-                (1, 2),
-                (2, 1),
-                (2, 0),
-                (2, 2),
-            };
-
-            foreach ((int row, int column) in fillOrder)
-            {
-                boardModel.PlaceMark(row, column);
-            }
+            FillBoardToDraw(boardModel);
 
             int xCount = 0;
             int oCount = 0;

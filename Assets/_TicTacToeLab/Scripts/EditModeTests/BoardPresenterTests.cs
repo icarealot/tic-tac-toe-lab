@@ -275,5 +275,59 @@ namespace TicTacToeLab.EditModeTests
 
             Assert.That(fakeLogService.Messages, Is.EqualTo(new[] { "X wins" }));
         }
+
+        private void DrawTheGame(FakeInputService fakeInputService, BoardModel boardModel)
+        {
+            // This order fills the board without ever completing a row, column or diagonal.
+            (int row, int column)[] fillOrder =
+            {
+                (0, 0),
+                (0, 1),
+                (0, 2),
+                (1, 1),
+                (1, 0),
+                (1, 2),
+                (2, 1),
+                (2, 0),
+                (2, 2),
+            };
+
+            foreach ((int row, int column) in fillOrder)
+            {
+                PressCell(fakeInputService, boardModel, row, column);
+            }
+        }
+
+        [Test]
+        public void A_drawn_game_is_announced_in_the_log_as_a_draw()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+
+            DrawTheGame(fakeInputService, boardModel);
+
+            Assert.That(fakeLogService.Messages, Is.EqualTo(new[] { "Draw" }));
+        }
+
+        [Test]
+        public void A_press_after_a_draw_shows_nothing_and_places_nothing_and_is_logged_as_refused()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            DrawTheGame(fakeInputService, boardModel);
+
+            fakeBoardView.ShownMarks.Clear();
+            fakeLogService.Messages.Clear();
+            fakeInputService.RaisePress(new Vector2(10f, 10f));
+
+            Assert.That(fakeBoardView.ShownMarks, Is.Empty);
+            Assert.That(fakeLogService.Messages, Is.EqualTo(new[] { "Rejected press: the game is over" }));
+        }
     }
 }
