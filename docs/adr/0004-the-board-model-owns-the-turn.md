@@ -2,7 +2,7 @@
 
 ## Status
 
-Superseded by [ADR 0004](./0004-the-board-model-owns-the-turn.md).
+Accepted.
 
 ## Context and Problem Statement
 
@@ -26,7 +26,7 @@ Marks must alternate: a press places an X, the next places an O, and so on. Some
 
 Chosen option: "`BoardModel` owns the turn, and `PlaceMark` advances it", because it is the only option in which placing a mark without advancing the turn is not expressible.
 
-`PlaceMark` loses its mark parameter entirely:
+`PlaceMark` takes no mark parameter:
 
 ```
 public Mark Turn { get; private set; }   // starts as Mark.X
@@ -38,21 +38,21 @@ A caller cannot place the wrong mark, cannot place without advancing, and cannot
 
 `BoardPresenter` keeps the rule that actually belongs to it — deciding *whether* a press becomes a placement at all. It resolves the pressed point to a cell, rejects presses on occupied cells, and only then calls `PlaceMark`. Rejected presses never reach the model, so the turn is untouched by construction rather than by a guard.
 
-This decision is paired with the removal of `Mark.Empty`. A cell's emptiness is now the absence of a mark (`Mark?`), not a third kind of mark, which is what `CONTEXT.md` always said it was. That removal is what allows `Turn` to be typed as `Mark`: with `Empty` gone, there is no unrepresentable state for the turn to fall into, and no guard needed to keep it out of one.
+This decision is paired with the removal of `Mark.Empty`. A cell's emptiness is the absence of a mark (`Mark?`), not a third kind of mark, which is what `CONTEXT.md` always said it was. That removal is what allows `Turn` to be typed as `Mark`: with `Empty` gone, there is no unrepresentable state for the turn to fall into, and no guard needed to keep it out of one.
 
 ### Positive Consequences
 
 - The alternation rule cannot be broken by a caller, only by editing `BoardModel` itself — which is where a reader would look for it.
 - Alternation is tested in `EditModeTests` against the model alone, with no fakes and no scene.
-- `MarkView.Show` loses its domain guard. Its throwing default arm survives only because C# requires one on an enum switch expression; it no longer defends against a state the domain forbids.
+- `MarkView.Show` has no domain guard. Its throwing default arm survives only because C# requires one on an enum switch expression; it does not defend against a state the domain forbids.
 - The app state machine gets a single object to own and reset per round: a fresh `BoardModel` is an empty board with X to play.
 
 ### Negative Consequences
 
 - **`BoardPresenter` must read `Turn` before calling `PlaceMark`**, because afterwards it is already the other mark, and the presenter needs the placed mark to pass to `BoardView.ShowMark`. Reading it after the call shows the wrong mark on every placement. This is the failure most likely to be introduced later; the test that presses twice and expects an X then an O is what catches it.
 - **`PlaceMark(row, column)` looks incomplete.** A method that places a mark without taking one invites a future reader to "fix" it by restoring the parameter, which would silently reintroduce the ability to place without advancing. This ADR exists largely to answer that reader.
-- `BoardModel` stops being one idea. It is now the marks, the geometry *and* the turn, and its `CONTEXT.md` entry has to list all three.
-- The model enforces a rule that `CONTEXT.md` assigns to presenters. The division still holds for the rule that matters — the presenter decides what is allowed — but the boundary is no longer clean, and a future rule will have to be placed by judgement rather than by the glossary.
+- `BoardModel` is not one idea. It is the marks, the geometry *and* the turn, and its `CONTEXT.md` entry has to list all three. ADR 0005 adds the outcome to that list.
+- The model enforces a rule that `CONTEXT.md` assigns to presenters. The division still holds for the rule that matters — the presenter decides what is allowed — but the boundary is not clean, and a future rule will have to be placed by judgement rather than by the glossary.
 - A second board, or a board rendered as a preview, cannot exist without also carrying a turn.
 
 ## Pros and Cons of the Options
