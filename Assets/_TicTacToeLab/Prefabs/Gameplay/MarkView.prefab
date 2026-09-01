@@ -104,6 +104,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edc6706b2a1e58c42a4f623abeb8b7d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.MarkView
-  _spriteRenderer: {fileID: 7288955483136151805}
   _oSprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  _xSprite: {fileID: 0}
+  _xSprite: {fileID: -712631045867808456, guid: b670ab75dde984907b8570040daa08c5, type: 3}
+  _spriteRenderer: {fileID: 7288955483136151805}
