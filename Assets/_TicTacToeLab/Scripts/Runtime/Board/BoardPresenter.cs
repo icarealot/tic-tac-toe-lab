@@ -40,6 +40,12 @@ namespace TicTacToeLab.Runtime
 
         private void OnPressed(Vector2 screenPoint)
         {
+            if (_boardModel.Outcome != Outcome.InProgress)
+            {
+                _logService.Log("Rejected press: the game is over");
+                return;
+            }
+
             Vector3 worldPoint = _cameraService.ScreenToWorldPoint(screenPoint);
             Vector3 localPoint = _boardView.ToLocalPoint(worldPoint);
 
@@ -56,6 +62,11 @@ namespace TicTacToeLab.Runtime
 
             _boardView.ShowMark(row, column, _boardModel.Turn);
             _boardModel.PlaceMark(row, column);
+
+            if (_boardModel.Outcome == Outcome.Win)
+            {
+                _logService.Log($"{_boardModel.Turn} wins");
+            }
         }
 
         private List<CellPlacement> BuildCellPlacements(int dimension)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TicTacToeLab.Runtime
@@ -13,6 +14,8 @@ namespace TicTacToeLab.Runtime
         public int Dimension => DIMENSION;
 
         public Mark Turn { get; private set; } = Mark.X;
+
+        public Outcome Outcome { get; private set; } = Outcome.InProgress;
 
         private readonly Mark?[,] _marks = new Mark?[DIMENSION, DIMENSION];
 
@@ -44,7 +47,87 @@ namespace TicTacToeLab.Runtime
         public void PlaceMark(int row, int column)
         {
             _marks[row, column] = Turn;
-            Turn = Turn == Mark.X ? Mark.O : Mark.X;
+
+            if (HasWonLine())
+            {
+                Outcome = Outcome.Win;
+            }
+
+            if (Outcome == Outcome.InProgress)
+            {
+                Turn = Turn == Mark.X ? Mark.O : Mark.X;
+            }
+        }
+
+        private bool HasWonLine()
+        {
+            for (int index = 0; index < DIMENSION; index++)
+            {
+                if (IsLineWon(RowCells(index)) || IsLineWon(ColumnCells(index)))
+                {
+                    return true;
+                }
+            }
+
+            return IsLineWon(MainDiagonalCells()) || IsLineWon(AntiDiagonalCells());
+        }
+
+        private bool IsLineWon(IEnumerable<Mark?> line)
+        {
+            Mark? firstMark = null;
+            bool hasFirstMark = false;
+
+            foreach (Mark? mark in line)
+            {
+                if (mark == null)
+                {
+                    return false;
+                }
+
+                if (!hasFirstMark)
+                {
+                    firstMark = mark;
+                    hasFirstMark = true;
+                }
+                else if (mark != firstMark)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private IEnumerable<Mark?> RowCells(int row)
+        {
+            for (int column = 0; column < DIMENSION; column++)
+            {
+                yield return _marks[row, column];
+            }
+        }
+
+        private IEnumerable<Mark?> ColumnCells(int column)
+        {
+            for (int row = 0; row < DIMENSION; row++)
+            {
+                yield return _marks[row, column];
+            }
+        }
+
+        private IEnumerable<Mark?> MainDiagonalCells()
+        {
+            for (int index = 0; index < DIMENSION; index++)
+            {
+                yield return _marks[index, index];
+            }
+        }
+
+        private IEnumerable<Mark?> AntiDiagonalCells()
+        {
+            for (int index = 0; index < DIMENSION; index++)
+            {
+                yield return _marks[index, DIMENSION - 1 - index];
+            }
         }
 
         private bool TryResolveAxis(float value, out int axisValue)

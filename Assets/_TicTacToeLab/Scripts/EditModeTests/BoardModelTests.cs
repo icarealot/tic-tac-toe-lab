@@ -111,6 +111,111 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
+        public void A_fresh_board_is_in_progress()
+        {
+            BoardModel boardModel = new();
+
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+        }
+
+        [Test]
+        public void A_completed_row_is_a_win()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 0); // X
+            boardModel.PlaceMark(1, 0); // O
+            boardModel.PlaceMark(0, 1); // X
+            boardModel.PlaceMark(1, 1); // O
+            boardModel.PlaceMark(0, 2); // X completes row 0
+
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
+        }
+
+        [Test]
+        public void A_completed_column_is_a_win()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 0); // X
+            boardModel.PlaceMark(0, 1); // O
+            boardModel.PlaceMark(1, 0); // X
+            boardModel.PlaceMark(1, 1); // O
+            boardModel.PlaceMark(2, 0); // X completes column 0
+
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
+        }
+
+        [Test]
+        public void The_top_left_to_bottom_right_diagonal_is_a_win()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 0); // X
+            boardModel.PlaceMark(0, 1); // O
+            boardModel.PlaceMark(1, 1); // X
+            boardModel.PlaceMark(0, 2); // O
+            boardModel.PlaceMark(2, 2); // X completes the top-left to bottom-right diagonal
+
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
+        }
+
+        [Test]
+        public void The_top_right_to_bottom_left_diagonal_is_a_win()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 2); // X
+            boardModel.PlaceMark(0, 0); // O
+            boardModel.PlaceMark(1, 1); // X
+            boardModel.PlaceMark(0, 1); // O
+            boardModel.PlaceMark(2, 0); // X completes the top-right to bottom-left diagonal
+
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
+        }
+
+        [Test]
+        public void Two_of_three_in_a_line_is_still_in_progress()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 0); // X
+            boardModel.PlaceMark(1, 0); // O
+            boardModel.PlaceMark(0, 1); // X
+
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+        }
+
+        [Test]
+        public void A_line_holding_both_marks_is_not_a_win()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 0); // X
+            boardModel.PlaceMark(0, 1); // O
+            boardModel.PlaceMark(1, 0); // X
+            boardModel.PlaceMark(1, 1); // O
+            boardModel.PlaceMark(2, 1); // X
+            boardModel.PlaceMark(0, 2); // O completes row 0 as X, O, O — mixed, not a win
+
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+        }
+
+        [Test]
+        public void The_turn_does_not_advance_on_a_win_so_the_turn_names_the_winner()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 0); // X
+            boardModel.PlaceMark(1, 0); // O
+            boardModel.PlaceMark(0, 1); // X
+            boardModel.PlaceMark(1, 1); // O
+            boardModel.PlaceMark(0, 2); // X completes row 0
+
+            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
+        }
+
+        [Test]
         public void Every_cell_reports_itself_empty_before_anything_is_placed()
         {
             BoardModel boardModel = new();
