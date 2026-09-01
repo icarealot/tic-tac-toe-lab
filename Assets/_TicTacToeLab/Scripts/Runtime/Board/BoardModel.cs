@@ -12,6 +12,8 @@ namespace TicTacToeLab.Runtime
 
         public int Dimension => DIMENSION;
 
+        public Mark Turn { get; private set; } = Mark.X;
+
         private readonly Mark?[,] _marks = new Mark?[DIMENSION, DIMENSION];
 
         public Vector3 GetCellLocalPoint(int row, int column)
@@ -39,9 +41,10 @@ namespace TicTacToeLab.Runtime
             return _marks[row, column];
         }
 
-        public void PlaceMark(int row, int column, Mark mark)
+        public void PlaceMark(int row, int column)
         {
-            _marks[row, column] = mark;
+            _marks[row, column] = Turn;
+            Turn = Turn == Mark.X ? Mark.O : Mark.X;
         }
 
         private bool TryResolveAxis(float value, out int axisValue)

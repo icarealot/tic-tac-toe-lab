@@ -54,8 +54,8 @@ namespace TicTacToeLab.Runtime
                 return;
             }
 
-            _boardModel.PlaceMark(row, column, Mark.O);
-            _boardView.ShowMark(row, column, Mark.O);
+            _boardView.ShowMark(row, column, _boardModel.Turn);
+            _boardModel.PlaceMark(row, column);
         }
 
         private List<CellPlacement> BuildCellPlacements(int dimension)

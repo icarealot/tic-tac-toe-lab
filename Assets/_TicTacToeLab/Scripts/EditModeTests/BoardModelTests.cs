@@ -103,6 +103,14 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
+        public void A_fresh_board_has_X_to_play()
+        {
+            BoardModel boardModel = new();
+
+            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
+        }
+
+        [Test]
         public void Every_cell_reports_itself_empty_before_anything_is_placed()
         {
             BoardModel boardModel = new();
@@ -121,9 +129,9 @@ namespace TicTacToeLab.EditModeTests
         {
             BoardModel boardModel = new();
 
-            boardModel.PlaceMark(1, 1, Mark.O);
+            boardModel.PlaceMark(1, 1);
 
-            Assert.That(boardModel.GetMark(1, 1), Is.EqualTo(Mark.O));
+            Assert.That(boardModel.GetMark(1, 1), Is.EqualTo(Mark.X));
             Assert.That(boardModel.IsEmpty(1, 1), Is.False);
 
             for (int row = 0; row < boardModel.Dimension; row++)
@@ -138,6 +146,62 @@ namespace TicTacToeLab.EditModeTests
                     Assert.That(boardModel.IsEmpty(row, column), Is.True);
                 }
             }
+        }
+
+        [Test]
+        public void Placing_a_mark_advances_the_turn_to_the_other_mark()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 0);
+
+            Assert.That(boardModel.Turn, Is.EqualTo(Mark.O));
+        }
+
+        [Test]
+        public void A_second_placement_advances_the_turn_back_to_X()
+        {
+            BoardModel boardModel = new();
+
+            boardModel.PlaceMark(0, 0);
+            boardModel.PlaceMark(0, 1);
+
+            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
+        }
+
+        [Test]
+        public void A_full_board_holds_five_Xs_and_four_Os_starting_with_X()
+        {
+            BoardModel boardModel = new();
+
+            for (int row = 0; row < boardModel.Dimension; row++)
+            {
+                for (int column = 0; column < boardModel.Dimension; column++)
+                {
+                    boardModel.PlaceMark(row, column);
+                }
+            }
+
+            int xCount = 0;
+            int oCount = 0;
+
+            for (int row = 0; row < boardModel.Dimension; row++)
+            {
+                for (int column = 0; column < boardModel.Dimension; column++)
+                {
+                    if (boardModel.GetMark(row, column) == Mark.X)
+                    {
+                        xCount++;
+                    }
+                    else
+                    {
+                        oCount++;
+                    }
+                }
+            }
+
+            Assert.That(xCount, Is.EqualTo(5));
+            Assert.That(oCount, Is.EqualTo(4));
         }
     }
 }

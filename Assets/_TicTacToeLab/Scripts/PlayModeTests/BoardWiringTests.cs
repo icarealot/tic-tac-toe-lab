@@ -22,7 +22,22 @@ namespace TicTacToeLab.PlayModeTests
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
 
-            Transform cellTransform = GameObject.Find("Cell (0, 0)").transform;
+            Transform firstCellTransform = GameObject.Find("Cell (0, 0)").transform;
+            Transform secondCellTransform = GameObject.Find("Cell (0, 1)").transform;
+
+            yield return IE_PressCell(mouse, firstCellTransform);
+            yield return IE_PressCell(mouse, secondCellTransform);
+
+            SpriteRenderer firstSpriteRenderer = firstCellTransform.GetComponentInChildren<MarkView>().GetComponent<SpriteRenderer>();
+            SpriteRenderer secondSpriteRenderer = secondCellTransform.GetComponentInChildren<MarkView>().GetComponent<SpriteRenderer>();
+
+            Assert.That(firstSpriteRenderer.sprite, Is.Not.Null);
+            Assert.That(secondSpriteRenderer.sprite, Is.Not.Null);
+            Assert.That(firstSpriteRenderer.sprite, Is.Not.EqualTo(secondSpriteRenderer.sprite));
+        }
+
+        private IEnumerator IE_PressCell(Mouse mouse, Transform cellTransform)
+        {
             Vector3 screenPoint = Camera.main.WorldToScreenPoint(cellTransform.position);
 
             Set(mouse.position, new Vector2(screenPoint.x, screenPoint.y));
@@ -30,9 +45,6 @@ namespace TicTacToeLab.PlayModeTests
             Release(mouse.leftButton);
 
             yield return null;
-
-            MarkView markView = cellTransform.GetComponentInChildren<MarkView>();
-            Assert.That(markView, Is.Not.Null);
         }
     }
 }
