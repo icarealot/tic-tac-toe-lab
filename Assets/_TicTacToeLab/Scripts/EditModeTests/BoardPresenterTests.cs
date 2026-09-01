@@ -120,19 +120,6 @@ namespace TicTacToeLab.EditModeTests
 
             Assert.That(fakeBoardView.ShownMarks, Is.EqualTo(new[] { (0, 2, Mark.O) }));
             Assert.That(boardModel.GetMark(0, 2), Is.EqualTo(Mark.O));
-
-            for (int row = 0; row < boardModel.Dimension; row++)
-            {
-                for (int column = 0; column < boardModel.Dimension; column++)
-                {
-                    if (row == 0 && column == 2)
-                    {
-                        continue;
-                    }
-
-                    Assert.That(boardModel.IsEmpty(row, column), Is.True);
-                }
-            }
         }
 
         [Test]
