@@ -54,6 +54,12 @@ _Avoid_: Nought, circle, zero
 One of the two kinds of mark, drawn as a cross. Spoken as "an X".
 _Avoid_: Cross, ex
 
+### Turns
+
+**Turn**:
+The mark that the next mark placed on the board will be. The turn is always an X or an O, never empty. It advances to the other mark each time a mark is placed, and only then — a press that places nothing leaves the turn where it was. X has the first turn of a game.
+_Avoid_: Player, side, current mark, go
+
 ### Interaction
 
 **Press**:
@@ -75,13 +81,13 @@ A suffix marking a type that drives a view from a model. A presenter is where a 
 _Avoid_: Controller, manager, mediator
 
 **BoardModel**:
-The state of the board — the mark in each cell, or its emptiness — together with the board's dimensions and the geometry that resolves a local point to the cell containing it.
+The state of the board — the mark in each cell, or its emptiness, and whose turn it is — together with the board's dimensions and the geometry that resolves a local point to the cell containing it. See [ADR 0003](./docs/adr/0003-board-model-owns-the-turn.md).
 
 **BoardView**:
 The visual representation of the board. Owns the arrangement of cell views on screen.
 
 **BoardPresenter**:
-The type that turns a press into a placed mark: it resolves the pressed point to a cell, rejects the press if that cell already holds a mark, and otherwise records the mark on the board model and tells the board view to show it.
+The type that turns a press into a placed mark: it resolves the pressed point to a cell, rejects the press if that cell already holds a mark, and otherwise places the turn's mark on the board model and tells the board view to show it.
 
 **CellView**:
 The visual representation of a single cell.
