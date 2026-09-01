@@ -174,12 +174,23 @@ namespace TicTacToeLab.EditModeTests
         {
             BoardModel boardModel = new();
 
-            for (int row = 0; row < boardModel.Dimension; row++)
+            // This order fills the board without ever completing a row, column or diagonal.
+            (int row, int column)[] fillOrder =
             {
-                for (int column = 0; column < boardModel.Dimension; column++)
-                {
-                    boardModel.PlaceMark(row, column);
-                }
+                (0, 0),
+                (0, 1),
+                (0, 2),
+                (1, 1),
+                (1, 0),
+                (1, 2),
+                (2, 1),
+                (2, 0),
+                (2, 2),
+            };
+
+            foreach ((int row, int column) in fillOrder)
+            {
+                boardModel.PlaceMark(row, column);
             }
 
             int xCount = 0;
