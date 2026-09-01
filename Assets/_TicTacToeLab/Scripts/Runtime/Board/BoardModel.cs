@@ -12,7 +12,7 @@ namespace TicTacToeLab.Runtime
 
         public int Dimension => DIMENSION;
 
-        private readonly Mark[,] _marks = new Mark[DIMENSION, DIMENSION];
+        private readonly Mark?[,] _marks = new Mark?[DIMENSION, DIMENSION];
 
         public Vector3 GetCellLocalPoint(int row, int column)
         {
@@ -31,10 +31,10 @@ namespace TicTacToeLab.Runtime
 
         public bool IsEmpty(int row, int column)
         {
-            return _marks[row, column] == Mark.Empty;
+            return _marks[row, column] == null;
         }
 
-        public Mark GetMark(int row, int column)
+        public Mark? GetMark(int row, int column)
         {
             return _marks[row, column];
         }

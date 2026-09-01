@@ -19,7 +19,7 @@ namespace TicTacToeLab.Runtime
             {
                 Mark.O => _oSprite,
                 Mark.X => _xSprite,
-                _ => throw new ArgumentOutOfRangeException(nameof(mark), mark, "A mark view cannot show an empty mark.")
+                _ => throw new ArgumentOutOfRangeException(nameof(mark), mark, "A mark view cannot show an undefined mark value.")
             };
         }
     }
