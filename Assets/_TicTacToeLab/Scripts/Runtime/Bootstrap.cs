@@ -8,6 +8,7 @@ namespace TicTacToeLab.Runtime
 
         private InputService _inputService;
         private BoardSession _boardSession;
+        private AppStateMachine _stateMachine;
 
         public void Awake()
         {
@@ -32,11 +33,19 @@ namespace TicTacToeLab.Runtime
             BoardPresenter boardPresenter = new(boardModel, boardView, factoryService, _inputService, cameraService, logService);
             _boardSession = new BoardSession(boardPresenter);
 
+            _stateMachine = new AppStateMachine();
+            GameplayState gameplayState = new(_boardSession, _stateMachine);
+            GameCompleteState gameCompleteState = new(_boardSession, _stateMachine);
+            _stateMachine.Add(gameplayState);
+            _stateMachine.Add(gameCompleteState);
+            _stateMachine.ChangeState<GameplayState>();
+
             logService.Log("Setup is done!");
         }
 
         public void OnDestroy()
         {
+            _stateMachine?.Dispose();
             _boardSession?.Dispose();
             _inputService?.Dispose();
         }
