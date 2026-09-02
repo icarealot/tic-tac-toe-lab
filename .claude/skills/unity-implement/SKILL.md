@@ -11,7 +11,7 @@ Implement the work described by the user in the spec or tickets.
 - The user names a task file, `docs/<feature-slug>/tasks/<NN>-<slug>.md`. If not, stop and ask the user.
 - Confirm the `/unity-cli` skill is available. If not, stop and ask the user.
 - Confirm the repository contains `Assets/` and `ProjectSettings/ProjectVersion.txt`. If not, stop and ask the user.
-- Confirm there is an opened editor by running `unity pipeline list`. If there is no opened editor, use `unity open --args "-automated"` to open one.
+- Confirm there is an opened editor by running `unity status`. If there is no opened editor, use `unity open --args "-automated"` to open one.
 - Always use `/unity-cli` to recompile after editing C# script and test files (`.cs`).
 - Always use `/unity-cli` to edit any non-code file (e.g. `.unity` scenes, `.prefab`, `.asset` ScriptableObjects, `.meta` files, `ProjectSettings/*`) or any `.asmdef` file. DO NOT edit YAML file directly.
 
