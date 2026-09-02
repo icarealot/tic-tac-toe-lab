@@ -22,6 +22,7 @@ namespace TicTacToeLab.Runtime
             FactoryService factoryService = Instantiate(_factoryServicePrefab);
             Camera mainCamera = factoryService.Get<Camera>();
             ICameraService cameraService = new CameraService(mainCamera);
+            ICoroutineService coroutineService = factoryService.Get<CoroutineService>();
 
             InputSystem_Actions inputActions = new();
             _inputService = new InputService(inputActions);
