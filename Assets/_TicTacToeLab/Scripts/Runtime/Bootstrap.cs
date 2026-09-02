@@ -7,7 +7,7 @@ namespace TicTacToeLab.Runtime
         [SerializeField] private FactoryService _factoryServicePrefab;
 
         private InputService _inputService;
-        private BoardPresenter _boardPresenter;
+        private BoardSession _boardSession;
 
         public void Awake()
         {
@@ -28,14 +28,15 @@ namespace TicTacToeLab.Runtime
 
             BoardModel boardModel = new();
             BoardView boardView = factoryService.Get<BoardView>();
-            _boardPresenter = new BoardPresenter(boardModel, boardView, factoryService, _inputService, cameraService, logService);
+            BoardPresenter boardPresenter = new(boardModel, boardView, factoryService, _inputService, cameraService, logService);
+            _boardSession = new BoardSession(boardPresenter);
 
             logService.Log("Setup is done!");
         }
 
         public void OnDestroy()
         {
-            _boardPresenter?.Dispose();
+            _boardSession?.Dispose();
             _inputService?.Dispose();
         }
     }
