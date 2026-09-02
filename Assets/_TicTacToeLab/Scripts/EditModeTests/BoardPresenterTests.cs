@@ -352,5 +352,122 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(fakeBoardView.ShownMarks, Is.Empty);
             Assert.That(fakeLogService.Messages, Is.EqualTo(new[] { "Rejected press: the game is over" }));
         }
+
+        private Func<int> SubscribeGameEndedCounter(BoardPresenter boardPresenter)
+        {
+            int count = 0;
+            boardPresenter.GameEnded += () => count++;
+            return () => count;
+        }
+
+        [Test]
+        public void The_game_ended_event_is_raised_once_when_a_line_is_won()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
+
+            WinRowZeroForX(fakeInputService, boardModel);
+
+            Assert.That(gameEndedCount(), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void The_game_ended_event_is_raised_once_when_the_board_fills_with_no_line_won()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
+
+            DrawTheGame(fakeInputService, boardModel);
+
+            Assert.That(gameEndedCount(), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void The_game_ended_event_is_not_raised_by_a_placement_that_leaves_the_game_in_progress()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
+
+            PressCell(fakeInputService, boardModel, 0, 0);
+
+            Assert.That(gameEndedCount(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void The_game_ended_event_is_not_raised_by_a_press_on_an_occupied_cell()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            PressCell(fakeInputService, boardModel, 1, 1);
+            Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
+
+            PressCell(fakeInputService, boardModel, 1, 1);
+
+            Assert.That(gameEndedCount(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void The_game_ended_event_is_not_raised_by_a_press_resolving_to_no_cell()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
+
+            fakeInputService.RaisePress(new Vector2(0.55f, 0f));
+
+            Assert.That(gameEndedCount(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void The_game_ended_event_is_not_raised_by_a_press_after_the_game_is_already_over()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            WinRowZeroForX(fakeInputService, boardModel);
+            Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
+
+            PressCell(fakeInputService, boardModel, 2, 2);
+
+            Assert.That(gameEndedCount(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void A_subscriber_can_detach_from_the_game_ended_event()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            int gameEndedCount = 0;
+            Action handler = () => gameEndedCount++;
+            boardPresenter.GameEnded += handler;
+            boardPresenter.GameEnded -= handler;
+
+            WinRowZeroForX(fakeInputService, boardModel);
+
+            Assert.That(gameEndedCount, Is.EqualTo(0));
+        }
     }
 }

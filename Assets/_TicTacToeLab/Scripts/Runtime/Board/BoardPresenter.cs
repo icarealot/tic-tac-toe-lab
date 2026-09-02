@@ -6,6 +6,8 @@ namespace TicTacToeLab.Runtime
 {
     public class BoardPresenter : IDisposable
     {
+        public event Action GameEnded;
+
         private readonly BoardModel _boardModel;
         private readonly IBoardView _boardView;
         private readonly IFactoryService _factoryService;
@@ -76,6 +78,11 @@ namespace TicTacToeLab.Runtime
             else if (_boardModel.Outcome == Outcome.Draw)
             {
                 _logService.Log("Draw");
+            }
+
+            if (_boardModel.Outcome != Outcome.InProgress)
+            {
+                GameEnded?.Invoke();
             }
         }
 
