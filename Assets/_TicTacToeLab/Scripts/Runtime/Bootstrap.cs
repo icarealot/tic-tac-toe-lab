@@ -35,7 +35,7 @@ namespace TicTacToeLab.Runtime
 
             _stateMachine = new AppStateMachine();
             GameplayState gameplayState = new(_boardSession, _stateMachine);
-            GameCompleteState gameCompleteState = new(_boardSession, _stateMachine);
+            GameCompleteState gameCompleteState = new(_boardSession, _stateMachine, coroutineService);
             _stateMachine.Add(gameplayState);
             _stateMachine.Add(gameCompleteState);
             _stateMachine.ChangeState<GameplayState>();

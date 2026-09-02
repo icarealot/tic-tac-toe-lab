@@ -135,6 +135,7 @@ namespace TicTacToeLab.EditModeTests
         private FakeBoardView _fakeBoardView;
         private FakeInputService _fakeInputService;
         private BoardSession _boardSession;
+        private FakeCoroutineService _fakeCoroutineService;
         private AppStateMachine _stateMachine;
         private GameplayState _gameplayState;
         private GameCompleteState _gameCompleteState;
@@ -149,9 +150,10 @@ namespace TicTacToeLab.EditModeTests
                 _boardModel, _fakeBoardView, factoryService: null,
                 _fakeInputService, new FakeCameraService(), new FakeLogService());
             _boardSession = new BoardSession(boardPresenter);
+            _fakeCoroutineService = new FakeCoroutineService();
             _stateMachine = new AppStateMachine();
             _gameplayState = new GameplayState(_boardSession, _stateMachine);
-            _gameCompleteState = new GameCompleteState(_boardSession, _stateMachine);
+            _gameCompleteState = new GameCompleteState(_boardSession, _stateMachine, _fakeCoroutineService);
             _stateMachine.Add(_gameplayState);
             _stateMachine.Add(_gameCompleteState);
         }
@@ -177,6 +179,7 @@ namespace TicTacToeLab.EditModeTests
             _gameplayState.Enter();
 
             WinRowZeroForX();
+            _fakeCoroutineService.PumpToCompletion();
 
             Assert.That(_fakeBoardView.WasCleared, Is.True);
         }
@@ -199,6 +202,7 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.ChangeState<GameplayState>();
 
             WinRowZeroForX();
+            _fakeCoroutineService.PumpToCompletion();
 
             Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
@@ -209,6 +213,7 @@ namespace TicTacToeLab.EditModeTests
         public void The_game_complete_state_resets_the_game_before_it_returns_to_gameplay()
         {
             _stateMachine.ChangeState<GameCompleteState>();
+            _fakeCoroutineService.PumpToCompletion();
 
             Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
@@ -216,6 +221,7 @@ namespace TicTacToeLab.EditModeTests
 
             // Being back in gameplay is what lets a freshly-started game end on its own again.
             WinRowZeroForX();
+            _fakeCoroutineService.PumpToCompletion();
             Assert.That(_fakeBoardView.WasCleared, Is.True);
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
         }
@@ -226,8 +232,11 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.ChangeState<GameplayState>();
 
             WinRowZeroForX();
+            _fakeCoroutineService.PumpToCompletion();
             WinRowZeroForX();
+            _fakeCoroutineService.PumpToCompletion();
             WinRowZeroForX();
+            _fakeCoroutineService.PumpToCompletion();
 
             // An extra, leftover subscription from a prior game would clear the board more than once per ending.
             Assert.That(_fakeBoardView.ClearCount, Is.EqualTo(3));
@@ -241,6 +250,7 @@ namespace TicTacToeLab.EditModeTests
             for (int i = 0; i < 5; i++)
             {
                 WinRowZeroForX();
+                _fakeCoroutineService.PumpToCompletion();
             }
 
             _boardSession.Dispose();

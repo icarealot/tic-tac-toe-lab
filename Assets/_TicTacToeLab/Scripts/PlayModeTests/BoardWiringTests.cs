@@ -36,6 +36,33 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(firstSpriteRenderer.sprite, Is.Not.EqualTo(secondSpriteRenderer.sprite));
         }
 
+        [UnityTest]
+        public IEnumerator Winning_a_game_holds_the_board_for_the_pause_then_clears_it_for_a_fresh_press()
+        {
+            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+
+            // X: (0,0) (0,1) (0,2) win row 0; O: (1,0) (1,1) in between.
+            yield return IE_PressCell(mouse, GameObject.Find("Cell (0, 0)").transform);
+            yield return IE_PressCell(mouse, GameObject.Find("Cell (1, 0)").transform);
+            yield return IE_PressCell(mouse, GameObject.Find("Cell (0, 1)").transform);
+            yield return IE_PressCell(mouse, GameObject.Find("Cell (1, 1)").transform);
+            yield return IE_PressCell(mouse, GameObject.Find("Cell (0, 2)").transform);
+
+            yield return new WaitForSeconds(GameCompleteState.RESET_PAUSE_SECONDS + 0.25f);
+
+            MarkView[] remainingMarks = Object.FindObjectsByType<MarkView>(FindObjectsSortMode.None);
+            Assert.That(remainingMarks, Is.Empty);
+
+            Transform freshCellTransform = GameObject.Find("Cell (0, 0)").transform;
+            yield return IE_PressCell(mouse, freshCellTransform);
+
+            SpriteRenderer spriteRenderer = freshCellTransform.GetComponentInChildren<MarkView>().GetComponent<SpriteRenderer>();
+            Assert.That(spriteRenderer.sprite, Is.Not.Null);
+        }
+
         private IEnumerator IE_PressCell(Mouse mouse, Transform cellTransform)
         {
             Vector3 screenPoint = Camera.main.WorldToScreenPoint(cellTransform.position);
