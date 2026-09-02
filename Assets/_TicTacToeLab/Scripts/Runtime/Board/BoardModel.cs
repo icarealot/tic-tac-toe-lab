@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -42,6 +43,13 @@ namespace TicTacToeLab.Runtime
         public Mark? GetMark(int row, int column)
         {
             return _marks[row, column];
+        }
+
+        public void Reset()
+        {
+            Array.Clear(_marks, 0, _marks.Length);
+            Turn = Mark.X;
+            Outcome = Outcome.InProgress;
         }
 
         public void PlaceMark(int row, int column)

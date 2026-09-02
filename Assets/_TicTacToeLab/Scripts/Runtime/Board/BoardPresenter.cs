@@ -38,6 +38,12 @@ namespace TicTacToeLab.Runtime
             _inputService.Pressed -= OnPressed;
         }
 
+        public void Reset()
+        {
+            _boardModel.Reset();
+            _boardView.Clear();
+        }
+
         private void OnPressed(Vector2 screenPoint)
         {
             if (_boardModel.Outcome != Outcome.InProgress)

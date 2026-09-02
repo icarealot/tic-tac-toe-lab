@@ -6,16 +6,28 @@ namespace TicTacToeLab.Runtime
     [RequireComponent(typeof(SpriteRenderer))]
     public class MarkView : MonoBehaviour
     {
+        private SpriteRenderer SpriteRendererComponent
+        {
+            get
+            {
+                if (_spriteRenderer == null)
+                {
+                    _spriteRenderer = GetComponent<SpriteRenderer>();
+                }
+
+                return _spriteRenderer;
+            }
+        }
+
         [Header("Assets")]
         [SerializeField] private Sprite _oSprite;
         [SerializeField] private Sprite _xSprite;
 
-        [Header("References")]
-        [SerializeField] private SpriteRenderer _spriteRenderer;
+        private SpriteRenderer _spriteRenderer;
 
         public void Show(Mark mark)
         {
-            _spriteRenderer.sprite = mark switch
+            SpriteRendererComponent.sprite = mark switch
             {
                 Mark.O => _oSprite,
                 Mark.X => _xSprite,

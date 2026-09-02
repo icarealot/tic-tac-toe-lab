@@ -32,5 +32,13 @@ namespace TicTacToeLab.Runtime
         {
             _cellViews[row, column].ShowMark(_factoryService, mark);
         }
+
+        public void Clear()
+        {
+            foreach (CellView cellView in _cellViews)
+            {
+                cellView.ClearMark(_factoryService);
+            }
+        }
     }
 }

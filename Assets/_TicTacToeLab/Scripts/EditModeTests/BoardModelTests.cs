@@ -335,6 +335,32 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
+        public void A_reset_board_is_indistinguishable_from_a_newly_constructed_one()
+        {
+            BoardModel boardModel = new();
+            BoardModel freshBoardModel = new();
+
+            boardModel.PlaceMark(0, 0); // X
+            boardModel.PlaceMark(1, 0); // O
+            boardModel.PlaceMark(0, 1); // X
+            boardModel.PlaceMark(1, 1); // O
+            boardModel.PlaceMark(0, 2); // X completes row 0
+
+            boardModel.Reset();
+
+            Assert.That(boardModel.Turn, Is.EqualTo(freshBoardModel.Turn));
+            Assert.That(boardModel.Outcome, Is.EqualTo(freshBoardModel.Outcome));
+
+            for (int row = 0; row < boardModel.Dimension; row++)
+            {
+                for (int column = 0; column < boardModel.Dimension; column++)
+                {
+                    Assert.That(boardModel.GetMark(row, column), Is.EqualTo(freshBoardModel.GetMark(row, column)));
+                }
+            }
+        }
+
+        [Test]
         public void A_full_board_holds_five_Xs_and_four_Os_starting_with_X()
         {
             BoardModel boardModel = new();

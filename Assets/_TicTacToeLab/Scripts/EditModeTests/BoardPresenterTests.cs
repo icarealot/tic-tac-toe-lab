@@ -13,6 +13,7 @@ namespace TicTacToeLab.EditModeTests
             public int Dimension { get; private set; }
             public IReadOnlyList<CellPlacement> Placements { get; private set; }
             public List<(int Row, int Column, Mark Mark)> ShownMarks { get; } = new();
+            public bool WasCleared { get; private set; }
 
             public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
             {
@@ -28,6 +29,11 @@ namespace TicTacToeLab.EditModeTests
             public void ShowMark(int row, int column, Mark mark)
             {
                 ShownMarks.Add((row, column, mark));
+            }
+
+            public void Clear()
+            {
+                WasCleared = true;
             }
         }
 
@@ -310,6 +316,23 @@ namespace TicTacToeLab.EditModeTests
             DrawTheGame(fakeInputService, boardModel);
 
             Assert.That(fakeLogService.Messages, Is.EqualTo(new[] { "Draw" }));
+        }
+
+        [Test]
+        public void Resetting_the_presenter_resets_the_model_and_clears_the_view()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            WinRowZeroForX(fakeInputService, boardModel);
+
+            boardPresenter.Reset();
+
+            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(fakeBoardView.WasCleared, Is.True);
         }
 
         [Test]
