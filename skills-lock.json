@@ -1,6 +1,24 @@
 {
   "version": 1,
   "skills": {
+    "ui-imgui": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-imgui/SKILL.md",
+      "computedHash": "2a1618db757d0cdc9efc997713648fd875c7618fcd60bd8981673990717488ac"
+    },
+    "ui-ugui": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-ugui/SKILL.md",
+      "computedHash": "b1c7c93396a619848a515c128e415cce25e8ba388cc353ef8c43af0760a7fe72"
+    },
+    "unity-cli": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/unity-cli/SKILL.md",
+      "computedHash": "c74f302cff06369fab01cbfdb7823623aa9f0b95adad12ba87cba33015184941"
+    },
     "unity-code-review": {
       "source": "icarealot/dotfiles",
       "sourceType": "github",
@@ -11,7 +29,7 @@
       "source": "icarealot/dotfiles",
       "sourceType": "github",
       "skillPath": "ai/skills/unity/unity-implement/SKILL.md",
-      "computedHash": "6f60262c22db796c1cd47391ff556917ce92dcc46e42bbbbc4280ef81652165d"
+      "computedHash": "d2abcfc6cbe29d4f73649b0ce003ef4c70a3256724cae124aa2d66664d05afb1"
     },
     "unity-tdd": {
       "source": "icarealot/dotfiles",
