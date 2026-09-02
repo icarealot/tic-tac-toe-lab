@@ -65,7 +65,7 @@ _Avoid_: Cross, ex
 ### Turns
 
 **Turn**:
-The mark that the next mark placed on the board will be. The turn is always an X or an O, never empty. It advances to the other mark each time a mark is placed while the game is in progress, and only then — a press that places nothing leaves the turn where it was. X has the first turn of a game. When a game ends the turn stops advancing, so once the outcome is a win the turn names the winner; after a draw it names nobody meaningful. See [ADR 0005](./docs/adr/0005-the-turn-freezes-when-the-game-ends.md).
+The mark that the next mark placed on the board will be. The turn is always an X or an O, never empty. It advances to the other mark each time a mark is placed while the game is in progress, and only then — a press that places nothing leaves the turn where it was. X has the first turn of a game. When a game ends the turn stops advancing, so once the outcome is a win the turn names the winner; after a draw it names nobody meaningful. Resetting a game returns the turn to X. See [ADR 0006](./docs/adr/0006-a-game-is-reset-rather-than-recreated.md).
 _Avoid_: Player, side, current mark, go
 
 ### Outcome
@@ -85,6 +85,20 @@ _Avoid_: Victory, won, winner
 **Draw**:
 The outcome of a game in which every cell holds a mark and no line was won.
 _Avoid_: Tie, stalemate, deadlock, full board
+
+### Games
+
+**Game**:
+One playthrough, from an empty board to a win or a draw. A game is not an object that is created and thrown away — it is a phase the board passes through, and the board outlives it. See [ADR 0006](./docs/adr/0006-a-game-is-reset-rather-than-recreated.md).
+_Avoid_: Round, match, play, session
+
+**Board session**:
+The long-lived pairing of one board's model, view and presenter, on which a series of games is played. A board session is created once, when the app starts, and is never replaced; when a game ends it resets that game after a pause and play continues. Its boundary is the board and the types that make it work — a scoreboard, a menu or an opponent is not part of it.
+_Avoid_: Game session, match, board manager
+
+**Reset**:
+Returning a game to its starting state — every cell empty, X to play, in progress — without creating anything new. A reset undoes what a game put into the board; the model, the view, the cells and the presenter all survive it. Distinct from recreation, which this project deliberately does not do. The word *replay* is not used for this: it is reserved for a player-initiated restart that does not exist yet.
+_Avoid_: Restart, clear, new game, replay
 
 ### Interaction
 
@@ -106,17 +120,39 @@ _Avoid_: Renderer, display, widget
 A suffix marking a type that drives a view from a model. A presenter is where a rule about what the player may do is enforced; it is the only thing that both reads the model and commands the view.
 _Avoid_: Controller, manager, mediator
 
+**State**:
+A suffix marking a type as one phase of the app — what the app is doing now, what it does on being entered, and what it undoes on being left. Exactly one state is current at a time, and a state is entered and left rather than created and destroyed.
+_Avoid_: Screen, mode, phase, scene
+
 **BoardModel**:
-The state of the board — the mark in each cell or its emptiness, whose turn it is, and the outcome of the game — together with the board's dimensions and the geometry that resolves a local point to the cell containing it. See [ADR 0004](./docs/adr/0004-the-board-model-owns-the-turn.md) and [ADR 0005](./docs/adr/0005-the-turn-freezes-when-the-game-ends.md).
+The state of the board — the mark in each cell or its emptiness, whose turn it is, and the outcome of the game — together with the board's dimensions and the geometry that resolves a local point to the cell containing it. It can be reset, which returns all three pieces of game state to their starting values. See [ADR 0006](./docs/adr/0006-a-game-is-reset-rather-than-recreated.md).
 
 **BoardView**:
-The visual representation of the board. Owns the arrangement of cell views on screen.
+The visual representation of the board. Owns the arrangement of cell views on screen, and can be cleared of every mark shown on it without losing its cells.
 
 **BoardPresenter**:
-The type that turns a press into a placed mark: it refuses every press once the game is over, resolves the pressed point to a cell, rejects the press if that cell already holds a mark, and otherwise places the turn's mark on the board model and tells the board view to show it. It is also what announces how a game ended.
+The type that turns a press into a placed mark: it refuses every press once the game is over, resolves the pressed point to a cell, rejects the press if that cell already holds a mark, and otherwise places the turn's mark on the board model and tells the board view to show it. It is also what announces how a game ended, and what resets the board model and the board view together.
 
 **CellView**:
-The visual representation of a single cell.
+The visual representation of a single cell. It owns the mark view shown inside it: it is what puts a mark there and what takes it away again.
 
 **MarkView**:
 The visual representation of a single placed mark — the circle or the cross drawn inside a cell.
+
+**BoardSession**:
+The long-lived pairing of the board's model, view and presenter. It announces when a game has ended and resets the game on request; it is the only thing the states know about the board.
+
+**StateMachine**:
+The type that holds the app's states and makes one of them current, always leaving the state it is in before entering the next.
+
+**GameplayState**:
+The state the app is in while a game is being played. It listens for the game to end.
+
+**GameCompleteState**:
+The state the app enters when a game has ended. It waits, resets the game, and returns to gameplay.
+
+**CoroutineService**:
+The service that runs a coroutine on behalf of a type that is not a `MonoBehaviour`, and hands back a handle for stopping it.
+
+**RoutineHandle**:
+The handle to a running coroutine. Disposing it stops the coroutine; disposing it twice, or after the coroutine has finished, does nothing.

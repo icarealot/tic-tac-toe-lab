@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted.
+Superseded by [ADR 0006](./0006-a-game-is-reset-rather-than-recreated.md).
 
 ## Context and Problem Statement
 
