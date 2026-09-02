@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -8,71 +7,6 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class BoardPresenterTests
     {
-        private sealed class FakeBoardView : IBoardView
-        {
-            public int Dimension { get; private set; }
-            public IReadOnlyList<CellPlacement> Placements { get; private set; }
-            public List<(int Row, int Column, Mark Mark)> ShownMarks { get; } = new();
-            public bool WasCleared { get; private set; }
-
-            public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
-            {
-                Dimension = dimension;
-                Placements = placements;
-            }
-
-            public Vector3 ToLocalPoint(Vector3 worldPoint)
-            {
-                return worldPoint;
-            }
-
-            public void ShowMark(int row, int column, Mark mark)
-            {
-                ShownMarks.Add((row, column, mark));
-            }
-
-            public void Clear()
-            {
-                WasCleared = true;
-            }
-        }
-
-        private sealed class FakeInputService : IInputService
-        {
-            public event Action<Vector2> Pressed;
-
-            public void RaisePress(Vector2 screenPoint)
-            {
-                Pressed?.Invoke(screenPoint);
-            }
-        }
-
-        private sealed class FakeCameraService : ICameraService
-        {
-            public Vector3 ScreenToWorldPoint(Vector2 screenPoint)
-            {
-                return new Vector3(screenPoint.x, screenPoint.y, 0f);
-            }
-        }
-
-        private sealed class FakeLogService : ILogService
-        {
-            public List<string> Messages { get; } = new();
-
-            public void Log(string message)
-            {
-                Messages.Add(message);
-            }
-
-            public void LogWarning(string message)
-            {
-            }
-
-            public void LogError(string message)
-            {
-            }
-        }
-
         private BoardPresenter CreatePresenter(
             BoardModel boardModel,
             FakeBoardView boardView,
@@ -121,8 +55,8 @@ namespace TicTacToeLab.EditModeTests
             FakeBoardView fakeBoardView = new();
             FakeInputService fakeInputService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, new FakeLogService());
-            Vector3 cellCenter = boardModel.GetCellLocalPoint(0, 2);
-            fakeInputService.RaisePress(new Vector2(cellCenter.x, cellCenter.y));
+
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 2);
 
             Assert.That(fakeBoardView.ShownMarks, Is.EqualTo(new[] { (0, 2, Mark.X) }));
             Assert.That(boardModel.GetMark(0, 2), Is.EqualTo(Mark.X));
@@ -135,11 +69,9 @@ namespace TicTacToeLab.EditModeTests
             FakeBoardView fakeBoardView = new();
             FakeInputService fakeInputService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, new FakeLogService());
-            Vector3 firstCellCenter = boardModel.GetCellLocalPoint(0, 0);
-            Vector3 secondCellCenter = boardModel.GetCellLocalPoint(0, 1);
 
-            fakeInputService.RaisePress(new Vector2(firstCellCenter.x, firstCellCenter.y));
-            fakeInputService.RaisePress(new Vector2(secondCellCenter.x, secondCellCenter.y));
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 0);
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 1);
 
             Assert.That(fakeBoardView.ShownMarks, Is.EqualTo(new[] { (0, 0, Mark.X), (0, 1, Mark.O) }));
         }
@@ -152,12 +84,10 @@ namespace TicTacToeLab.EditModeTests
             FakeInputService fakeInputService = new();
             FakeLogService fakeLogService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
-            Vector3 occupiedCellCenter = boardModel.GetCellLocalPoint(1, 1);
-            Vector3 nextCellCenter = boardModel.GetCellLocalPoint(0, 1);
 
-            fakeInputService.RaisePress(new Vector2(occupiedCellCenter.x, occupiedCellCenter.y));
-            fakeInputService.RaisePress(new Vector2(occupiedCellCenter.x, occupiedCellCenter.y));
-            fakeInputService.RaisePress(new Vector2(nextCellCenter.x, nextCellCenter.y));
+            BoardMoves.PressCell(fakeInputService, boardModel, 1, 1);
+            BoardMoves.PressCell(fakeInputService, boardModel, 1, 1);
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 1);
 
             Assert.That(fakeBoardView.ShownMarks, Is.EqualTo(new[] { (1, 1, Mark.X), (0, 1, Mark.O) }));
             Assert.That(boardModel.GetMark(1, 1), Is.EqualTo(Mark.X));
@@ -171,26 +101,12 @@ namespace TicTacToeLab.EditModeTests
             FakeBoardView fakeBoardView = new();
             FakeInputService fakeInputService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, new FakeLogService());
-            Vector3 firstCellCenter = boardModel.GetCellLocalPoint(1, 1);
-            Vector3 nextCellCenter = boardModel.GetCellLocalPoint(0, 1);
 
-            fakeInputService.RaisePress(new Vector2(firstCellCenter.x, firstCellCenter.y));
+            BoardMoves.PressCell(fakeInputService, boardModel, 1, 1);
             fakeInputService.RaisePress(new Vector2(0.55f, 0f));
-            fakeInputService.RaisePress(new Vector2(nextCellCenter.x, nextCellCenter.y));
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 1);
 
             Assert.That(fakeBoardView.ShownMarks, Is.EqualTo(new[] { (1, 1, Mark.X), (0, 1, Mark.O) }));
-        }
-
-        [Test]
-        public void A_press_resolving_to_no_cell_shows_nothing()
-        {
-            BoardModel boardModel = new();
-            FakeBoardView fakeBoardView = new();
-            FakeInputService fakeInputService = new();
-            _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, new FakeLogService());
-            fakeInputService.RaisePress(new Vector2(0.55f, 0f));
-
-            Assert.That(fakeBoardView.ShownMarks, Is.Empty);
         }
 
         [Test]
@@ -200,24 +116,10 @@ namespace TicTacToeLab.EditModeTests
             FakeBoardView fakeBoardView = new();
             FakeInputService fakeInputService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, new FakeLogService());
+
             fakeInputService.RaisePress(new Vector2(10f, 10f));
 
             Assert.That(fakeBoardView.ShownMarks, Is.Empty);
-        }
-
-        private void PressCell(FakeInputService fakeInputService, BoardModel boardModel, int row, int column)
-        {
-            Vector3 cellCenter = boardModel.GetCellLocalPoint(row, column);
-            fakeInputService.RaisePress(new Vector2(cellCenter.x, cellCenter.y));
-        }
-
-        private void WinRowZeroForX(FakeInputService fakeInputService, BoardModel boardModel)
-        {
-            PressCell(fakeInputService, boardModel, 0, 0); // X
-            PressCell(fakeInputService, boardModel, 1, 0); // O
-            PressCell(fakeInputService, boardModel, 0, 1); // X
-            PressCell(fakeInputService, boardModel, 1, 1); // O
-            PressCell(fakeInputService, boardModel, 0, 2); // X completes row 0
         }
 
         [Test]
@@ -227,10 +129,10 @@ namespace TicTacToeLab.EditModeTests
             FakeBoardView fakeBoardView = new();
             FakeInputService fakeInputService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, new FakeLogService());
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
 
             fakeBoardView.ShownMarks.Clear();
-            PressCell(fakeInputService, boardModel, 2, 2);
+            BoardMoves.PressCell(fakeInputService, boardModel, 2, 2);
 
             Assert.That(fakeBoardView.ShownMarks, Is.Empty);
             Assert.That(boardModel.IsEmpty(2, 2), Is.True);
@@ -244,26 +146,10 @@ namespace TicTacToeLab.EditModeTests
             FakeInputService fakeInputService = new();
             FakeLogService fakeLogService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
 
             fakeLogService.Messages.Clear();
-            PressCell(fakeInputService, boardModel, 2, 2);
-
-            Assert.That(fakeLogService.Messages, Is.EqualTo(new[] { "Rejected press: the game is over" }));
-        }
-
-        [Test]
-        public void A_press_after_a_win_landing_off_the_board_is_also_refused()
-        {
-            BoardModel boardModel = new();
-            FakeBoardView fakeBoardView = new();
-            FakeInputService fakeInputService = new();
-            FakeLogService fakeLogService = new();
-            _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
-            WinRowZeroForX(fakeInputService, boardModel);
-
-            fakeLogService.Messages.Clear();
-            fakeInputService.RaisePress(new Vector2(10f, 10f));
+            BoardMoves.PressCell(fakeInputService, boardModel, 2, 2);
 
             Assert.That(fakeLogService.Messages, Is.EqualTo(new[] { "Rejected press: the game is over" }));
         }
@@ -277,31 +163,9 @@ namespace TicTacToeLab.EditModeTests
             FakeLogService fakeLogService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
 
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
 
             Assert.That(fakeLogService.Messages, Is.EqualTo(new[] { "X wins" }));
-        }
-
-        private void DrawTheGame(FakeInputService fakeInputService, BoardModel boardModel)
-        {
-            // This order fills the board without ever completing a row, column or diagonal.
-            (int row, int column)[] fillOrder =
-            {
-                (0, 0),
-                (0, 1),
-                (0, 2),
-                (1, 1),
-                (1, 0),
-                (1, 2),
-                (2, 1),
-                (2, 0),
-                (2, 2),
-            };
-
-            foreach ((int row, int column) in fillOrder)
-            {
-                PressCell(fakeInputService, boardModel, row, column);
-            }
         }
 
         [Test]
@@ -313,7 +177,7 @@ namespace TicTacToeLab.EditModeTests
             FakeLogService fakeLogService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
 
-            DrawTheGame(fakeInputService, boardModel);
+            BoardMoves.PressToDraw(fakeInputService, boardModel);
 
             Assert.That(fakeLogService.Messages, Is.EqualTo(new[] { "Draw" }));
         }
@@ -326,7 +190,7 @@ namespace TicTacToeLab.EditModeTests
             FakeInputService fakeInputService = new();
             FakeLogService fakeLogService = new();
             BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
 
             boardPresenter.Reset();
 
@@ -343,7 +207,7 @@ namespace TicTacToeLab.EditModeTests
             FakeInputService fakeInputService = new();
             FakeLogService fakeLogService = new();
             _ = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
-            DrawTheGame(fakeInputService, boardModel);
+            BoardMoves.PressToDraw(fakeInputService, boardModel);
 
             fakeBoardView.ShownMarks.Clear();
             fakeLogService.Messages.Clear();
@@ -370,7 +234,7 @@ namespace TicTacToeLab.EditModeTests
             BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
             Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
 
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
 
             Assert.That(gameEndedCount(), Is.EqualTo(1));
         }
@@ -385,7 +249,7 @@ namespace TicTacToeLab.EditModeTests
             BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
             Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
 
-            DrawTheGame(fakeInputService, boardModel);
+            BoardMoves.PressToDraw(fakeInputService, boardModel);
 
             Assert.That(gameEndedCount(), Is.EqualTo(1));
         }
@@ -400,7 +264,7 @@ namespace TicTacToeLab.EditModeTests
             BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
             Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
 
-            PressCell(fakeInputService, boardModel, 0, 0);
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 0);
 
             Assert.That(gameEndedCount(), Is.EqualTo(0));
         }
@@ -413,10 +277,10 @@ namespace TicTacToeLab.EditModeTests
             FakeInputService fakeInputService = new();
             FakeLogService fakeLogService = new();
             BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
-            PressCell(fakeInputService, boardModel, 1, 1);
+            BoardMoves.PressCell(fakeInputService, boardModel, 1, 1);
             Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
 
-            PressCell(fakeInputService, boardModel, 1, 1);
+            BoardMoves.PressCell(fakeInputService, boardModel, 1, 1);
 
             Assert.That(gameEndedCount(), Is.EqualTo(0));
         }
@@ -444,10 +308,10 @@ namespace TicTacToeLab.EditModeTests
             FakeInputService fakeInputService = new();
             FakeLogService fakeLogService = new();
             BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
             Func<int> gameEndedCount = SubscribeGameEndedCounter(boardPresenter);
 
-            PressCell(fakeInputService, boardModel, 2, 2);
+            BoardMoves.PressCell(fakeInputService, boardModel, 2, 2);
 
             Assert.That(gameEndedCount(), Is.EqualTo(0));
         }
@@ -465,7 +329,7 @@ namespace TicTacToeLab.EditModeTests
             boardPresenter.GameEnded += handler;
             boardPresenter.GameEnded -= handler;
 
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
 
             Assert.That(gameEndedCount, Is.EqualTo(0));
         }

@@ -3,7 +3,7 @@ using TicTacToeLab.Runtime;
 
 namespace TicTacToeLab.EditModeTests
 {
-    internal sealed class FakeCoroutineService : ICoroutineService
+    public sealed class FakeCoroutineService : ICoroutineService
     {
         public bool HasCapturedRoutine => _routine != null;
         public bool WasStopped => _stopped;

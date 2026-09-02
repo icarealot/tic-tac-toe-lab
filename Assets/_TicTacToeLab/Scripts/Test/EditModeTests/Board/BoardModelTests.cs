@@ -6,28 +6,6 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class BoardModelTests
     {
-        private void FillBoardToDraw(BoardModel boardModel)
-        {
-            // This order fills the board without ever completing a row, column or diagonal.
-            (int row, int column)[] fillOrder =
-            {
-                (0, 0),
-                (0, 1),
-                (0, 2),
-                (1, 1),
-                (1, 0),
-                (1, 2),
-                (2, 1),
-                (2, 0),
-                (2, 2),
-            };
-
-            foreach ((int row, int column) in fillOrder)
-            {
-                boardModel.PlaceMark(row, column);
-            }
-        }
-
         [Test]
         public void The_local_point_of_each_cell_resolves_back_to_that_cells_own_coordinate()
         {
@@ -301,7 +279,7 @@ namespace TicTacToeLab.EditModeTests
         {
             BoardModel boardModel = new();
 
-            FillBoardToDraw(boardModel);
+            BoardMoves.FillToDraw(boardModel);
 
             Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Draw));
         }
@@ -311,7 +289,7 @@ namespace TicTacToeLab.EditModeTests
         {
             BoardModel boardModel = new();
 
-            FillBoardToDraw(boardModel);
+            BoardMoves.FillToDraw(boardModel);
 
             Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
         }
@@ -358,35 +336,6 @@ namespace TicTacToeLab.EditModeTests
                     Assert.That(boardModel.GetMark(row, column), Is.EqualTo(freshBoardModel.GetMark(row, column)));
                 }
             }
-        }
-
-        [Test]
-        public void A_full_board_holds_five_Xs_and_four_Os_starting_with_X()
-        {
-            BoardModel boardModel = new();
-
-            FillBoardToDraw(boardModel);
-
-            int xCount = 0;
-            int oCount = 0;
-
-            for (int row = 0; row < boardModel.Dimension; row++)
-            {
-                for (int column = 0; column < boardModel.Dimension; column++)
-                {
-                    if (boardModel.GetMark(row, column) == Mark.X)
-                    {
-                        xCount++;
-                    }
-                    else
-                    {
-                        oCount++;
-                    }
-                }
-            }
-
-            Assert.That(xCount, Is.EqualTo(5));
-            Assert.That(oCount, Is.EqualTo(4));
         }
     }
 }

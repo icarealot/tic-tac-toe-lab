@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
-    internal sealed class FakeFactoryService : IFactoryService
+    public sealed class FakeFactoryService : IFactoryService
     {
         public List<Component> ReturnedInstances { get; } = new();
 

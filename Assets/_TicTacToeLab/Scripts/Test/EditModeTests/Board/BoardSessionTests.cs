@@ -1,71 +1,10 @@
-using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
     public sealed class BoardSessionTests
     {
-        private sealed class FakeBoardView : IBoardView
-        {
-            public bool WasCleared { get; private set; }
-
-            public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
-            {
-            }
-
-            public Vector3 ToLocalPoint(Vector3 worldPoint)
-            {
-                return worldPoint;
-            }
-
-            public void ShowMark(int row, int column, Mark mark)
-            {
-            }
-
-            public void Clear()
-            {
-                WasCleared = true;
-            }
-        }
-
-        private sealed class FakeInputService : IInputService
-        {
-            public event Action<Vector2> Pressed;
-
-            public bool HasSubscribers => Pressed != null;
-
-            public void RaisePress(Vector2 screenPoint)
-            {
-                Pressed?.Invoke(screenPoint);
-            }
-        }
-
-        private sealed class FakeCameraService : ICameraService
-        {
-            public Vector3 ScreenToWorldPoint(Vector2 screenPoint)
-            {
-                return new Vector3(screenPoint.x, screenPoint.y, 0f);
-            }
-        }
-
-        private sealed class FakeLogService : ILogService
-        {
-            public void Log(string message)
-            {
-            }
-
-            public void LogWarning(string message)
-            {
-            }
-
-            public void LogError(string message)
-            {
-            }
-        }
-
         private BoardSession CreateSession(
             BoardModel boardModel,
             FakeBoardView boardView,
@@ -75,21 +14,6 @@ namespace TicTacToeLab.EditModeTests
                 boardModel, boardView, factoryService: null,
                 inputService, new FakeCameraService(), new FakeLogService());
             return new BoardSession(boardPresenter);
-        }
-
-        private void WinRowZeroForX(FakeInputService fakeInputService, BoardModel boardModel)
-        {
-            PressCell(fakeInputService, boardModel, 0, 0); // X
-            PressCell(fakeInputService, boardModel, 1, 0); // O
-            PressCell(fakeInputService, boardModel, 0, 1); // X
-            PressCell(fakeInputService, boardModel, 1, 1); // O
-            PressCell(fakeInputService, boardModel, 0, 2); // X completes row 0
-        }
-
-        private void PressCell(FakeInputService fakeInputService, BoardModel boardModel, int row, int column)
-        {
-            Vector3 cellCenter = boardModel.GetCellLocalPoint(row, column);
-            fakeInputService.RaisePress(new Vector2(cellCenter.x, cellCenter.y));
         }
 
         [Test]
@@ -102,7 +26,7 @@ namespace TicTacToeLab.EditModeTests
             int gameEndedCount = 0;
             boardSession.GameEnded += () => gameEndedCount++;
 
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
 
             Assert.That(gameEndedCount, Is.EqualTo(1));
         }
@@ -114,7 +38,7 @@ namespace TicTacToeLab.EditModeTests
             FakeBoardView fakeBoardView = new();
             FakeInputService fakeInputService = new();
             BoardSession boardSession = CreateSession(boardModel, fakeBoardView, fakeInputService);
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
 
             boardSession.Reset();
 
@@ -134,7 +58,7 @@ namespace TicTacToeLab.EditModeTests
             boardSession.GameEnded += () => gameEndedCount++;
 
             boardSession.Dispose();
-            WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
 
             Assert.That(gameEndedCount, Is.EqualTo(0));
             Assert.That(fakeInputService.HasSubscribers, Is.False);

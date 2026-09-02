@@ -1,69 +1,10 @@
-using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
     public sealed class GameCompleteStateTests
     {
-        private sealed class FakeBoardView : IBoardView
-        {
-            public bool WasCleared { get; private set; }
-
-            public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
-            {
-            }
-
-            public Vector3 ToLocalPoint(Vector3 worldPoint)
-            {
-                return worldPoint;
-            }
-
-            public void ShowMark(int row, int column, Mark mark)
-            {
-            }
-
-            public void Clear()
-            {
-                WasCleared = true;
-            }
-        }
-
-        private sealed class FakeInputService : IInputService
-        {
-            public event Action<Vector2> Pressed;
-
-            public void RaisePress(Vector2 screenPoint)
-            {
-                Pressed?.Invoke(screenPoint);
-            }
-        }
-
-        private sealed class FakeCameraService : ICameraService
-        {
-            public Vector3 ScreenToWorldPoint(Vector2 screenPoint)
-            {
-                return new Vector3(screenPoint.x, screenPoint.y, 0f);
-            }
-        }
-
-        private sealed class FakeLogService : ILogService
-        {
-            public void Log(string message)
-            {
-            }
-
-            public void LogWarning(string message)
-            {
-            }
-
-            public void LogError(string message)
-            {
-            }
-        }
-
         private BoardModel _boardModel;
         private FakeBoardView _fakeBoardView;
         private FakeInputService _fakeInputService;
@@ -90,12 +31,6 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.Add(_gameCompleteState);
         }
 
-        private void PressCell(int row, int column)
-        {
-            Vector3 cellCenter = _boardModel.GetCellLocalPoint(row, column);
-            _fakeInputService.RaisePress(new Vector2(cellCenter.x, cellCenter.y));
-        }
-
         [Test]
         public void Entering_the_state_starts_a_routine_and_does_not_reset_yet()
         {
@@ -116,7 +51,7 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
 
             // Being back in gameplay is what lets a fresh press place a mark.
-            PressCell(0, 0);
+            BoardMoves.PressCell(_fakeInputService, _boardModel, 0, 0);
             Assert.That(_boardModel.Turn, Is.EqualTo(Mark.O));
         }
 

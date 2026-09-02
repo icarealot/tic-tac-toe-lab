@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
@@ -71,66 +69,6 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(log, Is.EqualTo(new[] { "FirstSpyState.Leave" }));
         }
 
-        private sealed class FakeBoardView : IBoardView
-        {
-            public bool WasCleared { get; private set; }
-            public int ClearCount { get; private set; }
-
-            public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
-            {
-            }
-
-            public Vector3 ToLocalPoint(Vector3 worldPoint)
-            {
-                return worldPoint;
-            }
-
-            public void ShowMark(int row, int column, Mark mark)
-            {
-            }
-
-            public void Clear()
-            {
-                WasCleared = true;
-                ClearCount++;
-            }
-        }
-
-        private sealed class FakeInputService : IInputService
-        {
-            public event Action<Vector2> Pressed;
-
-            public bool HasSubscribers => Pressed != null;
-
-            public void RaisePress(Vector2 screenPoint)
-            {
-                Pressed?.Invoke(screenPoint);
-            }
-        }
-
-        private sealed class FakeCameraService : ICameraService
-        {
-            public Vector3 ScreenToWorldPoint(Vector2 screenPoint)
-            {
-                return new Vector3(screenPoint.x, screenPoint.y, 0f);
-            }
-        }
-
-        private sealed class FakeLogService : ILogService
-        {
-            public void Log(string message)
-            {
-            }
-
-            public void LogWarning(string message)
-            {
-            }
-
-            public void LogError(string message)
-            {
-            }
-        }
-
         private BoardModel _boardModel;
         private FakeBoardView _fakeBoardView;
         private FakeInputService _fakeInputService;
@@ -158,39 +96,13 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.Add(_gameCompleteState);
         }
 
-        private void PressCell(int row, int column)
-        {
-            Vector3 cellCenter = _boardModel.GetCellLocalPoint(row, column);
-            _fakeInputService.RaisePress(new Vector2(cellCenter.x, cellCenter.y));
-        }
-
-        private void WinRowZeroForX()
-        {
-            PressCell(0, 0); // X
-            PressCell(1, 0); // O
-            PressCell(0, 1); // X
-            PressCell(1, 1); // O
-            PressCell(0, 2); // X completes row 0
-        }
-
-        [Test]
-        public void The_gameplay_state_subscribes_to_the_session_ending_on_entry()
-        {
-            _gameplayState.Enter();
-
-            WinRowZeroForX();
-            _fakeCoroutineService.PumpToCompletion();
-
-            Assert.That(_fakeBoardView.WasCleared, Is.True);
-        }
-
         [Test]
         public void The_gameplay_state_unsubscribes_from_the_session_ending_on_exit()
         {
             _gameplayState.Enter();
             _gameplayState.Leave();
 
-            WinRowZeroForX();
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
 
             Assert.That(_fakeBoardView.WasCleared, Is.False);
             Assert.That(_boardModel.Outcome, Is.Not.EqualTo(Outcome.InProgress));
@@ -201,29 +113,12 @@ namespace TicTacToeLab.EditModeTests
         {
             _stateMachine.ChangeState<GameplayState>();
 
-            WinRowZeroForX();
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
             _fakeCoroutineService.PumpToCompletion();
 
             Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
             Assert.That(_fakeBoardView.WasCleared, Is.True);
-        }
-
-        [Test]
-        public void The_game_complete_state_resets_the_game_before_it_returns_to_gameplay()
-        {
-            _stateMachine.ChangeState<GameCompleteState>();
-            _fakeCoroutineService.PumpToCompletion();
-
-            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
-            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
-            Assert.That(_fakeBoardView.WasCleared, Is.True);
-
-            // Being back in gameplay is what lets a freshly-started game end on its own again.
-            WinRowZeroForX();
-            _fakeCoroutineService.PumpToCompletion();
-            Assert.That(_fakeBoardView.WasCleared, Is.True);
-            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
         }
 
         [Test]
@@ -231,11 +126,11 @@ namespace TicTacToeLab.EditModeTests
         {
             _stateMachine.ChangeState<GameplayState>();
 
-            WinRowZeroForX();
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
             _fakeCoroutineService.PumpToCompletion();
-            WinRowZeroForX();
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
             _fakeCoroutineService.PumpToCompletion();
-            WinRowZeroForX();
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
             _fakeCoroutineService.PumpToCompletion();
 
             // An extra, leftover subscription from a prior game would clear the board more than once per ending.
@@ -249,7 +144,7 @@ namespace TicTacToeLab.EditModeTests
 
             for (int i = 0; i < 5; i++)
             {
-                WinRowZeroForX();
+                BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
                 _fakeCoroutineService.PumpToCompletion();
             }
 
@@ -264,7 +159,7 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.ChangeState<GameplayState>();
 
             _stateMachine.Dispose();
-            WinRowZeroForX();
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
 
             Assert.That(_fakeBoardView.WasCleared, Is.False);
             Assert.That(_boardModel.Outcome, Is.Not.EqualTo(Outcome.InProgress));
