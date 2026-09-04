@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 
@@ -62,6 +63,40 @@ namespace TicTacToeLab.EditModeTests
 
             Assert.That(gameEndedCount, Is.EqualTo(0));
             Assert.That(fakeInputService.HasSubscribers, Is.False);
+        }
+
+        [Test]
+        public void The_session_reports_the_current_turn_and_raises_its_changed_event_as_marks_are_placed()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            BoardSession boardSession = CreateSession(boardModel, fakeBoardView, fakeInputService);
+            List<Mark> turns = new();
+            boardSession.TurnChanged += turn => turns.Add(turn);
+
+            Assert.That(boardSession.Turn, Is.EqualTo(Mark.X));
+
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 0);
+
+            Assert.That(boardSession.Turn, Is.EqualTo(Mark.O));
+            Assert.That(turns, Is.EqualTo(new[] { Mark.O }));
+        }
+
+        [Test]
+        public void Disposing_the_session_stops_it_forwarding_turn_changes()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            BoardSession boardSession = CreateSession(boardModel, fakeBoardView, fakeInputService);
+            int turnChangedCount = 0;
+            boardSession.TurnChanged += _ => turnChangedCount++;
+
+            boardSession.Dispose();
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 0);
+
+            Assert.That(turnChangedCount, Is.EqualTo(0));
         }
     }
 }

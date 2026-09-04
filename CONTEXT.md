@@ -106,6 +106,36 @@ _Avoid_: Restart, clear, new game, replay
 A complete pointer gesture over the board — down and then up — reported at the moment it completes. A press that never completes is not a press, so a player may push down on a cell, slide away, and release without placing a mark.
 _Avoid_: Click, tap, touch, input
 
+### User interface
+
+**Window**:
+A piece of user interface that the app shows, hides and stacks as a unit. Every window is either a panel or a popup; there is no third kind. A window is created when it is first shown and destroyed when it is taken off its stack, and it is hidden — rather than deactivated — while something covers it. See [ADR 0008](./docs/adr/0008-panels-and-popups-are-two-stacks.md).
+_Avoid_: Screen, view, widget, UI element, dialog
+
+**Panel**:
+The kind of window that covers the whole display. Only the topmost panel is visible; showing a panel hides the one beneath it, and it fills the display edge to edge so that a background reaches behind a notch.
+_Avoid_: Screen, page, menu, layout
+
+**Popup**:
+The kind of window that sits above the panels without hiding them. Only the topmost popup is visible; showing a popup hides the popup beneath it, but never the panel beneath it. A popup is what asks a question or interrupts, and it is the first thing back closes. See [ADR 0008](./docs/adr/0008-panels-and-popups-are-two-stacks.md).
+_Avoid_: Dialog, modal, overlay, prompt, toast
+
+**Layer**:
+One of the two places a window lives on screen — the panel layer or the popup layer. Every popup is drawn above every panel, because the popup layer sits above the panel layer. Layers fill the whole display and are never inset.
+_Avoid_: Sorting order, canvas, tier, z-order
+
+**Safe area**:
+The part of the display that a notch, a rounded corner or a system gesture bar does not intrude on. Anything a player is meant to read or press belongs inside it; a background does not. It is not fixed for the life of the app — it changes with orientation and with system settings — so a window follows it rather than reading it once.
+_Avoid_: Inset, padding, notch area, margin
+
+**Hidden**:
+Said of a window that still exists but is not shown — because something covers it, not because it was taken off its stack. A hidden window keeps everything it had; it is faded out and stops receiving presses rather than being deactivated.
+_Avoid_: Inactive, disabled, closed, off
+
+**Back**:
+The request to undo the last piece of navigation — the Android hardware back gesture, or Escape. It closes the topmost popup if there is one, and otherwise takes the topmost panel off its stack. What back actually does is decided by the state the app is in, not by the UI service; see [ADR 0007](./docs/adr/0007-states-decide-what-navigation-means.md).
+_Avoid_: Cancel, escape, return, dismiss
+
 ### Architecture
 
 **Model**:

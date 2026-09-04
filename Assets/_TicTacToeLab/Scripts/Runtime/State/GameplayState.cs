@@ -4,21 +4,64 @@ namespace TicTacToeLab.Runtime
     {
         private readonly BoardSession _boardSession;
         private readonly AppStateMachine _stateMachine;
+        private readonly IUIService _uiService;
+        private readonly IInputService _inputService;
+        private readonly ILogService _logService;
 
-        public GameplayState(BoardSession boardSession, AppStateMachine stateMachine)
+        public GameplayState(BoardSession boardSession, AppStateMachine stateMachine, IUIService uiService, IInputService inputService, ILogService logService)
         {
             _boardSession = boardSession;
             _stateMachine = stateMachine;
+            _uiService = uiService;
+            _inputService = inputService;
+            _logService = logService;
         }
 
         public void Enter()
         {
             _boardSession.GameEnded += OnGameEnded;
+            _uiService.ShowPanel<GameplayPanel>(panel => panel.Setup(_boardSession));
         }
 
         public void Leave()
         {
             _boardSession.GameEnded -= OnGameEnded;
+
+            if (_uiService.HasPopup)
+            {
+                _uiService.CloseAllPopups();
+                _inputService.EnablePlayerPress();
+            }
+
+            _ = _uiService.TryClosePanel();
+        }
+
+        public void Back()
+        {
+            if (_uiService.HasPopup)
+            {
+                CloseConfirmQuitPopup();
+                return;
+            }
+
+            _inputService.DisablePlayerPress();
+            _uiService.ShowPopup<ConfirmQuitPopup>(popup =>
+            {
+                popup.Setup(
+                    onYes: Quit,
+                    onNo: CloseConfirmQuitPopup);
+            });
+        }
+
+        private void CloseConfirmQuitPopup()
+        {
+            _ = _uiService.TryClosePopup();
+            _inputService.EnablePlayerPress();
+        }
+
+        private void Quit()
+        {
+            _logService.Log("Quitting the game");
         }
 
         private void OnGameEnded()

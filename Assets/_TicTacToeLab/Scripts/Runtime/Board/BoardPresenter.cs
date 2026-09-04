@@ -7,6 +7,9 @@ namespace TicTacToeLab.Runtime
     public class BoardPresenter : IDisposable
     {
         public event Action GameEnded;
+        public event Action<Mark> TurnChanged;
+
+        public Mark Turn => _boardModel.Turn;
 
         private readonly BoardModel _boardModel;
         private readonly IBoardView _boardView;
@@ -70,6 +73,7 @@ namespace TicTacToeLab.Runtime
 
             _boardView.ShowMark(row, column, _boardModel.Turn);
             _boardModel.PlaceMark(row, column);
+            TurnChanged?.Invoke(_boardModel.Turn);
 
             if (_boardModel.Outcome == Outcome.Win)
             {

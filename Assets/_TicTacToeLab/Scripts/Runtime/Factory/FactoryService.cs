@@ -22,6 +22,11 @@ namespace TicTacToeLab.Runtime
 
         public void Return<T>(T instance) where T : Component
         {
+            if (instance == null)
+            {
+                return;
+            }
+
             Destroy(instance.gameObject);
         }
 

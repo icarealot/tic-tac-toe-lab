@@ -1,0 +1,93 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace TicTacToeLab.Runtime
+{
+    public class UIService : IUIService
+    {
+        private readonly IFactoryService _factoryService;
+        private readonly UIRoot _uiRoot;
+        private readonly ICoroutineService _coroutineService;
+        private readonly Stack<Panel> _panelStack = new();
+        private readonly Stack<Popup> _popupStack = new();
+
+        public UIService(IFactoryService factoryService, UIRoot uiRoot, ICoroutineService coroutineService)
+        {
+            _factoryService = factoryService;
+            _uiRoot = uiRoot;
+            _coroutineService = coroutineService;
+        }
+
+        public bool HasPopup => _popupStack.Count > 0;
+
+        public void ShowPanel<TPanel>(Action<TPanel> configure = null) where TPanel : Panel
+        {
+            if (HasPopup)
+            {
+                throw new InvalidOperationException($"Cannot show {typeof(TPanel).Name} while a popup is up. Close the popups first.");
+            }
+
+            Show(_panelStack, _uiRoot.PanelLayer, configure);
+        }
+
+        public void ShowPopup<TPopup>(Action<TPopup> configure = null) where TPopup : Popup
+        {
+            Show(_popupStack, _uiRoot.PopupLayer, configure);
+        }
+
+        public bool TryClosePanel()
+        {
+            return TryClose(_panelStack);
+        }
+
+        public bool TryClosePopup()
+        {
+            return TryClose(_popupStack);
+        }
+
+        public void CloseAllPopups()
+        {
+            while (_popupStack.Count > 0)
+            {
+                _ = TryClosePopup();
+            }
+        }
+
+        private void Show<TWindow, TShown>(Stack<TWindow> stack, RectTransform layer, Action<TShown> configure)
+            where TWindow : Window
+            where TShown : TWindow
+        {
+            if (stack.Count > 0)
+            {
+                stack.Peek().Hide();
+            }
+
+            TShown window = _factoryService.Get<TShown>(layer);
+            window.Hide();
+            window.Construct(_coroutineService);
+            configure?.Invoke(window);
+            window.Show();
+
+            stack.Push(window);
+        }
+
+        private bool TryClose<TWindow>(Stack<TWindow> stack) where TWindow : Window
+        {
+            if (stack.Count == 0)
+            {
+                return false;
+            }
+
+            TWindow topWindow = stack.Pop();
+            _factoryService.Return(topWindow);
+
+            if (stack.Count > 0)
+            {
+                stack.Peek().Show();
+            }
+
+            return true;
+        }
+    }
+}

@@ -5,6 +5,9 @@ namespace TicTacToeLab.Runtime
     public class BoardSession : IDisposable
     {
         public event Action GameEnded;
+        public event Action<Mark> TurnChanged;
+
+        public Mark Turn => _boardPresenter.Turn;
 
         private readonly BoardPresenter _boardPresenter;
 
@@ -12,11 +15,13 @@ namespace TicTacToeLab.Runtime
         {
             _boardPresenter = boardPresenter;
             _boardPresenter.GameEnded += OnGameEnded;
+            _boardPresenter.TurnChanged += OnTurnChanged;
         }
 
         public void Dispose()
         {
             _boardPresenter.GameEnded -= OnGameEnded;
+            _boardPresenter.TurnChanged -= OnTurnChanged;
             _boardPresenter.Dispose();
         }
 
@@ -28,6 +33,11 @@ namespace TicTacToeLab.Runtime
         private void OnGameEnded()
         {
             GameEnded?.Invoke();
+        }
+
+        private void OnTurnChanged(Mark turn)
+        {
+            TurnChanged?.Invoke(turn);
         }
     }
 }

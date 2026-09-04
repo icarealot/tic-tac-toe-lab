@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -314,6 +315,39 @@ namespace TicTacToeLab.EditModeTests
             BoardMoves.PressCell(fakeInputService, boardModel, 2, 2);
 
             Assert.That(gameEndedCount(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void The_turn_changed_event_reports_the_new_turn_after_each_placed_mark()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            List<Mark> turns = new();
+            boardPresenter.TurnChanged += turn => turns.Add(turn);
+
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 0);
+            BoardMoves.PressCell(fakeInputService, boardModel, 0, 1);
+
+            Assert.That(turns, Is.EqualTo(new[] { Mark.O, Mark.X }));
+        }
+
+        [Test]
+        public void The_turn_changed_event_is_not_raised_by_a_press_that_places_no_mark()
+        {
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            FakeLogService fakeLogService = new();
+            BoardPresenter boardPresenter = CreatePresenter(boardModel, fakeBoardView, fakeInputService, fakeLogService);
+            int turnChangedCount = 0;
+            boardPresenter.TurnChanged += _ => turnChangedCount++;
+
+            fakeInputService.RaisePress(new Vector2(10f, 10f));
+
+            Assert.That(turnChangedCount, Is.EqualTo(0));
         }
 
         [Test]

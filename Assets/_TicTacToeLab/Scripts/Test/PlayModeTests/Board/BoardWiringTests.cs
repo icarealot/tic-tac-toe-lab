@@ -10,7 +10,7 @@ using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class BoardWiringTests : InputTestFixture
+    public sealed class BoardWiringTests : SceneWiringTests
     {
         private const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
 

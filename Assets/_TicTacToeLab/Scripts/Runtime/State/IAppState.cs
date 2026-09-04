@@ -5,5 +5,7 @@ namespace TicTacToeLab.Runtime
         public void Enter();
 
         public void Leave();
+
+        public void Back() { }
     }
 }

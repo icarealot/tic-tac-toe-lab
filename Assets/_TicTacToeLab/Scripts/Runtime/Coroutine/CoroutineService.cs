@@ -8,7 +8,13 @@ namespace TicTacToeLab.Runtime
         public CoroutineHandle Run(IEnumerator routine)
         {
             Coroutine coroutine = default;
-            CoroutineHandle handle = new(() => StopCoroutine(coroutine));
+            CoroutineHandle handle = new(() =>
+            {
+                if (this != null)
+                {
+                    StopCoroutine(coroutine);
+                }
+            });
 
             coroutine = StartCoroutine(IE_TrackCompletion(routine, handle));
 

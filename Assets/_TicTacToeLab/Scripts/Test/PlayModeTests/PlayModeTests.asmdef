@@ -4,9 +4,10 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "TicTacToeLab.Runtime",
         "Unity.InputSystem",
-        "Unity.InputSystem.TestFramework"
+        "Unity.InputSystem.TestFramework",
+        "Unity.TextMeshPro",
+        "TicTacToeLab.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

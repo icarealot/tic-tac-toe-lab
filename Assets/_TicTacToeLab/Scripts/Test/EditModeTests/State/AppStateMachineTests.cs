@@ -24,6 +24,11 @@ namespace TicTacToeLab.EditModeTests
             {
                 Log.Add($"{GetType().Name}.Leave");
             }
+
+            public void Back()
+            {
+                Log.Add($"{GetType().Name}.Back");
+            }
         }
 
         private sealed class FirstSpyState : SpyState
@@ -44,7 +49,7 @@ namespace TicTacToeLab.EditModeTests
         public void Changing_state_leaves_the_current_state_before_entering_the_next()
         {
             List<string> log = new();
-            AppStateMachine stateMachine = new();
+            AppStateMachine stateMachine = new(new FakeInputService());
             stateMachine.Add(new FirstSpyState(log));
             stateMachine.Add(new SecondSpyState(log));
             stateMachine.ChangeState<FirstSpyState>();
@@ -59,7 +64,7 @@ namespace TicTacToeLab.EditModeTests
         public void Disposing_the_machine_leaves_the_current_state()
         {
             List<string> log = new();
-            AppStateMachine stateMachine = new();
+            AppStateMachine stateMachine = new(new FakeInputService());
             stateMachine.Add(new FirstSpyState(log));
             stateMachine.ChangeState<FirstSpyState>();
             log.Clear();
@@ -69,11 +74,62 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(log, Is.EqualTo(new[] { "FirstSpyState.Leave" }));
         }
 
+        [Test]
+        public void A_raised_back_reaches_the_current_state_and_no_other()
+        {
+            List<string> log = new();
+            FakeInputService fakeInputService = new();
+            AppStateMachine stateMachine = new(fakeInputService);
+            stateMachine.Add(new FirstSpyState(log));
+            stateMachine.Add(new SecondSpyState(log));
+            stateMachine.ChangeState<FirstSpyState>();
+            log.Clear();
+
+            fakeInputService.RaiseBack();
+
+            Assert.That(log, Is.EqualTo(new[] { "FirstSpyState.Back" }));
+        }
+
+        [Test]
+        public void After_a_transition_back_reaches_the_new_state_and_not_the_one_just_left()
+        {
+            List<string> log = new();
+            FakeInputService fakeInputService = new();
+            AppStateMachine stateMachine = new(fakeInputService);
+            stateMachine.Add(new FirstSpyState(log));
+            stateMachine.Add(new SecondSpyState(log));
+            stateMachine.ChangeState<FirstSpyState>();
+            stateMachine.ChangeState<SecondSpyState>();
+            log.Clear();
+
+            fakeInputService.RaiseBack();
+
+            Assert.That(log, Is.EqualTo(new[] { "SecondSpyState.Back" }));
+        }
+
+        [Test]
+        public void After_disposal_back_reaches_nothing()
+        {
+            List<string> log = new();
+            FakeInputService fakeInputService = new();
+            AppStateMachine stateMachine = new(fakeInputService);
+            stateMachine.Add(new FirstSpyState(log));
+            stateMachine.ChangeState<FirstSpyState>();
+            stateMachine.Dispose();
+            log.Clear();
+
+            fakeInputService.RaiseBack();
+
+            Assert.That(log, Is.Empty);
+        }
+
         private BoardModel _boardModel;
         private FakeBoardView _fakeBoardView;
         private FakeInputService _fakeInputService;
         private BoardSession _boardSession;
         private FakeCoroutineService _fakeCoroutineService;
+        private UIService _uiService;
+        private FakeLogService _fakeLogService;
         private AppStateMachine _stateMachine;
         private GameplayState _gameplayState;
         private GameCompleteState _gameCompleteState;
@@ -84,13 +140,15 @@ namespace TicTacToeLab.EditModeTests
             _boardModel = new BoardModel();
             _fakeBoardView = new FakeBoardView();
             _fakeInputService = new FakeInputService();
+            _fakeLogService = new FakeLogService();
             BoardPresenter boardPresenter = new(
                 _boardModel, _fakeBoardView, factoryService: null,
-                _fakeInputService, new FakeCameraService(), new FakeLogService());
+                _fakeInputService, new FakeCameraService(), _fakeLogService);
             _boardSession = new BoardSession(boardPresenter);
             _fakeCoroutineService = new FakeCoroutineService();
-            _stateMachine = new AppStateMachine();
-            _gameplayState = new GameplayState(_boardSession, _stateMachine);
+            _uiService = new UIService(new FakeFactoryService(), TestUIRoot.Create(), new FakeCoroutineService());
+            _stateMachine = new AppStateMachine(_fakeInputService);
+            _gameplayState = new GameplayState(_boardSession, _stateMachine, _uiService, _fakeInputService, _fakeLogService);
             _gameCompleteState = new GameCompleteState(_boardSession, _stateMachine, _fakeCoroutineService);
             _stateMachine.Add(_gameplayState);
             _stateMachine.Add(_gameCompleteState);

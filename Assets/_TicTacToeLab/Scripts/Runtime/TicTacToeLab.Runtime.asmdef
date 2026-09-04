@@ -2,7 +2,8 @@
     "name": "TicTacToeLab.Runtime",
     "rootNamespace": "TicTacToeLab.Runtime",
     "references": [
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

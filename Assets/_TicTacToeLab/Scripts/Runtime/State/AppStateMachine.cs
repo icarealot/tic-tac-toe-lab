@@ -6,8 +6,15 @@ namespace TicTacToeLab.Runtime
     public sealed class AppStateMachine : IDisposable
     {
         private readonly Dictionary<Type, IAppState> _states = new();
+        private readonly IInputService _inputService;
 
         private IAppState _currentState;
+
+        public AppStateMachine(IInputService inputService)
+        {
+            _inputService = inputService;
+            _inputService.BackPressed += OnBackPressed;
+        }
 
         public void Add<TState>(TState state) where TState : IAppState
         {
@@ -28,8 +35,14 @@ namespace TicTacToeLab.Runtime
 
         public void Dispose()
         {
+            _inputService.BackPressed -= OnBackPressed;
             _currentState?.Leave();
             _currentState = null;
+        }
+
+        private void OnBackPressed()
+        {
+            _currentState?.Back();
         }
     }
 }

@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class CoroutineServiceWiringTests
+    public sealed class CoroutineServiceWiringTests : SceneWiringTests
     {
         private const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
 
