@@ -12,8 +12,6 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class UIWiringTests : SceneWiringTests
     {
-        private const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
-
         [UnityTest]
         public IEnumerator The_gameplay_panel_is_present_under_the_panel_layer_at_startup()
         {
@@ -40,17 +38,6 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_PressCell(mouse, GameObject.Find("Cell (0, 0)").transform);
 
             Assert.That(turnText.text, Is.Not.EqualTo(turnTextBeforePress));
-        }
-
-        private IEnumerator IE_PressCell(Mouse mouse, Transform cellTransform)
-        {
-            Vector3 screenPoint = Camera.main.WorldToScreenPoint(cellTransform.position);
-
-            Set(mouse.position, new Vector2(screenPoint.x, screenPoint.y));
-            Press(mouse.leftButton);
-            Release(mouse.leftButton);
-
-            yield return null;
         }
     }
 }

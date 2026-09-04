@@ -11,8 +11,6 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class CoroutineServiceWiringTests : SceneWiringTests
     {
-        private const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
-
         [UnityTest]
         public IEnumerator The_coroutine_service_resolves_from_the_factory_service_in_the_real_scene()
         {

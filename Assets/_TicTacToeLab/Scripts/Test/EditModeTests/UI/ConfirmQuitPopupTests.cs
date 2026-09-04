@@ -24,12 +24,12 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void A_popup_that_is_answered_neither_closes_itself_nor_navigates()
         {
-            UIRoot uiRoot = TestUIRoot.Create();
+            FakeUIRoot fakeUIRoot = new();
             FakeFactoryService fakeFactoryService = new();
-            UIService uiService = new(fakeFactoryService, uiRoot, new FakeCoroutineService());
+            UIService uiService = new(fakeFactoryService, fakeUIRoot, new FakeCoroutineService());
             ConfirmQuitPopup shownPopup = null;
             uiService.ShowPopup<ConfirmQuitPopup>(popup => popup.Setup(onYes: () => { }, onNo: () => { }));
-            shownPopup = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>();
+            shownPopup = fakeUIRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>();
 
             shownPopup.Yes();
             shownPopup.No();

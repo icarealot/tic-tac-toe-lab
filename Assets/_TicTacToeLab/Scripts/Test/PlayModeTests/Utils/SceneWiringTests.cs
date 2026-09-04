@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using System.Collections;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace TicTacToeLab.PlayModeTests
@@ -11,6 +13,18 @@ namespace TicTacToeLab.PlayModeTests
     /// </summary>
     public abstract class SceneWiringTests : InputTestFixture
     {
+        protected const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
+
+        protected IEnumerator IE_PressCell(Mouse mouse, Transform cellTransform)
+        {
+            Vector3 screenPoint = Camera.main.WorldToScreenPoint(cellTransform.position);
+
+            Set(mouse.position, new Vector2(screenPoint.x, screenPoint.y));
+            Press(mouse.leftButton);
+            Release(mouse.leftButton);
+
+            yield return null;
+        }
     }
 }
 #endif

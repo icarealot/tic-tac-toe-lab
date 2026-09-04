@@ -27,12 +27,7 @@ namespace TicTacToeLab.Runtime
         {
             _boardSession.GameEnded -= OnGameEnded;
 
-            if (_uiService.HasPopup)
-            {
-                _uiService.CloseAllPopups();
-                _inputService.EnablePlayerPress();
-            }
-
+            CloseConfirmQuitPopup();
             _ = _uiService.TryClosePanel();
         }
 
@@ -44,6 +39,11 @@ namespace TicTacToeLab.Runtime
                 return;
             }
 
+            OpenConfirmQuitPopup();
+        }
+
+        private void OpenConfirmQuitPopup()
+        {
             _inputService.DisablePlayerPress();
             _uiService.ShowPopup<ConfirmQuitPopup>(popup =>
             {
@@ -55,7 +55,12 @@ namespace TicTacToeLab.Runtime
 
         private void CloseConfirmQuitPopup()
         {
-            _ = _uiService.TryClosePopup();
+            if (!_uiService.HasPopup)
+            {
+                return;
+            }
+
+            _uiService.CloseAllPopups();
             _inputService.EnablePlayerPress();
         }
 

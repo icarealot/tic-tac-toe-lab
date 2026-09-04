@@ -25,7 +25,7 @@ namespace TicTacToeLab.EditModeTests
             _boardSession = new BoardSession(boardPresenter);
             _fakeCoroutineService = new FakeCoroutineService();
             _stateMachine = new AppStateMachine(_fakeInputService);
-            UIService uiService = new(new FakeFactoryService(), TestUIRoot.Create(), new FakeCoroutineService());
+            UIService uiService = new(new FakeFactoryService(), new FakeUIRoot(), new FakeCoroutineService());
             GameplayState gameplayState = new(_boardSession, _stateMachine, uiService, _fakeInputService, new FakeLogService());
             _gameCompleteState = new GameCompleteState(_boardSession, _stateMachine, _fakeCoroutineService);
             _stateMachine.Add(gameplayState);

@@ -23,6 +23,9 @@ namespace TicTacToeLab.Runtime
         private RectTransform _rectTransform;
 
         private CoroutineHandle _pollHandle;
+        private Rect _appliedSafeArea;
+        private int _appliedScreenWidth;
+        private int _appliedScreenHeight;
 
         public void Construct(ICoroutineService coroutineService)
         {
@@ -42,13 +45,28 @@ namespace TicTacToeLab.Runtime
             while (true)
             {
                 yield return wait;
-                Apply();
+
+                if (HasSafeAreaChanged())
+                {
+                    Apply();
+                }
             }
+        }
+
+        private bool HasSafeAreaChanged()
+        {
+            return Screen.safeArea != _appliedSafeArea
+                || Screen.width != _appliedScreenWidth
+                || Screen.height != _appliedScreenHeight;
         }
 
         private void Apply()
         {
-            SafeAreaInsets insets = SafeAreaCalculator.Calculate(Screen.safeArea, Screen.width, Screen.height);
+            _appliedSafeArea = Screen.safeArea;
+            _appliedScreenWidth = Screen.width;
+            _appliedScreenHeight = Screen.height;
+
+            SafeAreaInsets insets = SafeAreaCalculator.Calculate(_appliedSafeArea, _appliedScreenWidth, _appliedScreenHeight);
 
             RectTransformComponent.anchorMin = insets.AnchorMin;
             RectTransformComponent.anchorMax = insets.AnchorMax;

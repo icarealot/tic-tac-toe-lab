@@ -5,6 +5,9 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class GameplayStateTests
     {
+        private GameplayPanel Panel => _fakeUIRoot.PanelLayer.GetComponentInChildren<GameplayPanel>(includeInactive: true);
+        private ConfirmQuitPopup Popup => _fakeUIRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>(includeInactive: true);
+
         private BoardModel _boardModel;
         private FakeBoardView _fakeBoardView;
         private FakeInputService _fakeInputService;
@@ -12,7 +15,7 @@ namespace TicTacToeLab.EditModeTests
         private FakeCoroutineService _fakeCoroutineService;
         private FakeFactoryService _fakeFactoryService;
         private BoardSession _boardSession;
-        private UIRoot _uiRoot;
+        private FakeUIRoot _fakeUIRoot;
         private UIService _uiService;
         private AppStateMachine _stateMachine;
         private GameplayState _gameplayState;
@@ -30,16 +33,13 @@ namespace TicTacToeLab.EditModeTests
             _boardSession = new BoardSession(boardPresenter);
             _fakeCoroutineService = new FakeCoroutineService();
             _fakeFactoryService = new FakeFactoryService();
-            _uiRoot = TestUIRoot.Create();
-            _uiService = new UIService(_fakeFactoryService, _uiRoot, _fakeCoroutineService);
+            _fakeUIRoot = new FakeUIRoot();
+            _uiService = new UIService(_fakeFactoryService, _fakeUIRoot, _fakeCoroutineService);
             _stateMachine = new AppStateMachine(_fakeInputService);
             _gameplayState = new GameplayState(_boardSession, _stateMachine, _uiService, _fakeInputService, _fakeLogService);
             _stateMachine.Add(_gameplayState);
             _stateMachine.Add(new GameCompleteState(_boardSession, _stateMachine, _fakeCoroutineService));
         }
-
-        private GameplayPanel Panel => _uiRoot.PanelLayer.GetComponentInChildren<GameplayPanel>(includeInactive: true);
-        private ConfirmQuitPopup Popup => _uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>(includeInactive: true);
 
         [Test]
         public void Entering_gameplay_shows_the_gameplay_panel()
@@ -79,7 +79,7 @@ namespace TicTacToeLab.EditModeTests
 
             _fakeInputService.RaiseBack();
 
-            Assert.That(Popup.transform.parent, Is.EqualTo(_uiRoot.PopupLayer));
+            Assert.That(Popup.transform.parent, Is.EqualTo(_fakeUIRoot.PopupLayer));
             Assert.That(Popup.IsVisible, Is.True);
             Assert.That(Panel.IsVisible, Is.True);
         }

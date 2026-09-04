@@ -12,8 +12,6 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class BoardWiringTests : SceneWiringTests
     {
-        private const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
-
         [UnityTest]
         public IEnumerator A_press_over_a_cell_in_the_real_scene_spawns_a_mark_view_under_that_cells_view()
         {
@@ -61,17 +59,6 @@ namespace TicTacToeLab.PlayModeTests
 
             SpriteRenderer spriteRenderer = freshCellTransform.GetComponentInChildren<MarkView>().GetComponent<SpriteRenderer>();
             Assert.That(spriteRenderer.sprite, Is.Not.Null);
-        }
-
-        private IEnumerator IE_PressCell(Mouse mouse, Transform cellTransform)
-        {
-            Vector3 screenPoint = Camera.main.WorldToScreenPoint(cellTransform.position);
-
-            Set(mouse.position, new Vector2(screenPoint.x, screenPoint.y));
-            Press(mouse.leftButton);
-            Release(mouse.leftButton);
-
-            yield return null;
         }
     }
 }

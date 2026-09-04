@@ -13,8 +13,6 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class BackWiringTests : SceneWiringTests
     {
-        private const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
-
         [UnityTest]
         public IEnumerator A_keyboard_escape_in_the_real_scene_opens_the_confirmation_above_the_gameplay_panel()
         {
@@ -100,17 +98,6 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_PressCell(mouse, cellTransform);
 
             Assert.That(cellTransform.GetComponentInChildren<MarkView>(), Is.Not.Null);
-        }
-
-        private IEnumerator IE_PressCell(Mouse mouse, Transform cellTransform)
-        {
-            Vector3 screenPoint = Camera.main.WorldToScreenPoint(cellTransform.position);
-
-            Set(mouse.position, new Vector2(screenPoint.x, screenPoint.y));
-            Press(mouse.leftButton);
-            Release(mouse.leftButton);
-
-            yield return null;
         }
 
         private IEnumerator IE_ClickButton(Mouse mouse, Button button)

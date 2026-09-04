@@ -25,7 +25,10 @@ namespace TicTacToeLab.Runtime
 
         public void Construct(ICoroutineService coroutineService)
         {
-            _safeAreaRect?.Construct(coroutineService);
+            if (_safeAreaRect != null)
+            {
+                _safeAreaRect.Construct(coroutineService);
+            }
         }
 
         public void Show()
