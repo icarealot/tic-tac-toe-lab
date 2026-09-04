@@ -1,10 +1,10 @@
 ---
 name: unity-code-review
-description: Review the currently staged changes along two axes — Standards (does the code follow CODING_STANDARDS.md?) and Spec (does the code match what the originating spec asked for?). Runs both reviews in parallel sub-agents and reports them side by side.
+description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (does the code follow CODING_STANDARDS.md?) and Spec (does the code match what the originating spec asked for?). Runs both reviews in parallel sub-agents and reports them side by side.
 disable-model-invocation: true
 ---
 
-Two-axis review of the staged diff:
+Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes:
 
 - **Standards** — does the code conform to [CODING_STANDARDS.md](CODING_STANDARDS.md)?
 - **Spec** — does the code faithfully implement the originating spec?
@@ -13,9 +13,13 @@ Both axes run as **parallel sub-agents** so they don't pollute each other's cont
 
 ## Process
 
-### 1. Pin the diff
+### 1. Pin the fixed point
 
-Confirm non-empty staged diff by running `git diff --staged`, if empty, ask the user.
+Whatever the user said is the fixed point — a commit SHA, branch name, tag, `main`, `HEAD~5`, etc. If they didn't specify one, ask for it.
+
+Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
+
+Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here — not inside two parallel sub-agents.
 
 ### 2. Identify the spec source
 
@@ -51,13 +55,13 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 **Standards sub-agent prompt** — include:
 
-- The diff command.
+- The full diff command and commit list.
 - The [CODING_STANDARDS.md](CODING_STANDARDS.md), **plus the smell baseline from step 3 pasted in full** — the sub-agent has no other access to it.
 - The brief: "Report — per file/hunk where relevant — (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls — documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard overrides the baseline. Skip anything tooling enforces. Under 400 words."
 
 **Spec sub-agent prompt** — include:
 
-- The diff command.
+- The full diff command and commit list.
 - The path or fetched contents of the spec.
 - The brief: "Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Under 400 words."
 

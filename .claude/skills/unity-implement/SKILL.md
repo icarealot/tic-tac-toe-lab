@@ -10,9 +10,11 @@ Implement the work described by the user in the spec or tickets.
 
 - The user names a task file, `docs/<feature-slug>/tasks/<NN>-<slug>.md`. If not, stop and ask the user.
 - Confirm the `/unity-cli` skill is available. If not, stop and ask the user.
+- Confirm the connected Editor's `com.unity.pipeline` version matches the project. Run `unity pipeline list` and compare its `pipelineVersion` for this project against the `com.unity.pipeline` version in both `Packages/manifest.json` and `Packages/packages-lock.json`. If they don't all match, stop and ask the user.
 - Confirm the `/ui-ugui` and `/ui-imgui` skills are available when the task involves UI. If not, stop and ask the user.
 - Confirm the repository contains `Assets/` and `ProjectSettings/ProjectVersion.txt`. If not, stop and ask the user.
 - Confirm there is an opened editor by running `unity status`. If there is no opened editor, use `unity open --args "-automated"` to open one.
+- If the task needs an external package not already referenced by the project (e.g. TextMeshPro/`Unity.TextMeshPro`, or any package requiring an `.asmdef` reference addition, a `Packages/manifest.json` change, or an editor-resource import like TMP Essentials), stop and ask the user.
 - Always use `/unity-cli` to recompile after editing C# script and test files (`.cs`).
 - Always use `/unity-cli` to edit any non-code file (e.g. `.unity` scenes, `.prefab`, `.asset` ScriptableObjects, `.meta` files, `ProjectSettings/*`) or any `.asmdef` file. DO NOT edit YAML file directly.
 
