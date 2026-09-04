@@ -28,14 +28,7 @@ A game of tic-tac-toe ends when a line holds three of the same mark, or when the
 
 Chosen option: "the outcome is `InProgress`/`Win`/`Draw`, and the turn freezes when the game ends", because it is the only option in which the winner is a fact the model already holds rather than a second fact that has to be kept consistent with the first.
 
-`BoardModel` gains:
-
-```
-public Outcome Outcome { get; private set; }   // starts as Outcome.InProgress
-
-public void PlaceMark(int row, int column)     // places Turn, evaluates the outcome,
-                                               // and advances Turn only if still InProgress
-```
+`BoardModel` gains a read-only outcome that starts as in progress, and `PlaceMark` grows a third responsibility alongside placing and advancing: it evaluates the outcome, and advances the turn only if the game is still in progress.
 
 `Outcome` is an enum of `InProgress`, `Win`, `Draw`, living at `Runtime/Board/Outcome.cs` — beside the type that exposes it, rather than in a folder of its own, because the folders in this project track concepts that have a view and an outcome does not.
 

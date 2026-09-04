@@ -184,5 +184,5 @@ The state the app enters when a game has ended. It waits, resets the game, and r
 **CoroutineService**:
 The service that runs a coroutine on behalf of a type that is not a `MonoBehaviour`, and hands back a handle for stopping it.
 
-**RoutineHandle**:
+**CoroutineHandle**:
 The handle to a running coroutine. Disposing it stops the coroutine; disposing it twice, or after the coroutine has finished, does nothing.

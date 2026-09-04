@@ -25,11 +25,7 @@ Every cell on the board needs an address, and that address appears in GameObject
 
 Chosen option: "`(row, column)` with row growing downwards", because it matches how a person reads a tic-tac-toe board aloud, which is how the team already talks about it. Cell `(0, 0)` is top-left and `(2, 2)` is bottom-right.
 
-The consequence is that a row number and a world Y coordinate move in opposite directions. The project absorbs this in one place — the board's layout arithmetic negates the row term:
-
-```
-localPosition = origin + (column * step, -row * step, 0)
-```
+The consequence is that a row number and a world Y coordinate move in opposite directions. The project absorbs this in one place — the board's layout arithmetic negates the row term, offsetting a cell from the origin by its column along positive X and by its row along *negative* Y.
 
 To keep that inversion legible, the identifiers in code are named `row` and `column`, never `x` and `y`. A reader who sees `-row * step` in the Y term can tell at a glance that the negation is deliberate; a reader who saw `-x * step` in a Y term would reasonably suspect a bug.
 

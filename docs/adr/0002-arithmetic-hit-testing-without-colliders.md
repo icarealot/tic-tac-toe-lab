@@ -25,14 +25,7 @@ A press has to become a cell coordinate. The board is nine sprites laid out on a
 
 Chosen option: "arithmetic hit-testing owned by `BoardModel`", because it is the only option where the board's geometry exists once and can be verified without pressing play.
 
-The press pipeline is a chain of narrow conversions, each owned by the one type that has the knowledge for it:
-
-```
-InputService   screen point   (raises Pressed on release)
-CameraService  world point    (owns the camera)
-BoardView      local point    (owns the board's transform)
-BoardModel     cell coordinate or nothing
-```
+The press pipeline is a chain of narrow conversions, each owned by the one type that has the knowledge for it. `InputService` reports a press on release, as a screen point. `CameraService`, which owns the camera, turns that into a world point. `BoardView`, which owns the board's transform, turns that into a local point. `BoardModel` resolves the local point to a cell coordinate, or to nothing at all.
 
 `BoardModel` holds the cell size and the spacing as well as the marks, so it is the single authority on where cells are and which one contains a given local point. A press landing in the spacing between two cells resolves to no cell at all, and so does a press outside the board's outer edge.
 

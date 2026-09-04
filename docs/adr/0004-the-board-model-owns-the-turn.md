@@ -26,13 +26,7 @@ Marks must alternate: a press places an X, the next places an O, and so on. Some
 
 Chosen option: "`BoardModel` owns the turn, and `PlaceMark` advances it", because it is the only option in which placing a mark without advancing the turn is not expressible.
 
-`PlaceMark` takes no mark parameter:
-
-```
-public Mark Turn { get; private set; }   // starts as Mark.X
-
-public void PlaceMark(int row, int column)   // places Turn, then advances it
-```
+`PlaceMark` takes no mark parameter. The model exposes the turn as a read-only property that starts at X, and placing takes only a row and a column: it places whichever mark the turn names, then advances it.
 
 A caller cannot place the wrong mark, cannot place without advancing, and cannot advance without placing. The alternation rule is a property of the type rather than a sequence a caller must remember.
 

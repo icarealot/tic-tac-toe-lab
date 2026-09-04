@@ -66,12 +66,7 @@ And when a game has ended, the next one must begin — automatically, one second
 
 Chosen because it is the only option in which placing a mark without advancing the turn is not expressible.
 
-```
-public Mark Turn { get; private set; }   // starts as Mark.X
-
-public void PlaceMark(int row, int column)   // places Turn, evaluates the outcome,
-                                             // and advances Turn only if still InProgress
-```
+The model exposes the turn as a read-only property that starts at X, and `PlaceMark` takes only a row and a column: it places the turn's mark, evaluates the outcome, and advances the turn only if the game is still in progress.
 
 A caller cannot place the wrong mark, cannot place without advancing, and cannot advance without placing. The alternation rule is a property of the type rather than a sequence a caller must remember.
 
@@ -83,9 +78,7 @@ This is paired with the absence of `Mark.Empty`. A cell's emptiness is the absen
 
 Chosen because it is the only option in which the winner is a fact the model already holds rather than a second fact that has to be kept consistent with the first.
 
-```
-public Outcome Outcome { get; private set; }   // starts as Outcome.InProgress
-```
+The model exposes the outcome as a read-only property that starts as in progress.
 
 `Outcome` is an enum of `InProgress`, `Win`, `Draw`, living at `Runtime/Board/Outcome.cs` — beside the type that exposes it, rather than in a folder of its own, because the folders in this project track concepts that have a view and an outcome does not.
 
@@ -101,11 +94,7 @@ Evaluation walks every line — three rows, three columns, both diagonals — ex
 
 **A game is a phase the same objects pass through, not an object lifetime.** One `BoardModel`, one `BoardView` and one `BoardPresenter` are constructed at startup and live for the whole run of the app. Ending a game does not destroy them; it returns them to their starting state.
 
-```
-BoardModel.Reset()        // every cell empty, Turn = Mark.X, Outcome = Outcome.InProgress
-BoardView.Clear()         // every CellView clears the MarkView it spawned; CellViews survive
-BoardPresenter.Reset()    // calls both, in that order
-```
+Resetting the model empties every cell, returns the turn to X and the outcome to in progress. Clearing the view has every cell view clear the mark view it spawned, the cell views themselves surviving untouched. Resetting the presenter calls both, in that order.
 
 The alternative — a fresh `BoardModel` and a fresh `BoardPresenter` per game — has one genuine advantage this design gives up: a newly constructed object cannot forget to clear a field, whereas `Reset()` can be left behind when a fifth piece of state is added to `BoardModel`. That risk is accepted and named below, because recreation costs more than it saves here. The nine `CellView`s and the `BoardView` are pure scaffolding that no game ever changes, so destroying and re-instantiating them every game is work done to produce an object identical to the one thrown away — and every subscription in the app, the presenter's to `IInputService.Pressed` and the session's to the presenter, would have to be torn down and rebuilt on the same cadence.
 
@@ -113,26 +102,13 @@ The alternative — a fresh `BoardModel` and a fresh `BoardPresenter` per game �
 
 ### `BoardSession` owns the board, and a two-state machine drives it
 
-`BoardSession` is constructed in `Bootstrap`, holds the `BoardModel`, `BoardView` and `BoardPresenter`, and is the only thing the states talk to:
-
-```
-public event Action GameEnded;   // forwarded from BoardPresenter.GameEnded
-public void ResetGame();         // delegates to BoardPresenter.Reset()
-```
+`BoardSession` is constructed in `Bootstrap`, holds the `BoardModel`, `BoardView` and `BoardPresenter`, and is the only thing the states talk to. It forwards the presenter's ending as a `GameEnded` event of its own, and exposes a `Reset` that delegates to `BoardPresenter.Reset`.
 
 It is named for the board and not for the game deliberately. Its boundary is one board and the three types that make it work; a scoreboard, a round counter or an AI opponent are not board things, and must not be added to it on the strength of its name.
 
-`ResetGame` delegates rather than resetting the parts itself, so `BoardPresenter` remains the only type that both reads the model and commands the view, and only one type knows that a board is a model plus a view.
+`Reset` delegates rather than resetting the parts itself, so `BoardPresenter` remains the only type that both reads the model and commands the view, and only one type knows that a board is a model plus a view.
 
-The app state machine is introduced with exactly two states, not the full `Loading → MainMenu → Gameplay → GameComplete` sequence the app will eventually need:
-
-```
-IState { void Enter(); void Exit(); }
-StateMachine       — Dictionary<Type, IState>; Enter<TState>() exits the current state, then enters the requested one
-GameplayState      — subscribes to BoardSession.GameEnded on Enter, unsubscribes on Exit,
-                     and enters GameCompleteState when it fires
-GameCompleteState  — runs a routine on Enter; disposes it on Exit
-```
+The app state machine is introduced with exactly two states, not the full `Loading → MainMenu → Gameplay → GameComplete` sequence the app will eventually need. `IAppState` is entered and left. `AppStateMachine` holds its states by type and makes one current, leaving the state it is in before entering the next. `GameplayState` subscribes to the session's ending on entry, drops the subscription on leaving, and enters `GameCompleteState` when it fires. `GameCompleteState` runs a routine on entry and disposes it on leaving.
 
 `Loading` and `MainMenu` are not built. They are still expected, but a state that does nothing is a box drawn to match a diagram. They land in `Runtime/State/` when they have something to do, without changing anything decided here.
 
@@ -140,34 +116,19 @@ GameCompleteState  — runs a routine on Enter; disposes it on Exit
 
 ### The wait is an injected coroutine service
 
-```
-ICoroutineService { IDisposable Run(IEnumerator routine); }
-```
+`CoroutineService` is a `MonoBehaviour` obtained through `IFactoryService`, and `Run` returns a `CoroutineHandle` — its own type, in its own file, holding the host `MonoBehaviour` and the `Coroutine` so it can stop it on `Dispose`. The handle is what makes cancellation a first-class operation: `GameCompleteState.Leave()` disposes it, and a test can assert that it was disposed. Unity's own `Coroutine` type has no public constructor, so a faked service could only ever return `null` from `Run`, and "the pending reset was cancelled" would be an assertion against a null.
 
-`CoroutineService` is a `MonoBehaviour` obtained through `IFactoryService`, and `Run` returns a `RoutineHandle` — its own type, in its own file, holding the host `MonoBehaviour` and the `Coroutine` so it can stop it on `Dispose`. The handle is what makes cancellation a first-class operation: `GameCompleteState.Exit()` disposes it, and a test can assert that it was disposed. Unity's own `Coroutine` type has no public constructor, so a faked service could only ever return `null` from `Run`, and "the pending reset was cancelled" would be an assertion against a null.
-
-The restart itself:
-
-```
-private const float RESET_DELAY = 1f;
-
-private IEnumerator IE_ResetGame()
-{
-    yield return new WaitForSeconds(RESET_DELAY);
-    _boardSession.ResetGame();
-    _stateMachine.Enter<GameplayState>();
-}
-```
+The restart itself waits for the pause, resets the session, and only then changes back to the gameplay state.
 
 `WaitForSeconds` rather than `WaitForSecondsRealtime`, so a future pause that sets `Time.timeScale = 0` freezes the pending restart along with everything else. The constant lives on `GameCompleteState`, next to the only code that reads it, as `DIMENSION` and `CELL_SIZE` live on `BoardModel`.
 
-`ResetGame()` is called at the *end* of the routine, immediately before returning to `GameplayState`, rather than on entering `GameplayState`. The finished board therefore stays on screen for the whole second, and — more importantly — `GameplayState` stays a state that can be entered without destroying the game in progress, which a future `Paused` or `Settings` state will need.
+`Reset()` is called at the *end* of the routine, immediately before returning to `GameplayState`, rather than on entering `GameplayState`. The finished board therefore stays on screen for the whole second, and — more importantly — `GameplayState` stays a state that can be entered without destroying the game in progress, which a future `Paused` or `Settings` state will need.
 
 The service is injected rather than the state calling `Awaitable.WaitForSecondsAsync` directly, because every other collaborator that touches the world outside the model — input, camera, logging, instantiation — is already behind an interface for exactly this reason. A fake service captures the routine and pumps `MoveNext()`; the yielded `WaitForSeconds` is ignored, so the whole restart cycle becomes an edit-mode test that runs in microseconds.
 
 ### Teardown is explicit
 
-`StateMachine` gains a disposal that calls `Exit()` on the current state, so a pending routine is stopped and a live subscription dropped. `BoardSession.Dispose()` unsubscribes from and disposes the presenter. `Bootstrap.OnDestroy` disposes the machine, the session and the input service.
+`AppStateMachine` gains a disposal that calls `Leave()` on the current state, so a pending routine is stopped and a live subscription dropped. `BoardSession.Dispose()` unsubscribes from and disposes the presenter. `Bootstrap.OnDestroy` disposes the machine, the session and the input service.
 
 Destroying the `CoroutineService` game object would stop its coroutines anyway, and every subscription here is between objects that die together — so today this code is belt and braces. It is written anyway because "nothing leaks" is currently true by accident of destruction order, and that accident expires the first time a scene is unloaded while a board session is meant to survive it.
 
@@ -180,7 +141,7 @@ Destroying the `CoroutineService` game object would stop its coroutines anyway, 
 - Alternation, wins, draws and the freeze are all tested in `EditModeTests` against the model alone, with no fakes and no scene.
 - The line check being a loop over `Dimension` keeps `DIMENSION` an honest constant — the model's geometry and its rules would both survive a change to it.
 - Restarting allocates nothing but the marks of the next game. No cell views are destroyed, no subscriptions are rebuilt, and no object graph is re-wired between games.
-- The planned replay button is additive rather than a second restart path: it calls the same `BoardSession.ResetGame()`, and because `GameCompleteState.Exit` disposes the pending routine, pressing it during the delay cannot produce two restarts.
+- The planned replay button is additive rather than a second restart path: it calls the same `BoardSession.Reset()`, and because `GameCompleteState.Leave` disposes the pending routine, pressing it during the delay cannot produce two restarts.
 - The states are small enough to test individually with a fake session and a fake coroutine service, and the whole one-second cycle is asserted without a second passing.
 - `ICoroutineService` is a general-purpose seam, not a delay: the first mark-placement animation can use it without redesigning anything.
 
@@ -283,7 +244,7 @@ The board's model, view and presenter are constructed once and returned to their
 
 - Good, because nothing is allocated or destroyed to produce an object identical to the one thrown away.
 - Good, because no subscription is torn down and rebuilt on a per-game cadence.
-- Good, because the restart is one call, `ResetGame()`, which a replay button can call identically.
+- Good, because the restart is one call, `Reset()`, which a replay button can call identically.
 - Good, because `Bootstrap`'s wiring runs exactly once and is therefore exercised exactly once.
 - Bad, because `Reset()` must be maintained in step with the model's fields, and a forgotten field leaks state from one game into the next.
 - Bad, because "fresh" becomes a claim the code makes rather than a fact construction guarantees.

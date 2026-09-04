@@ -30,23 +30,7 @@ Chosen option: "states own navigation; `UIService` is mechanism", because it is 
 
 `UIService` creates, shows, hides, stacks and destroys windows and does nothing else. It never listens to input, never decides what back means, and never closes a window on its own. Its surface is imperative and total: show a panel, show a popup, try to close the top popup, try to close the top panel, close all popups, and ask whether a popup is up.
 
-`IAppState` gains `Back()`. `AppStateMachine` subscribes to `IInputService.BackPressed` and forwards it to whichever state is current. A state then composes the service's mechanism into the meaning it wants:
-
-```csharp
-// GameplayState — back asks before abandoning the game
-public void Back()
-{
-    if (_uiService.TryClosePopup())
-    {
-        return;
-    }
-
-    _uiService.ShowPopup<ConfirmQuitPopup>(popup => popup.Setup(
-        "Quit the game?",
-        onYes: GoToMenu,
-        onNo: CloseTopPopup));
-}
-```
+`IAppState` gains `Back()`. `AppStateMachine` subscribes to `IInputService.BackPressed` and forwards it to whichever state is current. A state then composes the service's mechanism into the meaning it wants: gameplay's `Back()` closes the top popup if one is up, and otherwise raises the confirm-quit popup, configured with what answering yes and answering no should each do.
 
 `GameplayPanel` is never popped by back, because `GameplayState` simply never calls `TryClosePanel`.
 
