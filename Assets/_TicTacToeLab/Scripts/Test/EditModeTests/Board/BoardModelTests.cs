@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -100,6 +101,36 @@ namespace TicTacToeLab.EditModeTests
             bool resolved = boardModel.TryResolveCell(center + new Vector3(0.51f, 0.51f, 0f), out _, out _);
 
             Assert.That(resolved, Is.False);
+        }
+
+        [Test]
+        public void The_model_delivers_exactly_one_placement_per_cell_coordinate_at_that_cells_local_point()
+        {
+            BoardModel boardModel = new();
+
+            IReadOnlyList<CellPlacement> cellPlacements = boardModel.GetCellPlacements();
+
+            Assert.That(cellPlacements, Has.Count.EqualTo(9));
+
+            for (int row = 0; row < boardModel.Dimension; row++)
+            {
+                for (int column = 0; column < boardModel.Dimension; column++)
+                {
+                    bool found = false;
+                    foreach (CellPlacement placement in cellPlacements)
+                    {
+                        if (placement.Row != row || placement.Column != column)
+                        {
+                            continue;
+                        }
+
+                        found = true;
+                        Assert.That(placement.LocalPoint, Is.EqualTo(boardModel.GetCellLocalPoint(row, column)));
+                    }
+
+                    Assert.That(found, Is.True, $"No placement was delivered for cell ({row}, {column}).");
+                }
+            }
         }
 
         [Test]

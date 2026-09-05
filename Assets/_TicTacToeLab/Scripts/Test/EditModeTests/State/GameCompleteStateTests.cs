@@ -20,7 +20,7 @@ namespace TicTacToeLab.EditModeTests
             _fakeBoardView = new FakeBoardView();
             _fakeInputService = new FakeInputService();
             BoardPresenter boardPresenter = new(
-                _boardModel, _fakeBoardView, factoryService: null,
+                _boardModel, _fakeBoardView,
                 _fakeInputService, new FakeCameraService(), new FakeLogService());
             _boardSession = new BoardSession(boardPresenter);
             _fakeCoroutineService = new FakeCoroutineService();

@@ -12,7 +12,7 @@ namespace TicTacToeLab.EditModeTests
             FakeInputService inputService)
         {
             BoardPresenter boardPresenter = new(
-                boardModel, boardView, factoryService: null,
+                boardModel, boardView,
                 inputService, new FakeCameraService(), new FakeLogService());
             return new BoardSession(boardPresenter);
         }

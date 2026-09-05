@@ -6,17 +6,9 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class FakeBoardView : IBoardView
     {
-        public int Dimension { get; private set; }
-        public IReadOnlyList<CellPlacement> Placements { get; private set; }
         public List<(int Row, int Column, Mark Mark)> ShownMarks { get; } = new();
         public bool WasCleared { get; private set; }
         public int ClearCount { get; private set; }
-
-        public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
-        {
-            Dimension = dimension;
-            Placements = placements;
-        }
 
         public Vector3 ToLocalPoint(Vector3 worldPoint)
         {

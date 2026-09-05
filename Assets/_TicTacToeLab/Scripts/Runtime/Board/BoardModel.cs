@@ -13,12 +13,25 @@ namespace TicTacToeLab.Runtime
         private const float CENTER_OFFSET = (DIMENSION - 1) * CELL_STEP * 0.5f;
 
         public int Dimension => DIMENSION;
-
         public Mark Turn { get; private set; } = Mark.X;
-
         public Outcome Outcome { get; private set; } = Outcome.InProgress;
 
         private readonly Mark?[,] _marks = new Mark?[DIMENSION, DIMENSION];
+
+        public IReadOnlyList<CellPlacement> GetCellPlacements()
+        {
+            List<CellPlacement> placements = new(DIMENSION * DIMENSION);
+
+            for (int row = 0; row < DIMENSION; row++)
+            {
+                for (int column = 0; column < DIMENSION; column++)
+                {
+                    placements.Add(new CellPlacement(row, column, GetCellLocalPoint(row, column)));
+                }
+            }
+
+            return placements;
+        }
 
         public Vector3 GetCellLocalPoint(int row, int column)
         {

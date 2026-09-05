@@ -15,38 +15,8 @@ namespace TicTacToeLab.EditModeTests
             FakeLogService logService)
         {
             return new BoardPresenter(
-                boardModel, boardView, factoryService: null,
+                boardModel, boardView,
                 inputService, new FakeCameraService(), logService);
-        }
-
-        [Test]
-        public void Initializing_the_presenter_delivers_exactly_nine_placements_one_per_cell_coordinate()
-        {
-            BoardModel boardModel = new();
-            FakeBoardView fakeBoardView = new();
-            _ = CreatePresenter(boardModel, fakeBoardView, new FakeInputService(), new FakeLogService());
-
-            Assert.That(fakeBoardView.Placements, Has.Count.EqualTo(9));
-
-            for (int row = 0; row < boardModel.Dimension; row++)
-            {
-                for (int column = 0; column < boardModel.Dimension; column++)
-                {
-                    bool found = false;
-                    foreach (CellPlacement placement in fakeBoardView.Placements)
-                    {
-                        if (placement.Row != row || placement.Column != column)
-                        {
-                            continue;
-                        }
-
-                        found = true;
-                        Assert.That(placement.LocalPoint, Is.EqualTo(boardModel.GetCellLocalPoint(row, column)));
-                    }
-
-                    Assert.That(found, Is.True, $"No placement was delivered for cell ({row}, {column}).");
-                }
-            }
         }
 
         [Test]

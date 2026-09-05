@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -12,16 +11,7 @@ namespace TicTacToeLab.EditModeTests
             GameObject gameObject = new("Board");
             BoardView boardView = gameObject.AddComponent<BoardView>();
 
-            List<CellPlacement> placements = new();
-            for (int row = 0; row < boardModel.Dimension; row++)
-            {
-                for (int column = 0; column < boardModel.Dimension; column++)
-                {
-                    placements.Add(new CellPlacement(row, column, boardModel.GetCellLocalPoint(row, column)));
-                }
-            }
-
-            boardView.Construct(factoryService, boardModel.Dimension, placements);
+            boardView.Construct(factoryService, boardModel.Dimension, boardModel.GetCellPlacements());
             return boardView;
         }
 
