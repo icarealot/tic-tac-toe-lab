@@ -1,4 +1,4 @@
-# The states decide what navigation means; the UI service only shows and hides
+# States decide what navigation means; UIService only performs it
 
 ## Status
 
@@ -6,83 +6,70 @@ Accepted
 
 ## Context and Problem Statement
 
-The project is growing a UI service that shows, hides and stacks windows, and the app targets mobile, where a hardware back gesture must do something sensible at every moment. Something has to hold the stacks, something has to decide what back means, and something has to stop a press landing on the board while a window covers it.
-
-The app already has an `AppStateMachine` in which "exactly one state is current at a time, and a state is entered and left rather than created and destroyed" — structurally the same shape as a window stack, minus the stack and minus back. Adding a UI service that also knows what the app is doing would create a second authority on the same question. Which of the two decides?
+The app has user-interface stacks and mobile back input. Something must hold windows, decide what back means in the current situation and prevent board interaction while blocking user interface is present. Should navigation meaning belong to app states, UIService or a unified state-and-window system?
 
 ## Decision Drivers
 
-- The state machine is already the app's answer to "what is the app doing now?", and `CONTEXT.md` defines a **State** as "one phase of the app". A second thing claiming that role would make the answer ambiguous.
-- Back is not one behaviour. Back during a game should ask before abandoning it; back on a settings popup should just close it; back at the root should quit the app. Any rule fixed inside a service is wrong for at least one of these.
-- A popup over gameplay is not a new phase of the app. The game is still in `GameplayState` — it is merely covered — so window visibility and app phase are genuinely different things and cannot be merged without lying about one of them.
-- [ADR 0002](./0002-arithmetic-hit-testing-without-colliders.md) resolves presses arithmetically with no `EventSystem` in the play path, and explicitly records that "the first overlay this project grows will need an explicit guard". That guard has to be placed somewhere, and its placement is part of this decision.
-- The existing services — `CoroutineService`, `ComponentFactoryService`, `CameraService`, `InputService`, `LogService` — are uniformly mechanism. None of them decides anything about the app.
+- The state machine is already the authority on what the app is doing.
+- Back means different things in different app phases.
+- A popup over gameplay does not replace gameplay as the current phase.
+- Arithmetic board hit-testing does not receive automatic user-interface blocking.
+- Services in this project provide mechanisms rather than app policy.
 
 ## Considered Options
 
-- States own navigation; `UIService` is mechanism
-- `UIService` owns navigation; states cover game flow only
-- Windows are states; the state machine grows a stack and a back handler
+- States own navigation meaning; UIService provides mechanism
+- UIService owns navigation policy
+- Windows become app states
 
 ## Decision Outcome
 
-Chosen option: "states own navigation; `UIService` is mechanism", because it is the only option that keeps one authority on what the app is doing while still letting each phase of the app give back a different meaning.
+Chosen option: “states own navigation meaning; UIService provides mechanism,” because it keeps one authority on app phase while allowing each phase to interpret back differently.
 
-`UIService` creates, shows, hides, stacks and destroys windows and does nothing else. It never listens to input, never decides what back means, and never closes a window on its own. Its surface is imperative and total: show a panel, show a popup, try to close the top popup, try to close the top panel, close all popups, and ask whether a popup is up.
+UIService shows, hides, stacks and returns windows when instructed. It does not listen for back input or decide why a window should close.
 
-`IAppState` gains `Back()`. `AppStateMachine` subscribes to `IInputService.BackPressed` and forwards it to whichever state is current. A state then composes the service's mechanism into the meaning it wants: gameplay's `Back()` closes the top popup if one is up, and otherwise raises the confirm-quit popup, configured with what answering yes and answering no should each do.
+The state machine forwards back input to the current state. Gameplay closes an existing popup first; without a popup, it opens a quit confirmation. The gameplay panel itself is not removed by back unless gameplay policy explicitly chooses to do so.
 
-`GameplayPanel` is never popped by back, because `GameplayState` simply never calls `TryClosePanel`.
+Blocking user interface is paired with disabling gameplay input. User-interface input remains active, so buttons still work while board presses stop. The state that opens blocking user interface also owns restoring input and cleaning up its windows when leaving.
 
-The same principle places ADR 0002's missing guard. `IInputService` gains `Enable()` and `Disable()` over the `Player` action map, and the state that puts up blocking UI disables gameplay input for as long as it is up. Because uGUI's `InputSystemUIInputModule` drives itself from its own action set, disabling `Player` stops board presses while leaving buttons fully working. `BoardPresenter` does not change and gains no knowledge of the UI.
-
-Popups report their outcome through callbacks handed to them at configure time; they never call the UI service themselves. A popup that could close itself would be navigating, and navigation belongs to the state.
+Popups report choices through callbacks supplied by the state. They do not navigate independently.
 
 ### Positive Consequences
 
-- There is exactly one authority on what the app is doing, and it is the one that was already there. `CONTEXT.md`'s definition of **State** survives intact.
-- Back is expressive at no cost. Intercepting it, ignoring it, or letting it pop are all ordinary code in the one place that knows which is right.
-- ADR 0002's outstanding guard is closed, and closed without coupling: the board keeps resolving presses arithmetically and simply stops being told about them, so `BoardPresenter` and `BoardPresenterTests` are untouched.
-- Disabling the action map is robust in a way an `EventSystem.IsPointerOverGameObject` check is not — no pointer-id subtleties under touch, and no leak through a popup's transparent margins.
-- `UIService` stays a plain class with no input dependency, so its stack rules are testable in EditMode with no scene.
+- App phase has one authority.
+- Back can have a meaning appropriate to each state.
+- Board interaction remains unaware of user-interface concerns.
+- UIService remains a mechanism whose stack rules are independently testable.
+- Popups do not acquire hidden navigation authority.
 
 ### Negative Consequences
 
-- Every state implements `Back()`, including states with nothing to say. A default interface implementation reduces this to a formality but does not remove it.
-- Back behaviour is distributed across states rather than readable in one file. Answering "what does back do here?" means knowing which state is current.
-- A state that forgets to re-enable gameplay input leaves the board dead with no visible cause. The symptom — presses silently doing nothing — is the hardest kind to trace, and nothing detects it.
-- Whether a state disables input is a per-state judgement, so two states can reasonably disagree about the same situation and neither is wrong by the rules.
-- A state that shows a window and forgets to clean up on `Leave()` leaks it into the next phase. Nothing enforces the pairing.
+- Back behavior is distributed across states.
+- Every state must define or inherit a back response.
+- Forgetting to restore gameplay input can leave the board unresponsive.
+- Forgetting window cleanup can leak user interface into the next state.
+- Correct cleanup depends on state discipline rather than structural enforcement.
 
 ## Pros and Cons of the Options
 
-### States own navigation; `UIService` is mechanism
+### States own navigation meaning
 
-The state machine forwards back to the current state, which calls mechanism on the service. The service holds the stacks and knows nothing about why.
+- Good, because current app phase remains authoritative.
+- Good, because different states can interpret back differently.
+- Good, because UIService stays a mechanism.
+- Bad, because navigation behavior is not centralized.
+- Bad, because input and window cleanup require discipline.
 
-- Good, because the app has one authority on its own phase.
-- Good, because each phase can give back a different meaning, which is what mobile back actually requires.
-- Good, because it matches every other service in the project, all of which are mechanism.
-- Good, because it places ADR 0002's guard without coupling the board to the UI.
-- Bad, because back behaviour is spread across states rather than centralised.
-- Bad, because input re-enabling is a discipline with no enforcement.
+### UIService owns navigation policy
 
-### `UIService` owns navigation; states cover game flow only
+- Good, because back behavior is centralized.
+- Good, because states contain less navigation logic.
+- Bad, because one universal rule cannot express every state’s intent.
+- Bad, because exceptions would make UIService a second authority on app phase.
 
-Back is handled inside the service: close the top popup, else pop the top panel, else quit. States are untouched.
+### Windows become app states
 
-- Good, because back is one rule in one place, easy to read and easy to test.
-- Good, because states need no `Back()` and no navigation code at all.
-- Bad, because "back always pops" is wrong for gameplay, where abandoning a game unconfirmed is a worse outcome than any implementation cost.
-- Bad, because the first exception to the rule pushes state-awareness into the service, at which point there are two authorities anyway and one of them is hidden.
-- Bad, because the service would have to listen to input, making it the only service in the project that observes the world rather than being told about it.
-
-### Windows are states; the state machine grows a stack and a back handler
-
-Every window is an `IAppState`; the state machine gains a stack and back semantics. One authority, one type.
-
-- Good, because there is only one concept and one stack to reason about.
-- Good, because back is uniform and defined once.
-- Bad, because a pause popup over gameplay is not a new phase — the game is still in `GameplayState`, so the merge misrepresents what is happening.
-- Bad, because it forces a state transition for every visual change, including ones with no phase meaning at all.
-- Bad, because `CONTEXT.md` would have to redefine **State** to mean two different things, which is exactly the ambiguity the glossary exists to prevent.
+- Good, because one structure controls both visibility and back.
+- Bad, because a popup does not actually replace the app phase beneath it.
+- Bad, because purely visual changes would become state transitions.
+- Bad, because the meaning of State would become ambiguous.

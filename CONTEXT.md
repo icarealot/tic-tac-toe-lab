@@ -158,13 +158,9 @@ _Avoid_: Screen, mode, phase, scene
 A suffix marking a type that provides a mechanism to the rest of the app rather than owning domain state. The project uses it for camera, input, logging, coroutine, UI and factory collaborators. A service hides an external system or shared operation behind an interface; it does what it is asked and does not decide what the app means.
 _Avoid_: Manager, helper, utility
 
-**ComponentFactoryService**:
-The factory for scene components and spawned views. It creates and returns Unity components from the prefab registry, while leaving window creation to **UIFactoryService**.
-_Avoid_: FactoryService
-
-**UIFactoryService**:
-The factory for windows. It creates and returns panels and popups by interface, and puts each one under the layer belonging to its kind. It is distinct from **ComponentFactoryService**, which serves scene components and spawned views.
-_Avoid_: WindowFactoryService
+**FactoryService**:
+The single service that instantiates and destroys runtime Unity objects from the prefab registry. It does not configure the objects it creates.
+_Avoid_: ComponentFactoryService, UIFactoryService, WindowFactoryService
 
 **BoardModel**:
 The state of the board — the mark in each cell or its emptiness, whose turn it is, and the outcome of the game — together with the board's dimensions, the cell placements derived from those dimensions, and the geometry that resolves a local point to the cell containing it. It can be reset, which returns all three pieces of game state to their starting values. See [ADR 0006](./docs/adr/0006-a-game-is-reset-rather-than-recreated.md).

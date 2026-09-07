@@ -1,4 +1,4 @@
-# Cells are addressed as (row, column) with row growing downwards
+# Cells are addressed as row and column, with rows growing downward
 
 ## Status
 
@@ -6,67 +6,59 @@ Accepted
 
 ## Context and Problem Statement
 
-Every cell on the board needs an address, and that address appears in GameObject names, in position arithmetic, and in the signature of any future lookup API. Unity's world Y axis grows *upwards*, but people read a tic-tac-toe board top-to-bottom, so the top-left cell is naturally "the first one". Which convention should the project commit to, and in which order are the two numbers written?
+Every cell needs a stable address shared by conversation, board layout and game rules. Unity’s vertical world axis grows upward, while people naturally read a tic-tac-toe board from top to bottom. Which convention should define cell addresses?
 
 ## Decision Drivers
 
-- The board is read and discussed by humans top-to-bottom, left-to-right.
-- Cell addresses appear in the Unity Hierarchy, where they must be scannable against what is visible in the Scene view.
-- Position arithmetic must be readable by someone who did not write it, in a codebase where the Y axis grows the other way.
-- The convention is referenced by every future feature that touches a cell (input, marks, win detection), so churn is expensive.
+- The board is read and discussed top-to-bottom and left-to-right.
+- Addresses must be easy to compare with the visible board.
+- The vertical-axis inversion should be explicit and confined.
+- Every future feature touching a cell will depend on this convention, making later reversal expensive.
 
 ## Considered Options
 
-- `(row, column)` with row growing downwards from the top
-- `(x, y)` with y growing upwards, matching Unity world axes
-- A single flat index `0..8`
+- Row and column, with rows growing downward from the top
+- Horizontal and vertical coordinates matching Unity world axes
+- One flat cell number
 
 ## Decision Outcome
 
-Chosen option: "`(row, column)` with row growing downwards", because it matches how a person reads a tic-tac-toe board aloud, which is how the team already talks about it. Cell `(0, 0)` is top-left and `(2, 2)` is bottom-right.
+Chosen option: “row and column, with rows growing downward from the top,” because it matches how people read and describe the board.
 
-The consequence is that a row number and a world Y coordinate move in opposite directions. The project absorbs this in one place — the board's layout arithmetic negates the row term, offsetting a cell from the origin by its column along positive X and by its row along *negative* Y.
+The top-left cell is row zero, column zero. The bottom-right cell is row two, column two. Row is always spoken and written before column.
 
-To keep that inversion legible, the identifiers in code are named `row` and `column`, never `x` and `y`. A reader who sees `-row * step` in the Y term can tell at a glance that the negation is deliberate; a reader who saw `-x * step` in a Y term would reasonably suspect a bug.
+Rows and world vertical coordinates therefore grow in opposite directions. The board’s geometry owns that inversion so the rest of the project can use one consistent cell-address language.
 
 ### Positive Consequences
 
-- Spoken vocabulary, Hierarchy names, and code identifiers all agree.
-- Reading the Hierarchy top-to-bottom matches reading the board top-to-bottom.
-- Future APIs take `(int row, int column)`, an order nobody has to look up.
-- The axis inversion is confined to a single expression rather than being spread across the codebase.
+- Spoken vocabulary and visible board order agree.
+- The center and corners have immediately understandable addresses.
+- Future rules can refer to rows and columns without translating from another convention.
+- The axis inversion has one conceptual home.
 
 ### Negative Consequences
 
-- Row-to-world-Y is inverted, which will surprise anyone who assumes the first coordinate is horizontal.
-- The convention disagrees with Unity's own `Vector2`/`Vector3` ordering, so converting between a cell coordinate and a world position always involves a swap as well as a negation.
-- Reversing the decision later means touching every cell name, every position expression, and every lookup call site.
+- The first coordinate is vertical rather than horizontal.
+- Translating between a cell address and a Unity point requires both an ordering change and a vertical inversion.
+- Reversing the convention later would affect every feature that addresses a cell.
 
 ## Pros and Cons of the Options
 
-### `(row, column)` with row growing downwards
+### Row and column, with rows growing downward
 
-The convention used by matrices, spreadsheets, and most board-game notation.
+- Good, because it matches reading order and common matrix language.
+- Good, because the top-left origin is familiar for grids.
+- Bad, because it disagrees with Unity’s upward vertical axis.
 
-- Good, because it matches how people read and describe the board.
-- Good, because row-major spawn order (left to right, top to bottom) falls out naturally.
-- Good, because `(0, 0)` being top-left is the near-universal expectation for a grid.
-- Bad, because the first coordinate is vertical, which is the opposite of `Vector2`.
-- Bad, because row and world Y grow in opposite directions.
+### Coordinates matching Unity world axes
 
-### `(x, y)` with y growing upwards
+- Good, because spatial conversion is direct.
+- Good, because coordinate order matches Unity points.
+- Bad, because the board would be addressed bottom-to-top.
+- Bad, because conversation about rows would require translation.
 
-Matching Unity's world axes exactly, so a cell coordinate scales directly into a position.
+### One flat cell number
 
-- Good, because position arithmetic needs no negation at all.
-- Good, because it agrees with `Vector2`/`Vector3` ordering.
-- Bad, because `(0, 0)` becomes the *bottom*-left cell, which contradicts how the board is read.
-- Bad, because the Hierarchy would list cells bottom-up relative to the Scene view.
-
-### A single flat index `0..8`
-
-Cells numbered sequentially in reading order.
-
-- Good, because it is the most compact form and maps directly onto a flat array.
-- Bad, because `4` carries no visible meaning, where `(1, 1)` obviously names the center.
-- Bad, because win detection has to reconstruct rows and columns via division and modulo.
+- Good, because it is compact.
+- Bad, because a number does not visibly communicate a row and column.
+- Bad, because board rules would repeatedly reconstruct two-dimensional relationships.
