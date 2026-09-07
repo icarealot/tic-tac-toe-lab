@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -19,6 +20,17 @@ namespace TicTacToeLab.Runtime
             coroutine = StartCoroutine(IE_TrackCompletion(routine, handle));
 
             return handle;
+        }
+
+        public CoroutineHandle RunAfter(float delaySeconds, Action callback)
+        {
+            return Run(IE_RunAfter(delaySeconds, callback));
+        }
+
+        private IEnumerator IE_RunAfter(float delaySeconds, Action callback)
+        {
+            yield return new WaitForSeconds(delaySeconds);
+            callback();
         }
 
         private IEnumerator IE_TrackCompletion(IEnumerator routine, CoroutineHandle handle)

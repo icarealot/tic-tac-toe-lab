@@ -1,6 +1,3 @@
-using System.Collections;
-using UnityEngine;
-
 namespace TicTacToeLab.Runtime
 {
     public sealed class GameCompleteState : IAppState
@@ -22,7 +19,7 @@ namespace TicTacToeLab.Runtime
 
         public void Enter()
         {
-            _pendingReset = _coroutineService.Run(IE_ResetAfterPause());
+            _pendingReset = _coroutineService.RunAfter(RESET_PAUSE_SECONDS, ResetAfterPause);
         }
 
         public void Leave()
@@ -31,10 +28,8 @@ namespace TicTacToeLab.Runtime
             _pendingReset = null;
         }
 
-        private IEnumerator IE_ResetAfterPause()
+        private void ResetAfterPause()
         {
-            yield return new WaitForSeconds(RESET_PAUSE_SECONDS);
-
             _boardSession.Reset();
             _stateMachine.ChangeState<GameplayState>();
         }

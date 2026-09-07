@@ -160,7 +160,7 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(() =>
             {
                 BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
-                _fakeCoroutineService.PumpToCompletion();
+                _fakeCoroutineService.FireScheduledCallback();
             }, Throws.Nothing);
 
             Assert.That(_uiService.HasPopup, Is.False);

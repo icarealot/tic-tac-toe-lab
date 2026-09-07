@@ -33,20 +33,21 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Entering_the_state_starts_a_routine_and_does_not_reset_yet()
+        public void Entering_the_state_schedules_a_reset_after_one_second_without_resetting_yet()
         {
             _gameCompleteState.Enter();
 
-            Assert.That(_fakeCoroutineService.HasCapturedRoutine, Is.True);
+            Assert.That(_fakeCoroutineService.HasScheduledCallback, Is.True);
+            Assert.That(_fakeCoroutineService.ScheduledDelaySeconds, Is.EqualTo(1f));
             Assert.That(_fakeBoardView.WasCleared, Is.False);
         }
 
         [Test]
-        public void Pumping_the_routine_to_completion_resets_the_game_and_then_returns_to_gameplay()
+        public void Firing_the_scheduled_reset_resets_the_game_and_then_returns_to_gameplay()
         {
             _gameCompleteState.Enter();
 
-            _fakeCoroutineService.PumpToCompletion();
+            _fakeCoroutineService.FireScheduledCallback();
 
             Assert.That(_fakeBoardView.WasCleared, Is.True);
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
@@ -72,7 +73,7 @@ namespace TicTacToeLab.EditModeTests
             _gameCompleteState.Enter();
             _gameCompleteState.Leave();
 
-            _fakeCoroutineService.PumpToCompletion();
+            _fakeCoroutineService.FireScheduledCallback();
 
             Assert.That(_fakeBoardView.WasCleared, Is.False);
         }

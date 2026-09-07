@@ -172,7 +172,7 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.ChangeState<GameplayState>();
 
             BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
-            _fakeCoroutineService.PumpToCompletion();
+            _fakeCoroutineService.FireScheduledCallback();
 
             Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
@@ -185,11 +185,11 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.ChangeState<GameplayState>();
 
             BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
-            _fakeCoroutineService.PumpToCompletion();
+            _fakeCoroutineService.FireScheduledCallback();
             BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
-            _fakeCoroutineService.PumpToCompletion();
+            _fakeCoroutineService.FireScheduledCallback();
             BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
-            _fakeCoroutineService.PumpToCompletion();
+            _fakeCoroutineService.FireScheduledCallback();
 
             // An extra, leftover subscription from a prior game would clear the board more than once per ending.
             Assert.That(_fakeBoardView.ClearCount, Is.EqualTo(3));
@@ -203,7 +203,7 @@ namespace TicTacToeLab.EditModeTests
             for (int i = 0; i < 5; i++)
             {
                 BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
-                _fakeCoroutineService.PumpToCompletion();
+                _fakeCoroutineService.FireScheduledCallback();
             }
 
             _boardSession.Dispose();

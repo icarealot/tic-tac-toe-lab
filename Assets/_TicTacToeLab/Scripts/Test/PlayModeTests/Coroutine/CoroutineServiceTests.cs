@@ -31,6 +31,23 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [UnityTest]
+        public IEnumerator A_callback_scheduled_after_a_delay_runs_across_real_frames()
+        {
+            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+
+            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
+            bool callbackRan = false;
+
+            _ = _coroutineService.RunAfter(0.1f, () => callbackRan = true);
+            Assert.That(callbackRan, Is.False);
+
+            yield return new UnityEngine.WaitForSeconds(0.2f);
+
+            Assert.That(callbackRan, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator Disposing_the_handle_before_the_routine_completes_stops_it()
         {
             yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
