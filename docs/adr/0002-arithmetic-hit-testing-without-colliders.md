@@ -74,7 +74,7 @@ Each `CellView` carries a `BoxCollider2D` and implements `IPointerClickHandler`;
 
 `InputService` converts the press to a world point and calls `Physics2D.OverlapPoint` to find the cell.
 
-- Good, because input stays in one service, matching `ILogService` and `IFactoryService`.
+- Good, because input stays in one service, matching `ILogService` and `IComponentFactoryService`.
 - Good, because colliders can be shaped independently of sprites.
 - Bad, because it keeps the colliders and their duplicated geometry while giving up the `EventSystem` features that justify them.
 - Bad, because it still needs play mode to test.

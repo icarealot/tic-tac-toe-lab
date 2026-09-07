@@ -6,11 +6,11 @@ Accepted
 
 ## Context and Problem Statement
 
-`FakeFactoryService` handed back components built with `AddComponent`, then used `System.Reflection` to walk every declared field up the type hierarchy, pick out the ones typed `TMP_Text`, create a child `GameObject` for each, and assign it through `FieldInfo.SetValue`. Its own comment said why: "the real factory hands back a prefab instance whose children are already wired to its serialized fields. A bare component has none."
+`FakeComponentFactoryService` handed back components built with `AddComponent`, then used `System.Reflection` to walk every declared field up the type hierarchy, pick out the ones typed `TMP_Text`, create a child `GameObject` for each, and assign it through `FieldInfo.SetValue`. Its own comment said why: "the real factory hands back a prefab instance whose children are already wired to its serialized fields. A bare component has none."
 
 That reflection served exactly one field in the entire project — `GameplayPanel._turnText`, the only serialized `TMP_Text` in `TicTacToeLab.Runtime`. It existed because a test that shows a `GameplayPanel` eventually reaches `Setup`, which writes to that field, and a bare component's copy is null.
 
-The reflection was a symptom, not the disease. `IFactoryService.Get<T>()` is `where T : Component` and `IUIService.ShowPanel<TPanel>()` is `where TPanel : Panel`, so every window an EditMode test touches is forced to be a real component on a real `GameObject` whose prefab wiring nothing supplies. The fake's only options were to guess at that wiring or to let tests crash.
+The reflection was a symptom, not the disease. `IComponentFactoryService.Get<T>()` is `where T : Component` and `IUIService.ShowPanel<TPanel>()` is `where TPanel : Panel`, so every window an EditMode test touches is forced to be a real component on a real `GameObject` whose prefab wiring nothing supplies. The fake's only options were to guess at that wiring or to let tests crash.
 
 The same pressure has already surfaced twice more, both times accommodated rather than fixed. Five test files construct `BoardPresenter` with `factoryService: null`, because the presenter demands a factory it only forwards. And `GameCompleteStateTests` builds nine objects to assert that a one-second pause resets the game — a pause which, as it turns out, no test asserts at all.
 
@@ -46,7 +46,7 @@ Four changes follow from the rule directly. How things are *created* is the subj
 
 ### `BoardModel` owns cell placements
 
-`BoardPresenter` holds `IFactoryService` only to forward it to `IBoardView.Construct`. Dropping it removes all five `factoryService: null` arguments at a stroke.
+`BoardPresenter` holds `IComponentFactoryService` only to forward it to `IBoardView.Construct`. Dropping it removes all five `factoryService: null` arguments at a stroke.
 
 Placement-building goes with it. `CONTEXT.md` casts **BoardPresenter** as the type "that turns a press into a placed mark" and says nothing about laying out a board, while **BoardModel** is defined as owning "the board's dimensions and the geometry that resolves a local point to the cell containing it". Cell placements are geometry derived from dimensions, so they are already the model's by the glossary's own account; `BoardPresenter.BuildCellPlacements` was the drift. `IBoardView` then shrinks to `ToLocalPoint`, `ShowMark` and `Clear` — exactly what the presenter uses — and `FakeBoardView` becomes an honest double rather than a class implementing a method it ignores.
 
@@ -64,7 +64,7 @@ The fake records the delay and the callback, so a test asserts both that the pau
 
 `Re_entering_gameplay_after_each_game_does_not_accumulate_subscriptions` and `Many_games_in_a_row_leave_exactly_one_active_subscription` derive their entire value from the real object graph; faked out, they assert nothing. They move into an explicitly named integration test class that wires the real graph on purpose, so what they cover becomes a stated intent rather than an accident of how a setup grew.
 
-`FakeFactoryService` and `FakeUIRoot` are deleted. Neither has anything left to fake.
+`FakeComponentFactoryService` and `FakeUIRoot` are deleted. Neither has anything left to fake.
 
 ### Positive Consequences
 

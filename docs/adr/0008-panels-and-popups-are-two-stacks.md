@@ -16,7 +16,7 @@ If panels and popups share one stack, showing a panel while a popup is open puts
 - A structural invariant cannot be violated by calling methods in the wrong order. A documented rule can.
 - The race is real and is not a coding mistake: a player opens a pause popup, and while it is up the game ends, so `GameplayState` transitions to `GameCompleteState`, which wants to show a panel. Two independent things happened at once.
 - [ADR 0007](./0007-states-decide-what-navigation-means.md) puts navigation in the states. Anything the service does automatically on a caller's behalf takes a decision away from the state that owns it.
-- The project already treats a call that cannot be honoured as a programmer error: `FactoryService.ResolveComponent` throws for an unregistered prefab, and `AppStateMachine.ChangeState` throws for an unknown state. Both throw `InvalidOperationException`.
+- The project already treats a call that cannot be honoured as a programmer error: `ComponentFactoryService.ResolveComponent` throws for an unregistered prefab, and `AppStateMachine.ChangeState` throws for an unknown state. Both throw `InvalidOperationException`.
 
 ## Considered Options
 
@@ -31,7 +31,7 @@ Chosen option: "two stacks, and showing a panel over a popup throws", because th
 
 `UIService` holds a panel stack and a popup stack. The two live under separate layer transforms beneath a single root canvas, with the popup layer a later sibling than the panel layer, so every popup is drawn above every panel as a fact about the hierarchy rather than as arithmetic the service has to get right. `Panel` and `Popup` both derive from `Window`, and the generic constraints on `ShowPanel<TPanel>` and `ShowPopup<TPopup>` make pushing a popup onto the panel stack a compile error.
 
-Within each stack only the top window is shown. Showing a panel hides the panel beneath it; showing a popup hides the popup beneath it but never the panel beneath it. Hiding means the window stays alive with its `CanvasGroup` faded out and its raycasts blocked, keeping its configuration so that a revealed window needs no reconfiguring; closing destroys it through `FactoryService.Return`.
+Within each stack only the top window is shown. Showing a panel hides the panel beneath it; showing a popup hides the popup beneath it but never the panel beneath it. Hiding means the window stays alive with its `CanvasGroup` faded out and its raycasts blocked, keeping its configuration so that a revealed window needs no reconfiguring; closing destroys it through `UIFactoryService.Return`.
 
 Back consults the popup stack first and the panel stack only if the popup stack is empty — but, per ADR 0007, back is a state's decision, and the service only offers `TryClosePopup` and `TryClosePanel` as mechanism.
 
@@ -60,7 +60,7 @@ Calling `ShowPanel` while the popup stack is non-empty throws `InvalidOperationE
 Separate panel and popup stacks under separate layers; the illegal combination raises `InvalidOperationException`.
 
 - Good, because the ordering invariant is structural and cannot be broken by a bug.
-- Good, because it matches how `FactoryService` and `AppStateMachine` already treat unhonourable calls.
+- Good, because it matches how `ComponentFactoryService` and `AppStateMachine` already treat unhonourable calls.
 - Good, because a wedged UI is never produced silently.
 - Bad, because a legitimate player-caused race becomes a runtime exception if a state forgot its cleanup.
 - Bad, because it forces two extra members onto the service so callers can avoid the throw.

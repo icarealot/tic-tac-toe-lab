@@ -16,7 +16,7 @@ The app already has an `AppStateMachine` in which "exactly one state is current 
 - Back is not one behaviour. Back during a game should ask before abandoning it; back on a settings popup should just close it; back at the root should quit the app. Any rule fixed inside a service is wrong for at least one of these.
 - A popup over gameplay is not a new phase of the app. The game is still in `GameplayState` — it is merely covered — so window visibility and app phase are genuinely different things and cannot be merged without lying about one of them.
 - [ADR 0002](./0002-arithmetic-hit-testing-without-colliders.md) resolves presses arithmetically with no `EventSystem` in the play path, and explicitly records that "the first overlay this project grows will need an explicit guard". That guard has to be placed somewhere, and its placement is part of this decision.
-- The existing services — `CoroutineService`, `FactoryService`, `CameraService`, `InputService`, `LogService` — are uniformly mechanism. None of them decides anything about the app.
+- The existing services — `CoroutineService`, `ComponentFactoryService`, `CameraService`, `InputService`, `LogService` — are uniformly mechanism. None of them decides anything about the app.
 
 ## Considered Options
 

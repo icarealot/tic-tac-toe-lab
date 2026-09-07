@@ -98,7 +98,7 @@ Resetting the model empties every cell, returns the turn to X and the outcome to
 
 The alternative — a fresh `BoardModel` and a fresh `BoardPresenter` per game — has one genuine advantage this design gives up: a newly constructed object cannot forget to clear a field, whereas `Reset()` can be left behind when a fifth piece of state is added to `BoardModel`. That risk is accepted and named below, because recreation costs more than it saves here. The nine `CellView`s and the `BoardView` are pure scaffolding that no game ever changes, so destroying and re-instantiating them every game is work done to produce an object identical to the one thrown away — and every subscription in the app, the presenter's to `IInputService.Pressed` and the session's to the presenter, would have to be torn down and rebuilt on the same cadence.
 
-`CellView` owns the `MarkView` it spawns. `ShowMark(IFactoryService, Mark)` gains its mirror, `ClearMark(IFactoryService)`, which returns the mark view through `IFactoryService.Return`. `BoardView.Clear()` is then a loop over cells, and no type holds a reference to an object parented under another type's transform.
+`CellView` owns the `MarkView` it spawns. `ShowMark(IComponentFactoryService, Mark)` gains its mirror, `ClearMark(IComponentFactoryService)`, which returns the mark view through `IComponentFactoryService.Return`. `BoardView.Clear()` is then a loop over cells, and no type holds a reference to an object parented under another type's transform.
 
 ### `BoardSession` owns the board, and a two-state machine drives it
 
@@ -116,7 +116,7 @@ The app state machine is introduced with exactly two states, not the full `Loadi
 
 ### The wait is an injected coroutine service
 
-`CoroutineService` is a `MonoBehaviour` obtained through `IFactoryService`, and `Run` returns a `CoroutineHandle` — its own type, in its own file, holding the host `MonoBehaviour` and the `Coroutine` so it can stop it on `Dispose`. The handle is what makes cancellation a first-class operation: `GameCompleteState.Leave()` disposes it, and a test can assert that it was disposed. Unity's own `Coroutine` type has no public constructor, so a faked service could only ever return `null` from `Run`, and "the pending reset was cancelled" would be an assertion against a null.
+`CoroutineService` is a `MonoBehaviour` obtained through `IComponentFactoryService`, and `Run` returns a `CoroutineHandle` — its own type, in its own file, holding the host `MonoBehaviour` and the `Coroutine` so it can stop it on `Dispose`. The handle is what makes cancellation a first-class operation: `GameCompleteState.Leave()` disposes it, and a test can assert that it was disposed. Unity's own `Coroutine` type has no public constructor, so a faked service could only ever return `null` from `Run`, and "the pending reset was cancelled" would be an assertion against a null.
 
 The restart itself waits for the pause, resets the session, and only then changes back to the gameplay state.
 
@@ -309,7 +309,7 @@ A `MonoBehaviour`-backed service behind an interface, returning a disposable han
 - Good, because it matches how input, camera, logging and instantiation are already injected.
 - Good, because it is general: any `IEnumerator`, not just a delay.
 - Bad, because it is two types and an interface for something `StartCoroutine` does in one call.
-- Bad, because the service must be registered as a prefab with `FactoryService`, which can be forgotten and fails only at runtime.
+- Bad, because the service must be registered as a prefab with `ComponentFactoryService`, which can be forgotten and fails only at runtime.
 
 ### `Awaitable.WaitForSecondsAsync` called directly
 

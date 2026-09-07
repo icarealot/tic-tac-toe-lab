@@ -10,7 +10,7 @@ Accepted
 
 The type parameter is doing two jobs at once. `ShowPanel<GameplayPanel>(panel => panel.Setup(session))` names *what the caller wants* and *what the factory must instantiate*, and those are now different things — the caller wants something it can call `Setup` on, while the factory needs a concrete `MonoBehaviour` to `Instantiate`. Something has to supply the second without the caller naming it.
 
-The factory has a second problem, older than this one. `IFactoryService` serves two unrelated populations: scene furniture created exactly once by `Bootstrap` — `Camera`, `CoroutineService`, `BoardView`, `UIRoot` — and things spawned repeatedly during play — `MarkView`, and every window. One interface, one constraint and one test double have been covering both, which is why the double had to be clairvoyant.
+The factory has a second problem, older than this one. `IComponentFactoryService` served two unrelated populations: scene furniture created exactly once by `Bootstrap` — `Camera`, `CoroutineService`, `BoardView`, `UIRoot` — and things spawned repeatedly during play — `MarkView`, and every window. One interface, one constraint and one test double have been covering both, which is why the double had to be clairvoyant.
 
 How does a caller name the window it wants, and who builds it?
 

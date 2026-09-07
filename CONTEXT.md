@@ -154,14 +154,26 @@ _Avoid_: Controller, manager, mediator
 A suffix marking a type as one phase of the app — what the app is doing now, what it does on being entered, and what it undoes on being left. Exactly one state is current at a time, and a state is entered and left rather than created and destroyed.
 _Avoid_: Screen, mode, phase, scene
 
+**Service**:
+A suffix marking a type that provides a mechanism to the rest of the app rather than owning domain state. The project uses it for camera, input, logging, coroutine, UI and factory collaborators. A service hides an external system or shared operation behind an interface; it does what it is asked and does not decide what the app means.
+_Avoid_: Manager, helper, utility
+
+**ComponentFactoryService**:
+The factory for scene components and spawned views. It creates and returns Unity components from the prefab registry, while leaving window creation to **UIFactoryService**.
+_Avoid_: FactoryService
+
+**UIFactoryService**:
+The factory for windows. It creates and returns panels and popups by interface, and puts each one under the layer belonging to its kind. It is distinct from **ComponentFactoryService**, which serves scene components and spawned views.
+_Avoid_: WindowFactoryService
+
 **BoardModel**:
-The state of the board — the mark in each cell or its emptiness, whose turn it is, and the outcome of the game — together with the board's dimensions and the geometry that resolves a local point to the cell containing it. It can be reset, which returns all three pieces of game state to their starting values. See [ADR 0006](./docs/adr/0006-a-game-is-reset-rather-than-recreated.md).
+The state of the board — the mark in each cell or its emptiness, whose turn it is, and the outcome of the game — together with the board's dimensions, the cell placements derived from those dimensions, and the geometry that resolves a local point to the cell containing it. It can be reset, which returns all three pieces of game state to their starting values. See [ADR 0006](./docs/adr/0006-a-game-is-reset-rather-than-recreated.md).
 
 **BoardView**:
 The visual representation of the board. Owns the arrangement of cell views on screen, and can be cleared of every mark shown on it without losing its cells.
 
 **BoardPresenter**:
-The type that turns a press into a placed mark: it refuses every press once the game is over, resolves the pressed point to a cell, rejects the press if that cell already holds a mark, and otherwise places the turn's mark on the board model and tells the board view to show it. It is also what announces how a game ended, and what resets the board model and the board view together.
+The type that turns a press into a placed mark: it refuses every press once the game is over, resolves the pressed point to a cell, rejects the press if that cell already holds a mark, and otherwise places the turn's mark on the board model and tells the board view to show it. It does not create the board's cell placements; those are derived by **BoardModel** and handed to **BoardView**. It is also what announces how a game ended, and what resets the board model and the board view together.
 
 **CellView**:
 The visual representation of a single cell. It owns the mark view shown inside it: it is what puts a mark there and what takes it away again.
@@ -182,7 +194,8 @@ The state the app is in while a game is being played. It listens for the game to
 The state the app enters when a game has ended. It waits, resets the game, and returns to gameplay.
 
 **CoroutineService**:
-The service that runs a coroutine on behalf of a type that is not a `MonoBehaviour`, and hands back a handle for stopping it.
+The service that runs a coroutine or schedules a callback after a delay on behalf of a type that is not a `MonoBehaviour`, and hands back a handle for cancelling the work.
+_Avoid_: DelayService, WaitService
 
 **CoroutineHandle**:
 The handle to a running coroutine. Disposing it stops the coroutine; disposing it twice, or after the coroutine has finished, does nothing.
