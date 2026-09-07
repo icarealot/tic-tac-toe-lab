@@ -2,10 +2,8 @@
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
@@ -15,8 +13,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_press_over_a_cell_in_the_real_scene_spawns_a_mark_view_under_that_cells_view()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
 
@@ -37,8 +34,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Winning_a_game_holds_the_board_for_the_pause_then_clears_it_for_a_fresh_press()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
 

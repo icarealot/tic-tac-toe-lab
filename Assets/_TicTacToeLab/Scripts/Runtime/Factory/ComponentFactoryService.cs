@@ -37,25 +37,7 @@ namespace TicTacToeLab.Runtime
 
         private T ResolveComponent<T>() where T : Component
         {
-            Type type = typeof(T);
-            if (_prefabCache.TryGetValue(type, out Component cachedComponent))
-            {
-                return (T)cachedComponent;
-            }
-
-            if (_prefabs != null)
-            {
-                foreach (GameObject prefab in _prefabs)
-                {
-                    if (prefab.TryGetComponent(out T component))
-                    {
-                        _prefabCache[type] = component;
-                        return component;
-                    }
-                }
-            }
-
-            throw new InvalidOperationException($"No prefab is registered for spawnable type '{type.Name}'.");
+            return (T)ResolveComponent(typeof(T));
         }
 
         private Component ResolveComponent(Type type)

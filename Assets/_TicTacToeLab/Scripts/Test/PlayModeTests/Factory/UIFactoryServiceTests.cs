@@ -3,9 +3,7 @@ using System;
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
@@ -15,8 +13,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator The_panel_getter_resolves_a_panel_interface_under_the_panel_layer_and_constructs_it()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             UIFactoryService uiFactory = CreateUIFactory(out UIRoot uiRoot, out RecordingCoroutineService coroutineService);
             IGameplayPanel panel = uiFactory.GetPanel<IGameplayPanel>();
@@ -30,8 +27,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator The_popup_getter_resolves_a_popup_interface_under_the_popup_layer()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             UIFactoryService uiFactory = CreateUIFactory(out UIRoot uiRoot, out RecordingCoroutineService coroutineService);
             IConfirmQuitPopup popup = uiFactory.GetPopup<IConfirmQuitPopup>();
@@ -45,8 +41,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Returning_a_window_destroys_the_created_instance()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             UIFactoryService uiFactory = CreateUIFactory(out _, out _);
             IGameplayPanel panel = uiFactory.GetPanel<IGameplayPanel>();
@@ -61,8 +56,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Requesting_a_window_without_a_registered_prefab_throws()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             UIFactoryService uiFactory = CreateUIFactory(out _, out _);
 

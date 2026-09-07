@@ -2,10 +2,8 @@
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.TestTools;
 
@@ -16,8 +14,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_keyboard_escape_in_the_real_scene_opens_the_confirmation_above_the_gameplay_panel()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
@@ -42,8 +39,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_second_escape_in_the_real_scene_closes_the_confirmation_and_leaves_the_gameplay_panel()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
@@ -58,8 +54,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_mouse_click_on_the_confirmations_no_button_closes_it_and_leaves_the_game_running()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
             Mouse mouse = InputSystem.AddDevice<Mouse>();
@@ -79,8 +74,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_press_on_the_board_places_no_mark_while_the_confirmation_is_up_and_places_one_again_after_answering_no()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
             Mouse mouse = InputSystem.AddDevice<Mouse>();

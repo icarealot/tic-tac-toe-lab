@@ -2,9 +2,7 @@
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
@@ -14,8 +12,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Clearing_the_board_view_leaves_every_cell_in_place_with_no_mark_showing()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             BoardView boardView = Object.FindFirstObjectByType<BoardView>();
             boardView.ShowMark(0, 0, Mark.X);

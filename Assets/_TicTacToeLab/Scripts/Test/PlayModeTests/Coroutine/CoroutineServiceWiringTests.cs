@@ -2,9 +2,7 @@
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
@@ -14,11 +12,10 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator The_coroutine_service_resolves_from_the_component_factory_service_in_the_real_scene()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
-            ComponentFactoryService factoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
-            CoroutineService coroutineService = factoryService.Get<CoroutineService>();
+            ComponentFactoryService componentFactoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
+            CoroutineService coroutineService = componentFactoryService.Get<CoroutineService>();
 
             Assert.That(coroutineService, Is.Not.Null);
         }

@@ -2,10 +2,8 @@
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
@@ -15,8 +13,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_popup_reports_yes_and_no_through_the_callbacks_it_was_configured_with()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -37,8 +34,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_popup_that_is_answered_neither_closes_itself_nor_navigates()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();

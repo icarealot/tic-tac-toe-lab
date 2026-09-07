@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
 using System.Collections;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace TicTacToeLab.PlayModeTests
 {
@@ -14,6 +16,13 @@ namespace TicTacToeLab.PlayModeTests
     public abstract class SceneWiringTests : InputTestFixture
     {
         protected const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
+
+        protected IEnumerator IE_LoadScene()
+        {
+            yield return EditorSceneManager.LoadSceneInPlayMode(
+                SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+        }
 
         protected IEnumerator IE_PressCell(Mouse mouse, Transform cellTransform)
         {

@@ -2,9 +2,7 @@
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
@@ -14,13 +12,12 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_shown_window_is_visible_and_a_covered_window_is_faded_and_stops_receiving_presses()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
-            ComponentFactoryService componentFactory = Object.FindFirstObjectByType<ComponentFactoryService>();
+            ComponentFactoryService componentFactoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
             ICoroutineService coroutineService = Object.FindFirstObjectByType<CoroutineService>();
-            IUIFactoryService uiFactory = new UIFactoryService(componentFactory, uiRoot, coroutineService);
+            IUIFactoryService uiFactory = new UIFactoryService(componentFactoryService, uiRoot, coroutineService);
             UIService uiService = new(uiFactory);
 
             IGameplayPanel firstPanel = null;

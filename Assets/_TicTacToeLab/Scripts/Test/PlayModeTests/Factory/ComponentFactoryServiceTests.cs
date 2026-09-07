@@ -2,9 +2,7 @@
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
@@ -14,27 +12,25 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_registered_component_is_resolved_from_the_prefab_registry()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
-            IComponentFactoryService factoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
-            CoroutineService coroutineService = factoryService.Get<CoroutineService>();
+            IComponentFactoryService componentFactoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
+            CoroutineService coroutineService = componentFactoryService.Get<CoroutineService>();
 
             Assert.That(coroutineService, Is.Not.Null);
 
-            factoryService.Return(coroutineService);
+            componentFactoryService.Return(coroutineService);
         }
 
         [UnityTest]
         public IEnumerator Returning_a_component_destroys_the_instance()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
-            IComponentFactoryService factoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
-            MarkView markView = factoryService.Get<MarkView>();
+            IComponentFactoryService componentFactoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
+            MarkView markView = componentFactoryService.Get<MarkView>();
 
-            factoryService.Return(markView);
+            componentFactoryService.Return(markView);
             yield return null;
 
             Assert.That(markView == null, Is.True);
@@ -43,12 +39,11 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Resolving_an_unregistered_component_throws()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
-            IComponentFactoryService factoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
+            IComponentFactoryService componentFactoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
 
-            Assert.That(() => factoryService.Get<UnregisteredComponent>(), Throws.TypeOf<System.InvalidOperationException>());
+            Assert.That(() => componentFactoryService.Get<UnregisteredComponent>(), Throws.TypeOf<System.InvalidOperationException>());
         }
 
         private sealed class UnregisteredComponent : MonoBehaviour

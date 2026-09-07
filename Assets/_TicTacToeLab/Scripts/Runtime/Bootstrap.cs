@@ -4,7 +4,7 @@ namespace TicTacToeLab.Runtime
 {
     public class Bootstrap : MonoBehaviour
     {
-        [SerializeField] private ComponentFactoryService _factoryServicePrefab;
+        [SerializeField] private ComponentFactoryService _componentFactoryServicePrefab;
 
         private InputService _inputService;
         private BoardSession _boardSession;
@@ -20,22 +20,22 @@ namespace TicTacToeLab.Runtime
             ILogService logService = new NullLogService();
 #endif
 
-            ComponentFactoryService factoryService = Instantiate(_factoryServicePrefab);
-            Camera mainCamera = factoryService.Get<Camera>();
+            ComponentFactoryService componentFactoryService = Instantiate(_componentFactoryServicePrefab);
+            Camera mainCamera = componentFactoryService.Get<Camera>();
             ICameraService cameraService = new CameraService(mainCamera);
-            ICoroutineService coroutineService = factoryService.Get<CoroutineService>();
+            ICoroutineService coroutineService = componentFactoryService.Get<CoroutineService>();
 
             InputSystem_Actions inputActions = new();
             _inputService = new InputService(inputActions);
 
             BoardModel boardModel = new();
-            BoardView boardView = factoryService.Get<BoardView>();
-            boardView.Construct(factoryService, boardModel.Dimension, boardModel.GetCellPlacements());
+            BoardView boardView = componentFactoryService.Get<BoardView>();
+            boardView.Construct(componentFactoryService, boardModel.Dimension, boardModel.GetCellPlacements());
             BoardPresenter boardPresenter = new(boardModel, boardView, _inputService, cameraService, logService);
             _boardSession = new BoardSession(boardPresenter);
 
-            UIRoot uiRoot = factoryService.Get<UIRoot>();
-            IUIFactoryService uiFactoryService = new UIFactoryService(factoryService, uiRoot, coroutineService);
+            UIRoot uiRoot = componentFactoryService.Get<UIRoot>();
+            IUIFactoryService uiFactoryService = new UIFactoryService(componentFactoryService, uiRoot, coroutineService);
             IUIService uiService = new UIService(uiFactoryService);
 
             _stateMachine = new AppStateMachine(_inputService);

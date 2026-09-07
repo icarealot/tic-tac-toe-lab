@@ -2,10 +2,8 @@
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
@@ -15,8 +13,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator The_gameplay_panel_is_present_under_the_panel_layer_at_startup()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
             GameplayPanel gameplayPanel = Object.FindFirstObjectByType<GameplayPanel>();
@@ -28,8 +25,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator The_turn_display_changes_after_a_press_places_a_mark()
         {
-            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
-            yield return null;
+            yield return IE_LoadScene();
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
             TMPro.TMP_Text turnText = Object.FindFirstObjectByType<GameplayPanel>().GetComponentInChildren<TMPro.TMP_Text>();
