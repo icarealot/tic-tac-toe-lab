@@ -7,14 +7,14 @@ namespace TicTacToeLab.Runtime
     {
         private MarkView _markView;
 
-        public void ShowMark(IFactoryService factoryService, Mark mark)
+        public void ShowMark(IComponentFactoryService factoryService, Mark mark)
         {
             _markView = factoryService.Get<MarkView>(transform);
             _markView.transform.localPosition = Vector3.zero;
             _markView.Show(mark);
         }
 
-        public void ClearMark(IFactoryService factoryService)
+        public void ClearMark(IComponentFactoryService factoryService)
         {
             if (_markView == null)
             {

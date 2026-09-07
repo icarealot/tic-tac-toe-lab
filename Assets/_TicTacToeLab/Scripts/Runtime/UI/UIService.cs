@@ -8,13 +8,13 @@ namespace TicTacToeLab.Runtime
     {
         public bool HasPopup => _popupStack.Count > 0;
 
-        private readonly IFactoryService _factoryService;
+        private readonly IComponentFactoryService _factoryService;
         private readonly IUIRoot _uiRoot;
         private readonly ICoroutineService _coroutineService;
         private readonly Stack<Panel> _panelStack = new();
         private readonly Stack<Popup> _popupStack = new();
 
-        public UIService(IFactoryService factoryService, IUIRoot uiRoot, ICoroutineService coroutineService)
+        public UIService(IComponentFactoryService factoryService, IUIRoot uiRoot, ICoroutineService coroutineService)
         {
             _factoryService = factoryService;
             _uiRoot = uiRoot;

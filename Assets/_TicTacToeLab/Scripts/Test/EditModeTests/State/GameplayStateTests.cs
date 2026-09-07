@@ -13,7 +13,7 @@ namespace TicTacToeLab.EditModeTests
         private FakeInputService _fakeInputService;
         private FakeLogService _fakeLogService;
         private FakeCoroutineService _fakeCoroutineService;
-        private FakeFactoryService _fakeFactoryService;
+        private FakeComponentFactoryService _fakeFactoryService;
         private BoardSession _boardSession;
         private FakeUIRoot _fakeUIRoot;
         private UIService _uiService;
@@ -32,7 +32,7 @@ namespace TicTacToeLab.EditModeTests
                 _fakeInputService, new FakeCameraService(), _fakeLogService);
             _boardSession = new BoardSession(boardPresenter);
             _fakeCoroutineService = new FakeCoroutineService();
-            _fakeFactoryService = new FakeFactoryService();
+            _fakeFactoryService = new FakeComponentFactoryService();
             _fakeUIRoot = new FakeUIRoot();
             _uiService = new UIService(_fakeFactoryService, _fakeUIRoot, _fakeCoroutineService);
             _stateMachine = new AppStateMachine(_fakeInputService);

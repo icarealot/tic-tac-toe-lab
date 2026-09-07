@@ -4,7 +4,7 @@ namespace TicTacToeLab.Runtime
 {
     public class Bootstrap : MonoBehaviour
     {
-        [SerializeField] private FactoryService _factoryServicePrefab;
+        [SerializeField] private ComponentFactoryService _factoryServicePrefab;
 
         private InputService _inputService;
         private BoardSession _boardSession;
@@ -20,7 +20,7 @@ namespace TicTacToeLab.Runtime
             ILogService logService = new NullLogService();
 #endif
 
-            FactoryService factoryService = Instantiate(_factoryServicePrefab);
+            ComponentFactoryService factoryService = Instantiate(_factoryServicePrefab);
             Camera mainCamera = factoryService.Get<Camera>();
             ICameraService cameraService = new CameraService(mainCamera);
             ICoroutineService coroutineService = factoryService.Get<CoroutineService>();

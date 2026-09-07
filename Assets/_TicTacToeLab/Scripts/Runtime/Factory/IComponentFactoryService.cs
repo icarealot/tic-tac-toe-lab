@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public interface IFactoryService
+    public interface IComponentFactoryService
     {
         public T Get<T>() where T : Component;
         public T Get<T>(Transform parent) where T : Component;

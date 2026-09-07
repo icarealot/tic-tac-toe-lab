@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
-    public sealed class FakeFactoryService : IFactoryService
+    public sealed class FakeComponentFactoryService : IComponentFactoryService
     {
         private const BindingFlags DECLARED_FIELDS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
@@ -34,7 +34,7 @@ namespace TicTacToeLab.EditModeTests
             UnityEngine.Object.DestroyImmediate(instance.gameObject);
         }
 
-        // The real factory hands back a prefab instance whose children are already wired to its
+        // The real component factory hands back a prefab instance whose children are already wired to its
         // serialized fields. A bare component has none, so supply the text a window writes to.
         private static void SupplyTextChildren(Component instance)
         {

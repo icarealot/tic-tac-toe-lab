@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public class FactoryService : MonoBehaviour, IFactoryService
+    public class ComponentFactoryService : MonoBehaviour, IComponentFactoryService
     {
         [SerializeField] private GameObject[] _prefabs;
 

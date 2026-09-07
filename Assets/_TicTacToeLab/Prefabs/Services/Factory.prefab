@@ -43,7 +43,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ca32e978044294f43a2cfde43b3d2994, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.FactoryService
+  m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.ComponentFactoryService
   _prefabs:
   - {fileID: 3294026118107988829, guid: f50388c368d7e95499c880712a2dc99a, type: 3}
   - {fileID: 5354016445857155596, guid: 47bd47c969b060047a112e618e20cb36, type: 3}

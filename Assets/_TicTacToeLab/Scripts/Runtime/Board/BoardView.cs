@@ -5,10 +5,10 @@ namespace TicTacToeLab.Runtime
 {
     public class BoardView : MonoBehaviour, IBoardView
     {
-        private IFactoryService _factoryService;
+        private IComponentFactoryService _factoryService;
         private CellView[,] _cellViews;
 
-        public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
+        public void Construct(IComponentFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
         {
             _factoryService = factoryService;
             _cellViews = new CellView[dimension, dimension];

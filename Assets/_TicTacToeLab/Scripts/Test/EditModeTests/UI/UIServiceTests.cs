@@ -8,14 +8,14 @@ namespace TicTacToeLab.EditModeTests
     public sealed class UIServiceTests
     {
         private FakeUIRoot _fakeUIRoot;
-        private FakeFactoryService _fakeFactoryService;
+        private FakeComponentFactoryService _fakeFactoryService;
         private UIService _uiService;
 
         [SetUp]
         public void SetUp()
         {
             _fakeUIRoot = new FakeUIRoot();
-            _fakeFactoryService = new FakeFactoryService();
+            _fakeFactoryService = new FakeComponentFactoryService();
             _uiService = new UIService(_fakeFactoryService, _fakeUIRoot, new FakeCoroutineService());
         }
 
