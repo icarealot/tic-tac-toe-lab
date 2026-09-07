@@ -4,13 +4,13 @@ namespace TicTacToeLab.Runtime
     {
         public const float RESET_PAUSE_SECONDS = 1f;
 
-        private readonly BoardSession _boardSession;
-        private readonly AppStateMachine _stateMachine;
+        private readonly IBoardSession _boardSession;
+        private readonly IStateMachine _stateMachine;
         private readonly ICoroutineService _coroutineService;
 
         private CoroutineHandle _pendingReset;
 
-        public GameCompleteState(BoardSession boardSession, AppStateMachine stateMachine, ICoroutineService coroutineService)
+        public GameCompleteState(IBoardSession boardSession, IStateMachine stateMachine, ICoroutineService coroutineService)
         {
             _boardSession = boardSession;
             _stateMachine = stateMachine;

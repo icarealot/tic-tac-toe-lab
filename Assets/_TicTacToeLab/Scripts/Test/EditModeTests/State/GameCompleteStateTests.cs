@@ -5,31 +5,19 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class GameCompleteStateTests
     {
-        private BoardModel _boardModel;
-        private FakeBoardView _fakeBoardView;
-        private FakeInputService _fakeInputService;
-        private BoardSession _boardSession;
+        private FakeBoardSession _fakeBoardSession;
+        private FakeStateMachine _fakeStateMachine;
         private FakeCoroutineService _fakeCoroutineService;
-        private AppStateMachine _stateMachine;
         private GameCompleteState _gameCompleteState;
 
         [SetUp]
         public void SetUp()
         {
-            _boardModel = new BoardModel();
-            _fakeBoardView = new FakeBoardView();
-            _fakeInputService = new FakeInputService();
-            BoardPresenter boardPresenter = new(
-                _boardModel, _fakeBoardView,
-                _fakeInputService, new FakeCameraService(), new FakeLogService());
-            _boardSession = new BoardSession(boardPresenter);
+            _fakeBoardSession = new FakeBoardSession();
+            _fakeStateMachine = new FakeStateMachine();
             _fakeCoroutineService = new FakeCoroutineService();
-            _stateMachine = new AppStateMachine(_fakeInputService);
-            UIService uiService = new(new FakeComponentFactoryService(), new FakeUIRoot(), new FakeCoroutineService());
-            GameplayState gameplayState = new(_boardSession, _stateMachine, uiService, _fakeInputService, new FakeLogService());
-            _gameCompleteState = new GameCompleteState(_boardSession, _stateMachine, _fakeCoroutineService);
-            _stateMachine.Add(gameplayState);
-            _stateMachine.Add(_gameCompleteState);
+            _gameCompleteState = new GameCompleteState(
+                _fakeBoardSession, _fakeStateMachine, _fakeCoroutineService);
         }
 
         [Test]
@@ -39,7 +27,7 @@ namespace TicTacToeLab.EditModeTests
 
             Assert.That(_fakeCoroutineService.HasScheduledCallback, Is.True);
             Assert.That(_fakeCoroutineService.ScheduledDelaySeconds, Is.EqualTo(1f));
-            Assert.That(_fakeBoardView.WasCleared, Is.False);
+            Assert.That(_fakeBoardSession.WasReset, Is.False);
         }
 
         [Test]
@@ -49,12 +37,8 @@ namespace TicTacToeLab.EditModeTests
 
             _fakeCoroutineService.FireScheduledCallback();
 
-            Assert.That(_fakeBoardView.WasCleared, Is.True);
-            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
-
-            // Being back in gameplay is what lets a fresh press place a mark.
-            BoardMoves.PressCell(_fakeInputService, _boardModel, 0, 0);
-            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.O));
+            Assert.That(_fakeBoardSession.WasReset, Is.True);
+            Assert.That(_fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(GameplayState)));
         }
 
         [Test]
@@ -75,7 +59,8 @@ namespace TicTacToeLab.EditModeTests
 
             _fakeCoroutineService.FireScheduledCallback();
 
-            Assert.That(_fakeBoardView.WasCleared, Is.False);
+            Assert.That(_fakeBoardSession.WasReset, Is.False);
+            Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
         }
     }
 }

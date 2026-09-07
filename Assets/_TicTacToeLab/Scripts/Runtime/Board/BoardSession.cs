@@ -2,7 +2,7 @@ using System;
 
 namespace TicTacToeLab.Runtime
 {
-    public class BoardSession : IDisposable
+    public class BoardSession : IDisposable, IBoardSession
     {
         public event Action GameEnded;
         public event Action<Mark> TurnChanged;

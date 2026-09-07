@@ -7,9 +7,9 @@ namespace TicTacToeLab.Runtime
     {
         [SerializeField] private TMP_Text _turnText;
 
-        private BoardSession _boardSession;
+        private IBoardSession _boardSession;
 
-        public void Setup(BoardSession boardSession)
+        public void Setup(IBoardSession boardSession)
         {
             _boardSession = boardSession;
             _boardSession.TurnChanged += OnTurnChanged;

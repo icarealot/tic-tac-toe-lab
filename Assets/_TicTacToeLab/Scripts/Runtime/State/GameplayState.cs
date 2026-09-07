@@ -2,13 +2,13 @@ namespace TicTacToeLab.Runtime
 {
     public sealed class GameplayState : IAppState
     {
-        private readonly BoardSession _boardSession;
-        private readonly AppStateMachine _stateMachine;
+        private readonly IBoardSession _boardSession;
+        private readonly IStateMachine _stateMachine;
         private readonly IUIService _uiService;
         private readonly IInputService _inputService;
         private readonly ILogService _logService;
 
-        public GameplayState(BoardSession boardSession, AppStateMachine stateMachine, IUIService uiService, IInputService inputService, ILogService logService)
+        public GameplayState(IBoardSession boardSession, IStateMachine stateMachine, IUIService uiService, IInputService inputService, ILogService logService)
         {
             _boardSession = boardSession;
             _stateMachine = stateMachine;

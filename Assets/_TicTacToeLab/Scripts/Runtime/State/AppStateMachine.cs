@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TicTacToeLab.Runtime
 {
-    public sealed class AppStateMachine : IDisposable
+    public sealed class AppStateMachine : IDisposable, IStateMachine
     {
         private readonly Dictionary<Type, IAppState> _states = new();
         private readonly IInputService _inputService;
