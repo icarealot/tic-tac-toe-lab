@@ -1,34 +1,26 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEngine;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class CoroutineServiceTests
+    public sealed class CoroutineServiceTests : SceneWiringTests
     {
         private CoroutineService _coroutineService;
-
-        [UnitySetUp]
-        public IEnumerator UnitySetUp()
-        {
-            _coroutineService = new GameObject(nameof(CoroutineService)).AddComponent<CoroutineService>();
-            yield return null;
-        }
-
-        [UnityTearDown]
-        public IEnumerator UnityTearDown()
-        {
-            UnityEngine.Object.Destroy(_coroutineService.gameObject);
-            yield return null;
-        }
 
         [UnityTest]
         public IEnumerator A_routine_handed_to_the_service_runs_and_continues_across_frames()
         {
+            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+
+            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
             List<int> steps = new();
 
             _ = _coroutineService.Run(IE_RecordSteps(steps));
@@ -41,6 +33,10 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Disposing_the_handle_before_the_routine_completes_stops_it()
         {
+            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+
+            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
             bool ranAfterYield = false;
             CoroutineHandle handle = _coroutineService.Run(IE_SetFlagAfterYield(() => ranAfterYield = true));
 
@@ -55,6 +51,10 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Disposing_a_handle_whose_routine_has_already_finished_does_nothing()
         {
+            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+
+            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
             CoroutineHandle handle = _coroutineService.Run(IE_Immediate());
 
             yield return null;
@@ -66,6 +66,10 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Disposing_the_same_handle_twice_does_nothing()
         {
+            yield return EditorSceneManager.LoadSceneInPlayMode(SCENE_PATH, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+
+            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
             CoroutineHandle handle = _coroutineService.Run(IE_Immediate());
 
             handle.Dispose();
@@ -93,3 +97,4 @@ namespace TicTacToeLab.PlayModeTests
         }
     }
 }
+#endif
