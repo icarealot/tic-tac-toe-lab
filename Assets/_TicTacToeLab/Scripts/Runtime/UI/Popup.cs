@@ -1,6 +1,6 @@
 namespace TicTacToeLab.Runtime
 {
-    public abstract class Popup : Window
+    public abstract class Popup : Window, IPopup
     {
     }
 }

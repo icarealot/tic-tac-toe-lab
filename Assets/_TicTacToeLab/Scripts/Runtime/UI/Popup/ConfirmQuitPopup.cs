@@ -2,7 +2,7 @@ using System;
 
 namespace TicTacToeLab.Runtime
 {
-    public class ConfirmQuitPopup : Popup
+    public class ConfirmQuitPopup : Popup, IConfirmQuitPopup
     {
         private Action _onYes;
         private Action _onNo;

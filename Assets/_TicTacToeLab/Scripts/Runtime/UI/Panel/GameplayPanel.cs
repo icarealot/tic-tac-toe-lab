@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public class GameplayPanel : Panel
+    public class GameplayPanel : Panel, IGameplayPanel
     {
         [SerializeField] private TMP_Text _turnText;
 

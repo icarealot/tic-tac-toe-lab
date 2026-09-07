@@ -1,6 +1,6 @@
 namespace TicTacToeLab.Runtime
 {
-    public abstract class Panel : Window
+    public abstract class Panel : Window, IPanel
     {
     }
 }

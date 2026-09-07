@@ -28,6 +28,21 @@ namespace TicTacToeLab.EditModeTests
             return instance;
         }
 
+        public Component Get(Type componentType, Transform parent)
+        {
+            if (componentType == typeof(IGameplayPanel))
+            {
+                return Get<GameplayPanel>(parent);
+            }
+
+            if (componentType == typeof(IConfirmQuitPopup))
+            {
+                return Get<ConfirmQuitPopup>(parent);
+            }
+
+            throw new InvalidOperationException($"No fake component is registered for type '{componentType.Name}'.");
+        }
+
         public void Return<T>(T instance) where T : Component
         {
             ReturnedInstances.Add(instance);

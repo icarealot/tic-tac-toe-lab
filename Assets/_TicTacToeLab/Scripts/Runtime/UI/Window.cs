@@ -3,7 +3,7 @@ using UnityEngine;
 namespace TicTacToeLab.Runtime
 {
     [RequireComponent(typeof(CanvasGroup))]
-    public abstract class Window : MonoBehaviour
+    public abstract class Window : MonoBehaviour, IWindow
     {
         public bool IsVisible => CanvasGroupComponent.alpha > 0f;
 
