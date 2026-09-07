@@ -71,11 +71,9 @@ Write `docs/<feature-name>/CODE_REVIEW.md` with format:
 ## Spec
 
 <Spec findings>
-
-<one-line summary: total findings per axis and the worst issue within each axis, if any>
 ```
 
-Keep findings in their separate sections and rank each axis independently. The summary is the only cross-axis operation: name the worst issue within each axis without choosing a single overall winner.
+Keep findings in their separate sections and rank each axis independently.
 
 After the write succeeds, respond with the file path.
 
@@ -86,4 +84,4 @@ A change can pass one axis and fail the other:
 - Code that follows every standard but implements the wrong thing → **Standards pass, Spec fail.**
 - Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
 
-Reporting them separately stops one axis from masking the other. The sequential passes keep each axis tied to its own sources, while the summary reports the worst issue within each axis without collapsing them into one ranking.
+Reporting them separately stops one axis from masking the other. The sequential passes keep each axis tied to its own sources.
