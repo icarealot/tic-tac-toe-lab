@@ -6,8 +6,8 @@ namespace TicTacToeLab.Runtime
     {
         public bool HasPopup { get; }
 
-        public void ShowPanel<TPanel>(Action<TPanel> configure = null) where TPanel : Panel;
-        public void ShowPopup<TPopup>(Action<TPopup> configure = null) where TPopup : Popup;
+        public void ShowPanel<TPanel>(Action<TPanel> configure = null) where TPanel : class, IPanel;
+        public void ShowPopup<TPopup>(Action<TPopup> configure = null) where TPopup : class, IPopup;
         public bool TryClosePanel();
         public bool TryClosePopup();
         public void CloseAllPopups();

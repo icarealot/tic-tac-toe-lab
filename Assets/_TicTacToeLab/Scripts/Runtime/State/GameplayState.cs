@@ -20,7 +20,7 @@ namespace TicTacToeLab.Runtime
         public void Enter()
         {
             _boardSession.GameEnded += OnGameEnded;
-            _uiService.ShowPanel<GameplayPanel>(panel => panel.Setup(_boardSession));
+            _uiService.ShowPanel<IGameplayPanel>(panel => panel.Setup(_boardSession));
         }
 
         public void Leave()
@@ -45,7 +45,7 @@ namespace TicTacToeLab.Runtime
         private void OpenConfirmQuitPopup()
         {
             _inputService.DisablePlayerPress();
-            _uiService.ShowPopup<ConfirmQuitPopup>(popup =>
+            _uiService.ShowPopup<IConfirmQuitPopup>(popup =>
             {
                 popup.Setup(
                     onYes: Quit,
