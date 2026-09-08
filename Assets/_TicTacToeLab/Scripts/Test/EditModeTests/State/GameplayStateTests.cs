@@ -5,13 +5,13 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class GameplayStateTests
     {
-        private FakeGameplayPanel Panel => _uiFactory.Panels[0];
-        private FakeConfirmQuitPopup Popup => _uiFactory.Popups[0];
+        private FakeGameplayPanel Panel => _fakeFactory.Panels[0];
+        private FakeConfirmQuitPopup Popup => _fakeFactory.Popups[0];
 
         private FakeBoardSession _fakeBoardSession;
         private FakeInputService _fakeInputService;
         private FakeLogService _fakeLogService;
-        private FakeUIFactoryService _uiFactory;
+        private FakeFactoryService _fakeFactory;
         private UIService _uiService;
         private FakeStateMachine _fakeStateMachine;
         private GameplayState _gameplayState;
@@ -22,8 +22,8 @@ namespace TicTacToeLab.EditModeTests
             _fakeBoardSession = new FakeBoardSession();
             _fakeInputService = new FakeInputService();
             _fakeLogService = new FakeLogService();
-            _uiFactory = new FakeUIFactoryService();
-            _uiService = new UIService(_uiFactory);
+            _fakeFactory = new FakeFactoryService();
+            _uiService = new UIService(_fakeFactory, new FakeUIRoot(), new FakeCoroutineService());
             _fakeStateMachine = new FakeStateMachine();
             _gameplayState = new GameplayState(
                 _fakeBoardSession, _fakeStateMachine, _uiService,
@@ -35,7 +35,7 @@ namespace TicTacToeLab.EditModeTests
         {
             _gameplayState.Enter();
 
-            Assert.That(_uiFactory.Panels, Has.Count.EqualTo(1));
+            Assert.That(_fakeFactory.Panels, Has.Count.EqualTo(1));
             Assert.That(Panel.ConfiguredBoardSession, Is.SameAs(_fakeBoardSession));
             Assert.That(Panel.IsVisible, Is.True);
         }
@@ -47,7 +47,7 @@ namespace TicTacToeLab.EditModeTests
 
             _gameplayState.Leave();
 
-            Assert.That(_uiFactory.ReturnedWindows, Does.Contain(Panel));
+            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(Panel));
         }
 
         [Test]
@@ -91,8 +91,8 @@ namespace TicTacToeLab.EditModeTests
 
             _gameplayState.Back();
 
-            Assert.That(_uiFactory.Popups, Has.Count.EqualTo(1));
-            Assert.That(_uiFactory.ReturnedWindows.Contains(Panel), Is.False);
+            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
+            Assert.That(_fakeFactory.ReturnedWindows.Contains(Panel), Is.False);
             Assert.That(_uiService.TryClosePanel(), Is.True);
         }
 
@@ -116,8 +116,8 @@ namespace TicTacToeLab.EditModeTests
             _gameplayState.Back();
 
             Assert.That(_uiService.HasPopup, Is.False);
-            Assert.That(_uiFactory.Popups, Has.Count.EqualTo(1));
-            Assert.That(_uiFactory.ReturnedWindows.Contains(Popup), Is.True);
+            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
+            Assert.That(_fakeFactory.ReturnedWindows.Contains(Popup), Is.True);
             Assert.That(Panel.IsVisible, Is.True);
         }
 
@@ -130,7 +130,7 @@ namespace TicTacToeLab.EditModeTests
             Popup.No();
 
             Assert.That(_uiService.HasPopup, Is.False);
-            Assert.That(_uiFactory.ReturnedWindows.Contains(Popup), Is.True);
+            Assert.That(_fakeFactory.ReturnedWindows.Contains(Popup), Is.True);
             Assert.That(Panel.IsVisible, Is.True);
             Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
         }

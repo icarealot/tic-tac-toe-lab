@@ -14,11 +14,10 @@ namespace TicTacToeLab.PlayModeTests
         {
             yield return IE_LoadScene();
 
-            ComponentFactoryService componentFactoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
             ICoroutineService coroutineService = Object.FindFirstObjectByType<CoroutineService>();
-            IUIFactoryService uiFactory = new UIFactoryService(componentFactoryService, uiRoot, coroutineService);
-            UIService uiService = new(uiFactory);
+            IFactoryService factoryService = Object.FindFirstObjectByType<FactoryService>();
+            UIService uiService = new(factoryService, uiRoot, coroutineService);
 
             IGameplayPanel firstPanel = null;
             uiService.ShowPanel<IGameplayPanel>(panel => firstPanel = panel);
@@ -29,6 +28,7 @@ namespace TicTacToeLab.PlayModeTests
             CanvasGroup secondCanvasGroup = ((Component)secondPanel).GetComponent<CanvasGroup>();
 
             Assert.That(firstPanel.IsVisible, Is.False);
+            Assert.That(firstPanel, Is.Not.Null); // Covered, not returned: still alive on its stack.
             Assert.That(firstCanvasGroup.alpha, Is.Zero);
             Assert.That(firstCanvasGroup.interactable, Is.False);
             Assert.That(firstCanvasGroup.blocksRaycasts, Is.False);
@@ -41,6 +41,10 @@ namespace TicTacToeLab.PlayModeTests
             _ = uiService.TryClosePanel();
             _ = uiService.TryClosePanel();
             yield return null;
+
+            // Closed windows are returned to the factory, which destroys them.
+            Assert.That((Component)firstPanel == null, Is.True);
+            Assert.That((Component)secondPanel == null, Is.True);
         }
     }
 }

@@ -61,6 +61,22 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [UnityTest]
+        public IEnumerator Returning_an_already_destroyed_interface_backed_object_is_a_no_op()
+        {
+            yield return IE_LoadScene();
+
+            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
+            IGameplayPanel panel = factoryService.Get<IGameplayPanel>();
+
+            UnityEngine.Object.Destroy((Component)panel);
+            yield return null;
+
+            // Scene teardown can reach a window that Unity already destroyed; returning it must
+            // not throw or log, because the instance is no longer reclaimable.
+            Assert.DoesNotThrow(() => factoryService.Return(panel));
+        }
+
+        [UnityTest]
         public IEnumerator Returning_an_object_that_is_not_a_unity_component_throws()
         {
             yield return IE_LoadScene();

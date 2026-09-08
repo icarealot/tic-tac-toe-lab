@@ -7,13 +7,17 @@ namespace TicTacToeLab.Runtime
     {
         public bool HasPopup => _popupStack.Count > 0;
 
-        private readonly IUIFactoryService _uiFactoryService;
+        private readonly IFactoryService _factoryService;
+        private readonly IUIRoot _uiRoot;
+        private readonly ICoroutineService _coroutineService;
         private readonly Stack<IPanel> _panelStack = new();
         private readonly Stack<IPopup> _popupStack = new();
 
-        public UIService(IUIFactoryService uiFactoryService)
+        public UIService(IFactoryService factoryService, IUIRoot uiRoot, ICoroutineService coroutineService)
         {
-            _uiFactoryService = uiFactoryService;
+            _factoryService = factoryService;
+            _uiRoot = uiRoot;
+            _coroutineService = coroutineService;
         }
 
         public void ShowPanel<TPanel>(Action<TPanel> configure = null) where TPanel : class, IPanel
@@ -23,12 +27,12 @@ namespace TicTacToeLab.Runtime
                 throw new InvalidOperationException($"Cannot show {typeof(TPanel).Name} while a popup is up. Close the popups first.");
             }
 
-            Show(_panelStack, _uiFactoryService.GetPanel<TPanel>, configure);
+            Show(_panelStack, () => _factoryService.Get<TPanel>(_uiRoot.PanelLayer), configure);
         }
 
         public void ShowPopup<TPopup>(Action<TPopup> configure = null) where TPopup : class, IPopup
         {
-            Show(_popupStack, _uiFactoryService.GetPopup<TPopup>, configure);
+            Show(_popupStack, () => _factoryService.Get<TPopup>(_uiRoot.PopupLayer), configure);
         }
 
         public bool TryClosePanel()
@@ -49,7 +53,7 @@ namespace TicTacToeLab.Runtime
             }
         }
 
-        private static void Show<TWindow, TShown>(Stack<TWindow> stack, Func<TShown> getWindow, Action<TShown> configure)
+        private void Show<TWindow, TShown>(Stack<TWindow> stack, Func<TShown> getWindow, Action<TShown> configure)
             where TWindow : IWindow
             where TShown : class, TWindow
         {
@@ -59,6 +63,7 @@ namespace TicTacToeLab.Runtime
             }
 
             TShown window = getWindow();
+            window.Construct(_coroutineService);
             window.Hide();
             configure?.Invoke(window);
             window.Show();
@@ -66,7 +71,7 @@ namespace TicTacToeLab.Runtime
             stack.Push(window);
         }
 
-        private bool TryClose<TWindow>(Stack<TWindow> stack) where TWindow : IWindow
+        private bool TryClose<TWindow>(Stack<TWindow> stack) where TWindow : class, IWindow
         {
             if (stack.Count == 0)
             {
@@ -74,7 +79,7 @@ namespace TicTacToeLab.Runtime
             }
 
             TWindow topWindow = stack.Pop();
-            _uiFactoryService.Return(topWindow);
+            _factoryService.Return(topWindow);
 
             if (stack.Count > 0)
             {

@@ -6,35 +6,57 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class UIServiceTests
     {
-        private FakeUIFactoryService _uiFactory;
+        private FakeFactoryService _fakeFactory;
+        private FakeCoroutineService _fakeCoroutineService;
         private UIService _uiService;
 
         [SetUp]
         public void SetUp()
         {
-            _uiFactory = new FakeUIFactoryService();
-            _uiService = new UIService(_uiFactory);
+            _fakeFactory = new FakeFactoryService();
+            _fakeCoroutineService = new FakeCoroutineService();
+            _uiService = new UIService(_fakeFactory, new FakeUIRoot(), _fakeCoroutineService);
         }
 
         [Test]
-        public void Showing_a_panel_obtains_it_from_the_ui_factory_and_makes_it_visible()
+        public void Showing_a_panel_requests_its_panel_role_through_the_factory_and_makes_it_visible()
         {
             _uiService.ShowPanel<IGameplayPanel>();
 
-            Assert.That(_uiFactory.Panels, Has.Count.EqualTo(1));
-            Assert.That(_uiFactory.Panels[0].IsVisible, Is.True);
+            Assert.That(_fakeFactory.Panels, Has.Count.EqualTo(1));
+            Assert.That(_fakeFactory.Panels[0].IsVisible, Is.True);
         }
 
         [Test]
         public void Showing_a_second_panel_hides_the_first_without_returning_it()
         {
             _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel firstPanel = _uiFactory.Panels[0];
+            FakeGameplayPanel firstPanel = _fakeFactory.Panels[0];
 
             _uiService.ShowPanel<IGameplayPanel>();
 
             Assert.That(firstPanel.IsVisible, Is.False);
-            Assert.That(_uiFactory.ReturnedWindows, Is.Empty);
+            Assert.That(_fakeFactory.ReturnedWindows, Is.Empty);
+        }
+
+        [Test]
+        public void A_new_window_is_constructed_before_the_caller_configuration_runs()
+        {
+            int constructionCallsBeforeConfigure = 0;
+
+            _uiService.ShowPanel<IGameplayPanel>(panel => constructionCallsBeforeConfigure = _fakeFactory.Panels[0].ConstructionServices.Count);
+
+            Assert.That(constructionCallsBeforeConfigure, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void A_new_window_is_constructed_with_the_coroutine_service_the_ui_service_received()
+        {
+            _uiService.ShowPanel<IGameplayPanel>();
+
+            FakeGameplayPanel panel = _fakeFactory.Panels[0];
+            Assert.That(panel.ConstructionServices, Is.EqualTo(new ICoroutineService[] { _fakeCoroutineService }));
+            Assert.That(panel.IsVisible, Is.True);
         }
 
         [Test]
@@ -48,18 +70,18 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Closing_the_top_panel_returns_it_and_reveals_the_one_beneath_with_its_configuration_intact()
+        public void Closing_the_top_panel_returns_it_through_the_factory_and_reveals_the_one_beneath_with_its_configuration_intact()
         {
             FakeBoardSession boardSession = new();
             _uiService.ShowPanel<IGameplayPanel>(panel => panel.Setup(boardSession));
-            FakeGameplayPanel firstPanel = _uiFactory.Panels[0];
+            FakeGameplayPanel firstPanel = _fakeFactory.Panels[0];
             _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel secondPanel = _uiFactory.Panels[1];
+            FakeGameplayPanel secondPanel = _fakeFactory.Panels[1];
 
             bool wasClosed = _uiService.TryClosePanel();
 
             Assert.That(wasClosed, Is.True);
-            Assert.That(_uiFactory.ReturnedWindows, Is.EqualTo(new IWindow[] { secondPanel }));
+            Assert.That(_fakeFactory.ReturnedWindows, Is.EqualTo(new IWindow[] { secondPanel }));
             Assert.That(firstPanel.IsVisible, Is.True);
             Assert.That(firstPanel.ConfiguredBoardSession, Is.SameAs(boardSession));
         }
@@ -71,19 +93,19 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Showing_a_popup_obtains_it_from_the_ui_factory_and_makes_it_visible()
+        public void Showing_a_popup_requests_its_popup_role_through_the_factory_and_makes_it_visible()
         {
             _uiService.ShowPopup<IConfirmQuitPopup>();
 
-            Assert.That(_uiFactory.Popups, Has.Count.EqualTo(1));
-            Assert.That(_uiFactory.Popups[0].IsVisible, Is.True);
+            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
+            Assert.That(_fakeFactory.Popups[0].IsVisible, Is.True);
         }
 
         [Test]
         public void Showing_a_popup_leaves_the_panel_beneath_it_visible()
         {
             _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel panel = _uiFactory.Panels[0];
+            FakeGameplayPanel panel = _fakeFactory.Panels[0];
 
             _uiService.ShowPopup<IConfirmQuitPopup>();
 
@@ -94,29 +116,29 @@ namespace TicTacToeLab.EditModeTests
         public void Showing_a_second_popup_hides_the_first_but_never_the_panel_behind_them()
         {
             _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel panel = _uiFactory.Panels[0];
+            FakeGameplayPanel panel = _fakeFactory.Panels[0];
             _uiService.ShowPopup<IConfirmQuitPopup>();
-            FakeConfirmQuitPopup firstPopup = _uiFactory.Popups[0];
+            FakeConfirmQuitPopup firstPopup = _fakeFactory.Popups[0];
 
             _uiService.ShowPopup<IConfirmQuitPopup>();
 
             Assert.That(firstPopup.IsVisible, Is.False);
             Assert.That(panel.IsVisible, Is.True);
-            Assert.That(_uiFactory.ReturnedWindows, Is.Empty);
+            Assert.That(_fakeFactory.ReturnedWindows, Is.Empty);
         }
 
         [Test]
-        public void Closing_the_top_popup_returns_it_and_reveals_the_one_beneath()
+        public void Closing_the_top_popup_returns_it_through_the_factory_and_reveals_the_one_beneath()
         {
             _uiService.ShowPopup<IConfirmQuitPopup>();
-            FakeConfirmQuitPopup firstPopup = _uiFactory.Popups[0];
+            FakeConfirmQuitPopup firstPopup = _fakeFactory.Popups[0];
             _uiService.ShowPopup<IConfirmQuitPopup>();
-            FakeConfirmQuitPopup secondPopup = _uiFactory.Popups[1];
+            FakeConfirmQuitPopup secondPopup = _fakeFactory.Popups[1];
 
             bool wasClosed = _uiService.TryClosePopup();
 
             Assert.That(wasClosed, Is.True);
-            Assert.That(_uiFactory.ReturnedWindows, Is.EqualTo(new IWindow[] { secondPopup }));
+            Assert.That(_fakeFactory.ReturnedWindows, Is.EqualTo(new IWindow[] { secondPopup }));
             Assert.That(firstPopup.IsVisible, Is.True);
         }
 
@@ -130,7 +152,7 @@ namespace TicTacToeLab.EditModeTests
         public void The_popup_stack_is_exhausted_before_the_panel_stack_is_touched()
         {
             _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel panel = _uiFactory.Panels[0];
+            FakeGameplayPanel panel = _fakeFactory.Panels[0];
             _uiService.ShowPopup<IConfirmQuitPopup>();
 
             Assert.That(_uiService.TryClosePopup(), Is.True);
@@ -143,7 +165,7 @@ namespace TicTacToeLab.EditModeTests
         public void Closing_every_popup_empties_the_popup_stack_and_leaves_the_panel_stack_untouched()
         {
             _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel panel = _uiFactory.Panels[0];
+            FakeGameplayPanel panel = _fakeFactory.Panels[0];
             _uiService.ShowPopup<IConfirmQuitPopup>();
             _uiService.ShowPopup<IConfirmQuitPopup>();
 

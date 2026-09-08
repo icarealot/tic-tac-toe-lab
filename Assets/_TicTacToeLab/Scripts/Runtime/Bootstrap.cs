@@ -37,8 +37,7 @@ namespace TicTacToeLab.Runtime
             _boardSession = new BoardSession(boardPresenter);
 
             IUIRoot uiRoot = factoryService.Get<IUIRoot>();
-            IUIFactoryService uiFactoryService = new UIFactoryService(componentFactoryService, uiRoot, coroutineService);
-            IUIService uiService = new UIService(uiFactoryService);
+            IUIService uiService = new UIService(factoryService, uiRoot, coroutineService);
 
             _stateMachine = new AppStateMachine(_inputService);
             GameplayState gameplayState = new(_boardSession, _stateMachine, uiService, _inputService, logService);
