@@ -10,6 +10,10 @@ namespace TicTacToeLab.EditModeTests
         public bool WasCleared { get; private set; }
         public int ClearCount { get; private set; }
 
+        public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
+        {
+        }
+
         public Vector3 ToLocalPoint(Vector3 worldPoint)
         {
             return worldPoint;

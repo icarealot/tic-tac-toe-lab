@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -10,56 +11,101 @@ namespace TicTacToeLab.PlayModeTests
     public sealed class CellViewTests : SceneWiringTests
     {
         [UnityTest]
-        public IEnumerator Clearing_a_cell_holding_a_mark_returns_that_mark_view_through_the_component_factory_service()
+        public IEnumerator A_cell_obtained_through_its_role_applies_its_assigned_local_point_and_diagnostic_name()
         {
             yield return IE_LoadScene();
 
-            CellView cellView = GameObject.Find("Cell (0, 0)").GetComponent<CellView>();
-            ComponentFactoryService componentFactoryService = Object.FindFirstObjectByType<ComponentFactoryService>();
-            RecordingComponentFactoryService recordingFactory = new(componentFactoryService);
-            cellView.ShowMark(recordingFactory, Mark.X);
-            MarkView markView = cellView.GetComponentInChildren<MarkView>();
+            CellPlacement placement = new(1, 2, new Vector3(0.3f, -0.4f, 0f));
+            GameObject host = new("CellHost");
+            RecordingFactoryService factory = new(Object.FindFirstObjectByType<FactoryService>());
+            ICellView cellView = factory.Get<ICellView>(host.transform);
+            cellView.Construct(factory, placement);
+            CellView cell = (CellView)cellView;
 
+            Assert.That(cell.name, Is.EqualTo("Cell (1, 2)"));
+            Assert.That(cell.transform.localPosition, Is.EqualTo(placement.LocalPoint));
+
+            factory.Return(cellView);
+            Object.Destroy(host);
+        }
+
+        [UnityTest]
+        public IEnumerator Showing_a_mark_requests_an_interface_based_mark_beneath_the_cell_and_displays_the_requested_mark()
+        {
+            yield return IE_LoadScene();
+
+            GameObject host = new("CellHost");
+            RecordingFactoryService factory = new(Object.FindFirstObjectByType<FactoryService>());
+            ICellView cellView = factory.Get<ICellView>(host.transform);
+            cellView.Construct(factory, new CellPlacement(0, 0, Vector3.zero));
+            CellView cell = (CellView)cellView;
+
+            cellView.ShowMark(Mark.X);
+
+            MarkView markView = cell.GetComponentInChildren<MarkView>();
+            Assert.That(markView, Is.Not.Null);
+            Assert.That(markView.transform.parent, Is.EqualTo(cell.transform));
+            Assert.That(markView.GetComponent<SpriteRenderer>().sprite, Is.Not.Null);
+            Assert.That(factory.GetRequests, Does.Contain((typeof(IMarkView), cell.transform)));
+
+            factory.Return(cellView);
+            Object.Destroy(host);
+        }
+
+        [UnityTest]
+        public IEnumerator Clearing_a_marked_cell_returns_that_same_mark_through_the_factory_service()
+        {
+            yield return IE_LoadScene();
+
+            GameObject host = new("CellHost");
+            RecordingFactoryService factory = new(Object.FindFirstObjectByType<FactoryService>());
+            ICellView cellView = factory.Get<ICellView>(host.transform);
+            cellView.Construct(factory, new CellPlacement(0, 0, Vector3.zero));
+            CellView cell = (CellView)cellView;
+
+            cellView.ShowMark(Mark.O);
+            MarkView markView = cell.GetComponentInChildren<MarkView>();
             Assert.That(markView, Is.Not.Null);
 
-            cellView.ClearMark(recordingFactory);
-            Assert.That(recordingFactory.ReturnedInstance, Is.SameAs(markView));
+            cellView.ClearMark();
+            Assert.That(factory.ReturnedInstance, Is.SameAs(markView));
 
             yield return null;
 
-            Assert.That(cellView.GetComponentInChildren<MarkView>(), Is.Null);
+            Assert.That(cell.GetComponentInChildren<MarkView>(), Is.Null);
+
+            factory.Return(cellView);
+            Object.Destroy(host);
         }
 
-        private sealed class RecordingComponentFactoryService : IComponentFactoryService
+        private sealed class RecordingFactoryService : IFactoryService
         {
-            private readonly IComponentFactoryService _componentFactoryService;
+            private readonly IFactoryService _factoryService;
 
-            public RecordingComponentFactoryService(IComponentFactoryService componentFactoryService)
+            public RecordingFactoryService(IFactoryService factoryService)
             {
-                _componentFactoryService = componentFactoryService;
+                _factoryService = factoryService;
             }
 
             public Component ReturnedInstance { get; private set; }
+            public List<(System.Type Type, Transform Parent)> GetRequests { get; } = new();
 
-            public T Get<T>() where T : Component
+            public T Get<T>() where T : class
             {
-                return _componentFactoryService.Get<T>();
+                GetRequests.Add((typeof(T), null));
+                return _factoryService.Get<T>();
             }
 
-            public T Get<T>(Transform parent) where T : Component
+            public T Get<T>(Transform parent) where T : class
             {
-                return _componentFactoryService.Get<T>(parent);
+                GetRequests.Add((typeof(T), parent));
+                return _factoryService.Get<T>(parent);
             }
 
-            public Component Get(System.Type componentType, Transform parent)
+            public void Return<T>(T instance) where T : class
             {
-                return _componentFactoryService.Get(componentType, parent);
-            }
-
-            public void Return<T>(T instance) where T : Component
-            {
-                ReturnedInstance = instance;
-                _componentFactoryService.Return(instance);
+                ReturnedInstance = instance as Component;
+                _factoryService.Return(instance);
             }
         }
     }

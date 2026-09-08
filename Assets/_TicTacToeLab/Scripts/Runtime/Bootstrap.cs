@@ -31,8 +31,8 @@ namespace TicTacToeLab.Runtime
             _inputService = new InputService(inputActions);
 
             BoardModel boardModel = new();
-            BoardView boardView = componentFactoryService.Get<BoardView>();
-            boardView.Construct(componentFactoryService, boardModel.Dimension, boardModel.GetCellPlacements());
+            IBoardView boardView = factoryService.Get<IBoardView>();
+            boardView.Construct(factoryService, boardModel.Dimension, boardModel.GetCellPlacements());
             BoardPresenter boardPresenter = new(boardModel, boardView, _inputService, cameraService, logService);
             _boardSession = new BoardSession(boardPresenter);
 
