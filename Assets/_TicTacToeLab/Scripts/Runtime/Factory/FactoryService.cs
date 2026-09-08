@@ -19,6 +19,12 @@ namespace TicTacToeLab.Runtime
 
         public void Return<T>(T instance) where T : class
         {
+            if (!typeof(T).IsInterface)
+            {
+                throw new InvalidOperationException(
+                    $"The returned type '{typeof(T).Name}' is not an interface; factory returns must name an interface role.");
+            }
+
             if (instance == null)
             {
                 return;
@@ -30,10 +36,6 @@ namespace TicTacToeLab.Runtime
                     $"Instance of type '{instance.GetType().Name}' is not a Unity component and cannot be returned to the factory.");
             }
 
-            // The generic null check above is reference equality on an interface-typed value. A
-            // component whose GameObject is already destroyed (e.g. scene teardown reaching a
-            // window still on its stack) only reports null through Unity's ==, so compare through
-            // the Component reference and treat it as already returned.
             if (component == null)
             {
                 return;

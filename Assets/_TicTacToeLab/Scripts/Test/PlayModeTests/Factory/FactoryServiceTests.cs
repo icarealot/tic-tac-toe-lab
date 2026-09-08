@@ -71,9 +71,7 @@ namespace TicTacToeLab.PlayModeTests
             UnityEngine.Object.Destroy((Component)panel);
             yield return null;
 
-            // Scene teardown can reach a window that Unity already destroyed; returning it must
-            // not throw or log, because the instance is no longer reclaimable.
-            Assert.DoesNotThrow(() => factoryService.Return(panel));
+            Assert.That(() => factoryService.Return(panel), Throws.Nothing);
         }
 
         [UnityTest]
@@ -82,8 +80,9 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_LoadScene();
 
             IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
+            IUnregisteredRole plain = new PlainImplementation();
 
-            Assert.That(() => factoryService.Return(new PlainImplementation()), Throws.TypeOf<InvalidOperationException>());
+            Assert.That(() => factoryService.Return(plain), Throws.TypeOf<InvalidOperationException>());
         }
 
         [UnityTest]
@@ -94,6 +93,18 @@ namespace TicTacToeLab.PlayModeTests
             IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
 
             Assert.That(() => factoryService.Get<CoroutineService>(), Throws.TypeOf<InvalidOperationException>());
+        }
+
+        [UnityTest]
+        public IEnumerator Returning_a_concrete_type_is_rejected_even_when_it_is_registered()
+        {
+            yield return IE_LoadScene();
+
+            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
+            CoroutineService productionInstance = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
+
+            Assert.That(() => factoryService.Return(productionInstance), Throws.TypeOf<InvalidOperationException>());
+            Assert.That(productionInstance == null, Is.False);
         }
 
         [UnityTest]

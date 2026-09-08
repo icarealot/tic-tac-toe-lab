@@ -22,7 +22,7 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(created.Camera, Is.Not.Null);
 
             Assert.That(created.Camera, Is.EqualTo(((Component)created).GetComponent<Camera>()));
-            Assert.DoesNotThrow(() => new CameraService(created.Camera));
+            Assert.That(() => { _ = new CameraService(created.Camera); }, Throws.Nothing);
 
             factoryService.Return(created);
         }

@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System.Collections;
-using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -76,37 +75,6 @@ namespace TicTacToeLab.PlayModeTests
 
             factory.Return(cellView);
             Object.Destroy(host);
-        }
-
-        private sealed class RecordingFactoryService : IFactoryService
-        {
-            private readonly IFactoryService _factoryService;
-
-            public RecordingFactoryService(IFactoryService factoryService)
-            {
-                _factoryService = factoryService;
-            }
-
-            public Component ReturnedInstance { get; private set; }
-            public List<(System.Type Type, Transform Parent)> GetRequests { get; } = new();
-
-            public T Get<T>() where T : class
-            {
-                GetRequests.Add((typeof(T), null));
-                return _factoryService.Get<T>();
-            }
-
-            public T Get<T>(Transform parent) where T : class
-            {
-                GetRequests.Add((typeof(T), parent));
-                return _factoryService.Get<T>(parent);
-            }
-
-            public void Return<T>(T instance) where T : class
-            {
-                ReturnedInstance = instance as Component;
-                _factoryService.Return(instance);
-            }
         }
     }
 }
