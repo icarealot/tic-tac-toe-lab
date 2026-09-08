@@ -11,6 +11,22 @@ namespace TicTacToeLab.PlayModeTests
     public sealed class UIWiringTests : SceneWiringTests
     {
         [UnityTest]
+        public IEnumerator The_scene_starts_with_one_ui_root_exposing_both_window_layers()
+        {
+            yield return IE_LoadScene();
+
+            UIRoot[] startupRoots = Object.FindObjectsByType<UIRoot>(FindObjectsSortMode.None);
+
+            Assert.That(startupRoots.Length, Is.EqualTo(1));
+
+            IUIRoot uiRoot = startupRoots[0];
+            Assert.That(uiRoot.PanelLayer, Is.Not.Null);
+            Assert.That(uiRoot.PopupLayer, Is.Not.Null);
+            Assert.That(uiRoot.PanelLayer.GetComponentInParent<Canvas>(), Is.EqualTo(((Component)uiRoot).GetComponent<Canvas>()));
+            Assert.That(uiRoot.PopupLayer.GetComponentInParent<Canvas>(), Is.EqualTo(((Component)uiRoot).GetComponent<Canvas>()));
+        }
+
+        [UnityTest]
         public IEnumerator The_gameplay_panel_is_present_under_the_panel_layer_at_startup()
         {
             yield return IE_LoadScene();

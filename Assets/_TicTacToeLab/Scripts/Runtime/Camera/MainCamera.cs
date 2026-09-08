@@ -3,7 +3,7 @@ using UnityEngine;
 namespace TicTacToeLab.Runtime
 {
     [RequireComponent(typeof(Camera))]
-    public class MainCamera : MonoBehaviour
+    public class MainCamera : MonoBehaviour, IMainCamera
     {
         public Camera Camera
         {

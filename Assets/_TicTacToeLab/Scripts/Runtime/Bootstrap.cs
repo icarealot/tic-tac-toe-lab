@@ -21,9 +21,11 @@ namespace TicTacToeLab.Runtime
 #endif
 
             ComponentFactoryService componentFactoryService = Instantiate(_componentFactoryServicePrefab);
-            Camera mainCamera = componentFactoryService.Get<Camera>();
-            ICameraService cameraService = new CameraService(mainCamera);
-            ICoroutineService coroutineService = componentFactoryService.Get<CoroutineService>();
+            IFactoryService factoryService = componentFactoryService.GetComponent<FactoryService>();
+
+            IMainCamera mainCamera = factoryService.Get<IMainCamera>();
+            ICameraService cameraService = new CameraService(mainCamera.Camera);
+            ICoroutineService coroutineService = factoryService.Get<ICoroutineService>();
 
             InputSystem_Actions inputActions = new();
             _inputService = new InputService(inputActions);
@@ -34,7 +36,7 @@ namespace TicTacToeLab.Runtime
             BoardPresenter boardPresenter = new(boardModel, boardView, _inputService, cameraService, logService);
             _boardSession = new BoardSession(boardPresenter);
 
-            UIRoot uiRoot = componentFactoryService.Get<UIRoot>();
+            IUIRoot uiRoot = factoryService.Get<IUIRoot>();
             IUIFactoryService uiFactoryService = new UIFactoryService(componentFactoryService, uiRoot, coroutineService);
             IUIService uiService = new UIService(uiFactoryService);
 
