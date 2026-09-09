@@ -1,87 +1,88 @@
 ---
 name: unity-code-review
-description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (does the code follow CODING_STANDARDS.md?) and Spec (does the code match what the originating spec asked for?) then write the report.
-disable-model-invocation: true
+description: Review staged, unstaged, and untracked Unity project changes when asked for a working-tree code review or when unity-implement requests its final review. Evaluate Standards and Spec independently and return the report.
 ---
 
-Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes:
+Review the current working-tree changes along two axes:
 
-- **Standards** — does the code conform to [CODING_STANDARDS.md](CODING_STANDARDS.md)?
-- **Spec** — does the code faithfully implement the originating spec?
+- **Standards** — does the change conform to [CODING_STANDARDS.md](CODING_STANDARDS.md)?
+- **Spec** — does the change faithfully implement the originating spec?
 
-Read the diff once, then perform two independent passes in this context — Standards followed by Spec — so findings stay separated. Write the report to `CODE_REVIEW.md` in the selected spec's folder.
+Inspect the change once, complete two independent passes in this context—Standards followed by Spec—then return the report to the caller.
 
-## Process
+## 1. Capture the working-tree change
 
-### 1. Pin the fixed point
+Capture all three working-tree states:
 
-Whatever the user said is the fixed point — a commit SHA, branch name, tag, `main`, `HEAD~5`, etc. If they didn't specify one, ask for it.
+- `git diff HEAD --` for the combined staged and unstaged tracked changes.
+- `git ls-files --others --exclude-standard` for untracked files; read each reviewable untracked file directly.
+- `git status --short` as the exhaustive changed-file inventory.
 
-Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
+Review no committed-only changes. Account for every path in the inventory. If the inventory is empty, return `No working-tree changes to review.` and stop. Record binary or unreadable files as unavailable rather than silently omitting them.
 
-Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff stops the review before analysis begins.
+## 2. Identify the spec source
 
-### 2. Identify the spec source
+Use the originating spec in this order:
 
-Look for the originating spec, in this order:
+1. The exact spec path passed by the caller.
+2. `SPEC.md` in a feature folder passed by the caller.
+3. A spec under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
+4. If no spec is found, stop and ask the caller.
 
-1. A path the user passed as an argument.
-2. A spec file under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
-3. If nothing is found, stop and ask the user.
+Read the selected spec completely.
 
-### 3. Standards source
+## 3. Standards source
 
-The Standards axis always carries [CODING_STANDARDS.md](CODING_STANDARDS.md) and the **smell baseline** below — a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies on top of the bundled file. Two rules bind it:
+The Standards axis always carries [CODING_STANDARDS.md](CODING_STANDARDS.md) and the **smell baseline** below. The bundled file overrides the baseline: where it endorses something the baseline would flag, suppress the smell. Skip anything tooling already enforces.
 
-- **The bundled file overrides.** [CODING_STANDARDS.md](CODING_STANDARDS.md) always wins; where it endorses something the baseline would flag, suppress the smell.
-- **Always a judgement call.** Each smell is a labelled heuristic ("possible Feature Envy"), never a hard violation — and, like any standard here, skip anything tooling already enforces.
+Baseline smells are labelled judgement calls, never hard violations:
 
-Each smell reads *what it is* → *how to fix*; match it against the diff:
+- **Mysterious Name** — a name does not reveal what it does or holds. Rename it; if no honest name emerges, clarify the design.
+- **Duplicated Code** — the same logic shape appears in multiple changed locations. Extract and share the shape.
+- **Feature Envy** — a method reaches into another object's data more than its own. Move the behavior toward that data.
+- **Data Clumps** — the same fields or parameters repeatedly travel together. Bundle them into a type.
+- **Primitive Obsession** — a primitive or string substitutes for a domain concept. Introduce a small domain type.
+- **Repeated Switches** — the same conditional dispatch recurs. Replace it with polymorphism or one shared map.
+- **Shotgun Surgery** — one logical change requires scattered edits. Gather what changes together.
+- **Divergent Change** — one module changes for unrelated reasons. Split its responsibilities.
+- **Speculative Generality** — abstractions, parameters, or hooks serve no requirement. Remove or inline them.
+- **Message Chains** — navigation such as `a.b().c().d()` leaks structure. Hide the walk behind behavior.
+- **Middle Man** — a type or function mostly delegates. Call the real target directly.
+- **Refused Bequest** — a subtype ignores most inherited behavior. Prefer composition.
 
-- **Mysterious Name** — a function, variable, or type whose name doesn't reveal what it does or holds. → rename it; if no honest name comes, the design's murky.
-- **Duplicated Code** — the same logic shape appears in more than one hunk or file in the change. → extract the shared shape, call it from both.
-- **Feature Envy** — a method that reaches into another object's data more than its own. → move the method onto the data it envies.
-- **Data Clumps** — the same few fields or params keep travelling together (a type wanting to be born). → bundle them into one type, pass that.
-- **Primitive Obsession** — a primitive or string standing in for a domain concept that deserves its own type. → give the concept its own small type.
-- **Repeated Switches** — the same `switch`/`if`-cascade on the same type recurs across the change. → replace with polymorphism, or one map both sites share.
-- **Shotgun Surgery** — one logical change forces scattered edits across many files in the diff. → gather what changes together into one module.
-- **Divergent Change** — one file or module is edited for several unrelated reasons. → split so each module changes for one reason.
-- **Speculative Generality** — abstraction, parameters, or hooks added for needs the spec doesn't have. → delete it; inline back until a real need shows.
-- **Message Chains** — long `a.b().c().d()` navigation the caller shouldn't depend on. → hide the walk behind one method on the first object.
-- **Middle Man** — a class or function that mostly just delegates onward. → cut it, call the real target direct.
-- **Refused Bequest** — a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
+## 4. Review the change
 
-### 4. Review the diff
+Use the captured tracked diff and untracked contents. Complete one pass before starting the next, and rank findings within each pass.
 
-Read the captured diff once. Complete each pass before starting the next. Use only the sources listed for that pass, and rank findings within that pass.
+### Pass 1 — Standards
 
-**Pass 1 — Standards.** Use the diff, [CODING_STANDARDS.md](CODING_STANDARDS.md), and the smell baseline. Report — per file/hunk where relevant — (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls — documented-standard breaches can be hard, but baseline smells are always judgement calls, and [CODING_STANDARDS.md](CODING_STANDARDS.md) overrides the baseline. Skip anything tooling enforces. Draft the findings under `## Standards`.
+Use only the change, [CODING_STANDARDS.md](CODING_STANDARDS.md), and the smell baseline. Report:
 
-**Pass 2 — Spec.** Use the diff and the selected spec. Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); and (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Draft the findings under `## Spec`.
+- Every documented-standard violation, citing the file and rule.
+- Every applicable baseline smell, naming the smell and quoting the changed location.
 
-### 5. Write the report
+Distinguish hard documented violations from judgement-call smells.
 
-Write `docs/<feature-name>/CODE_REVIEW.md` with format:
+### Pass 2 — Spec
+
+Use only the change and selected spec. Report:
+
+- Missing or partially implemented requirements.
+- Behavior the spec did not request.
+- Requirements that appear implemented incorrectly.
+
+Quote the spec requirement for every finding.
+
+## 5. Return the report
+
+Return the complete report directly to the caller:
 
 ```markdown
 ## Standards
 
-<Standards findings>
+<ranked findings, or "No findings.">
 
 ## Spec
 
-<Spec findings>
+<ranked findings, or "No findings.">
 ```
-
-Keep findings in their separate sections and rank each axis independently.
-
-After the write succeeds, respond with the file path.
-
-## Why two axes
-
-A change can pass one axis and fail the other:
-
-- Code that follows every standard but implements the wrong thing → **Standards pass, Spec fail.**
-- Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
-
-Reporting them separately stops one axis from masking the other. The sequential passes keep each axis tied to its own sources.
