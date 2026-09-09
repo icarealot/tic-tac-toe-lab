@@ -17,6 +17,8 @@ namespace TicTacToeLab.PlayModeTests
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
 
+            yield return IE_StartGame(mouse);
+
             Transform firstCellTransform = GameObject.Find("Cell (0, 0)").transform;
             Transform secondCellTransform = GameObject.Find("Cell (0, 1)").transform;
 
@@ -38,6 +40,8 @@ namespace TicTacToeLab.PlayModeTests
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
 
+            yield return IE_StartGame(mouse);
+
             // X: (0,0) (0,1) (0,2) win row 0; O: (1,0) (1,1) in between.
             yield return IE_PressCell(mouse, GameObject.Find("Cell (0, 0)").transform);
             yield return IE_PressCell(mouse, GameObject.Find("Cell (1, 0)").transform);
@@ -49,6 +53,10 @@ namespace TicTacToeLab.PlayModeTests
 
             MarkView[] remainingMarks = Object.FindObjectsByType<MarkView>(FindObjectsSortMode.None);
             Assert.That(remainingMarks, Is.Empty);
+
+            // The end-of-game loop returns to gameplay without ever showing the menu.
+            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Null);
+            Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Not.Null);
 
             Transform freshCellTransform = GameObject.Find("Cell (0, 0)").transform;
             yield return IE_PressCell(mouse, freshCellTransform);

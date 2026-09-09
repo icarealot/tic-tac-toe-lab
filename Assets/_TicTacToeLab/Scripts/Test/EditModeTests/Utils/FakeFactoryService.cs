@@ -11,6 +11,7 @@ namespace TicTacToeLab.EditModeTests
     /// </summary>
     public sealed class FakeFactoryService : IFactoryService
     {
+        public List<FakeMainMenuPanel> MenuPanels { get; } = new();
         public List<FakeGameplayPanel> Panels { get; } = new();
         public List<FakeConfirmQuitPopup> Popups { get; } = new();
         public List<IWindow> ReturnedWindows { get; } = new();
@@ -22,6 +23,13 @@ namespace TicTacToeLab.EditModeTests
 
         public T Get<T>(Transform parent) where T : class
         {
+            if (typeof(T) == typeof(IMainMenuPanel))
+            {
+                FakeMainMenuPanel panel = new();
+                MenuPanels.Add(panel);
+                return (T)(object)panel;
+            }
+
             if (typeof(T) == typeof(IGameplayPanel))
             {
                 FakeGameplayPanel panel = new();
@@ -77,6 +85,24 @@ namespace TicTacToeLab.EditModeTests
         public void Hide()
         {
             IsVisible = false;
+        }
+    }
+
+    public sealed class FakeMainMenuPanel : FakeWindow, IMainMenuPanel
+    {
+        public Action ConfiguredOnStart { get; private set; }
+
+        private Action _onStart;
+
+        public void Setup(Action onStart)
+        {
+            _onStart = onStart;
+            ConfiguredOnStart = onStart;
+        }
+
+        public void StartGame()
+        {
+            _onStart?.Invoke();
         }
     }
 

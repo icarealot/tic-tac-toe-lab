@@ -10,7 +10,6 @@ namespace TicTacToeLab.EditModeTests
 
         private FakeBoardSession _fakeBoardSession;
         private FakeInputService _fakeInputService;
-        private FakeLogService _fakeLogService;
         private FakeFactoryService _fakeFactory;
         private UIService _uiService;
         private FakeStateMachine _fakeStateMachine;
@@ -21,13 +20,15 @@ namespace TicTacToeLab.EditModeTests
         {
             _fakeBoardSession = new FakeBoardSession();
             _fakeInputService = new FakeInputService();
-            _fakeLogService = new FakeLogService();
             _fakeFactory = new FakeFactoryService();
-            _uiService = new UIService(_fakeFactory, new FakeUIRoot(), new FakeCoroutineService());
+            _uiService = new UIService(_fakeFactory,
+                                        new FakeUIRoot(),
+                                        new FakeCoroutineService());
             _fakeStateMachine = new FakeStateMachine();
-            _gameplayState = new GameplayState(
-                _fakeBoardSession, _fakeStateMachine, _uiService,
-                _fakeInputService, _fakeLogService);
+            _gameplayState = new GameplayState(_fakeBoardSession,
+                                                _fakeStateMachine,
+                                                _uiService,
+                                                _fakeInputService);
         }
 
         [Test]
@@ -133,6 +134,32 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_fakeFactory.ReturnedWindows.Contains(Popup), Is.True);
             Assert.That(Panel.IsVisible, Is.True);
             Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
+        }
+
+        [Test]
+        public void Answering_yes_enters_the_menu_state()
+        {
+            _gameplayState.Enter();
+            _gameplayState.Back();
+
+            Popup.Yes();
+
+            Assert.That(_fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(MainMenuState)));
+            Assert.That(_fakeStateMachine.ChangeStateCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Answering_yes_leaves_gameplay_so_its_popup_and_panel_are_cleaned_up_on_the_way_out()
+        {
+            _gameplayState.Enter();
+            _gameplayState.Back();
+
+            Popup.Yes();
+            _gameplayState.Leave();
+
+            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(Popup));
+            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(Panel));
+            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
         }
 
         [Test]

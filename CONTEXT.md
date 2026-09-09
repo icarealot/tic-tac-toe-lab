@@ -183,6 +183,9 @@ The long-lived pairing of the board's model, view and presenter. It announces wh
 **StateMachine**:
 The type that holds the app's states and makes one of them current, always leaving the state it is in before entering the next.
 
+**MainMenuState**:
+The state the app is in while the main menu is shown. The menu is the app's entry point: it presents the game's title and a start control, and starting always begins a fresh game — a half-played board on the menu is never resumed. Back does nothing there: the menu is where navigation ends.
+
 **GameplayState**:
 The state the app is in while a game is being played. It listens for the game to end.
 

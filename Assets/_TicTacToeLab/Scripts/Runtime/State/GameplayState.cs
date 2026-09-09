@@ -6,15 +6,17 @@ namespace TicTacToeLab.Runtime
         private readonly IStateMachine _stateMachine;
         private readonly IUIService _uiService;
         private readonly IInputService _inputService;
-        private readonly ILogService _logService;
 
-        public GameplayState(IBoardSession boardSession, IStateMachine stateMachine, IUIService uiService, IInputService inputService, ILogService logService)
+        public GameplayState(
+            IBoardSession boardSession,
+            IStateMachine stateMachine,
+            IUIService uiService,
+            IInputService inputService)
         {
             _boardSession = boardSession;
             _stateMachine = stateMachine;
             _uiService = uiService;
             _inputService = inputService;
-            _logService = logService;
         }
 
         public void Enter()
@@ -48,7 +50,7 @@ namespace TicTacToeLab.Runtime
             _uiService.ShowPopup<IConfirmQuitPopup>(popup =>
             {
                 popup.Setup(
-                    onYes: Quit,
+                    onYes: EnterMainMenu,
                     onNo: CloseConfirmQuitPopup);
             });
         }
@@ -64,9 +66,9 @@ namespace TicTacToeLab.Runtime
             _inputService.EnablePlayerPress();
         }
 
-        private void Quit()
+        private void EnterMainMenu()
         {
-            _logService.Log("Quitting the game");
+            _stateMachine.ChangeState<MainMenuState>();
         }
 
         private void OnGameEnded()

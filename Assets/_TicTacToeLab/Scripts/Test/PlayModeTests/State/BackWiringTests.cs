@@ -17,8 +17,10 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_LoadScene();
 
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
 
+            yield return IE_StartGame(mouse);
             yield return IE_PressBack(keyboard);
 
             ConfirmQuitPopup popup = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>();
@@ -42,7 +44,10 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_LoadScene();
 
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
+
+            yield return IE_StartGame(mouse);
 
             yield return IE_PressBack(keyboard);
             yield return IE_PressBack(keyboard);
@@ -60,6 +65,7 @@ namespace TicTacToeLab.PlayModeTests
             Mouse mouse = InputSystem.AddDevice<Mouse>();
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
 
+            yield return IE_StartGame(mouse);
             yield return IE_PressBack(keyboard);
 
             Button noButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
@@ -81,6 +87,7 @@ namespace TicTacToeLab.PlayModeTests
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
             Transform cellTransform = GameObject.Find("Cell (0, 0)").transform;
 
+            yield return IE_StartGame(mouse);
             yield return IE_PressBack(keyboard);
             yield return IE_PressCell(mouse, cellTransform);
 
@@ -94,19 +101,63 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(cellTransform.GetComponentInChildren<MarkView>(), Is.Not.Null);
         }
 
-        private IEnumerator IE_ClickButton(Mouse mouse, Button button)
+        [UnityTest]
+        public IEnumerator A_mouse_click_on_the_confirmations_yes_button_returns_to_the_menu_panel()
         {
-            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(null, button.transform.position);
+            yield return IE_LoadScene();
 
-            Set(mouse.position, screenPoint);
-            yield return null;
-            Press(mouse.leftButton);
-            yield return null;
-            Release(mouse.leftButton);
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
 
-            // The button raises onClick on release, and the closed popup is destroyed at end of frame.
-            yield return null;
-            yield return null;
+            yield return IE_StartGame(mouse);
+            yield return IE_PressBack(keyboard);
+
+            Button yesButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
+                .Find("SafeArea/Dialog/YesButton").GetComponent<Button>();
+
+            yield return IE_ClickButton(mouse, yesButton);
+
+            Assert.That(uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>(), Is.Null);
+            Assert.That(uiRoot.PanelLayer.GetComponentInChildren<GameplayPanel>(), Is.Null);
+
+            MainMenuPanel menuPanel = Object.FindFirstObjectByType<MainMenuPanel>();
+            Assert.That(menuPanel, Is.Not.Null);
+            Assert.That(menuPanel.transform.parent, Is.EqualTo(uiRoot.PanelLayer));
+            Assert.That(menuPanel.IsVisible, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator A_game_abandoned_through_yes_keeps_its_marks_and_start_begins_an_empty_board()
+        {
+            yield return IE_LoadScene();
+
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
+            Transform cellTransform = GameObject.Find("Cell (0, 0)").transform;
+
+            yield return IE_StartGame(mouse);
+            yield return IE_PressCell(mouse, cellTransform);
+
+            yield return IE_PressBack(keyboard);
+            Button yesButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
+                .Find("SafeArea/Dialog/YesButton").GetComponent<Button>();
+            yield return IE_ClickButton(mouse, yesButton);
+
+            // The abandoned board keeps its mark, hidden behind the menu.
+            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Not.Null);
+            Assert.That(cellTransform.GetComponentInChildren<MarkView>(), Is.Not.Null);
+
+            Button startButton = Object.FindFirstObjectByType<MainMenuPanel>().GetComponentInChildren<Button>();
+            yield return IE_ClickButton(mouse, startButton);
+
+            MarkView[] remainingMarks = Object.FindObjectsByType<MarkView>(FindObjectsSortMode.None);
+            Assert.That(remainingMarks, Is.Empty);
+
+            GameplayPanel gameplayPanel = Object.FindFirstObjectByType<GameplayPanel>();
+            TMPro.TMP_Text turnText = gameplayPanel.GetComponentInChildren<TMPro.TMP_Text>();
+            Assert.That(turnText.text, Is.EqualTo("X's turn"));
         }
 
         private IEnumerator IE_PressBack(Keyboard keyboard)

@@ -17,6 +17,9 @@ namespace TicTacToeLab.PlayModeTests
 
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+
+            yield return IE_StartGame(mouse);
             yield return IE_PressBack(keyboard);
 
             ConfirmQuitPopup popup = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>();
@@ -38,6 +41,9 @@ namespace TicTacToeLab.PlayModeTests
 
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+
+            yield return IE_StartGame(mouse);
             yield return IE_PressBack(keyboard);
 
             ConfirmQuitPopup shownPopup = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>();

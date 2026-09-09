@@ -11,6 +11,7 @@ namespace TicTacToeLab.EditModeTests
         private FakeBoardView _fakeBoardView;
         private FakeInputService _fakeInputService;
         private FakeCoroutineService _fakeCoroutineService;
+        private FakeFactoryService _fakeFactory;
         private BoardSession _boardSession;
         private UIService _uiService;
         private AppStateMachine _stateMachine;
@@ -21,19 +22,28 @@ namespace TicTacToeLab.EditModeTests
             _boardModel = new BoardModel();
             _fakeBoardView = new FakeBoardView();
             _fakeInputService = new FakeInputService();
-            BoardPresenter boardPresenter = new(
-                _boardModel, _fakeBoardView,
-                _fakeInputService, new FakeCameraService(), new FakeLogService());
+            BoardPresenter boardPresenter = new(_boardModel,
+                                                _fakeBoardView,
+                                                _fakeInputService,
+                                                new FakeCameraService(),
+                                                new FakeLogService());
             _boardSession = new BoardSession(boardPresenter);
             _fakeCoroutineService = new FakeCoroutineService();
-            _uiService = new UIService(new FakeFactoryService(), new FakeUIRoot(), _fakeCoroutineService);
+            _fakeFactory = new FakeFactoryService();
+            _uiService = new UIService(_fakeFactory, new FakeUIRoot(), _fakeCoroutineService);
             _stateMachine = new AppStateMachine(_fakeInputService);
 
-            GameplayState gameplayState = new(
-                _boardSession, _stateMachine, _uiService,
-                _fakeInputService, new FakeLogService());
-            GameCompleteState gameCompleteState = new(
-                _boardSession, _stateMachine, _fakeCoroutineService);
+            MainMenuState mainMenuState = new(_boardSession,
+                                            _stateMachine,
+                                            _uiService);
+            GameplayState gameplayState = new(_boardSession,
+                                            _stateMachine,
+                                            _uiService,
+                                            _fakeInputService);
+            GameCompleteState gameCompleteState = new(_boardSession,
+                                                    _stateMachine,
+                                                    _fakeCoroutineService);
+            _stateMachine.Add(mainMenuState);
             _stateMachine.Add(gameplayState);
             _stateMachine.Add(gameCompleteState);
         }
@@ -102,6 +112,67 @@ namespace TicTacToeLab.EditModeTests
 
             Assert.That(_fakeBoardView.WasCleared, Is.False);
             Assert.That(_boardModel.Outcome, Is.Not.EqualTo(Outcome.InProgress));
+        }
+
+        [Test]
+        public void The_full_round_trip_through_the_menu_ends_on_a_fresh_board()
+        {
+            _stateMachine.ChangeState<MainMenuState>();
+            _fakeFactory.MenuPanels[0].StartGame();
+
+            BoardMoves.PressCell(_fakeInputService, _boardModel, 0, 0);
+            Assert.That(_boardModel.IsEmpty(0, 0), Is.False);
+
+            _fakeInputService.RaiseBack();
+            _fakeFactory.Popups[0].Yes();
+
+            // Back on the menu, the abandoned board keeps its mark hidden behind the menu panel.
+            Assert.That(_fakeFactory.MenuPanels, Has.Count.EqualTo(2));
+            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
+            Assert.That(_uiService.HasPopup, Is.False);
+            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(_boardModel.IsEmpty(0, 0), Is.False);
+
+            _fakeFactory.MenuPanels[1].StartGame();
+
+            // The next Start begins from an empty board with X to play, and the reset reached the view.
+            Assert.That(_boardModel.IsEmpty(0, 0), Is.True);
+            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
+            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(_fakeBoardView.ClearCount, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void The_end_of_game_loop_returns_to_gameplay_without_the_menu()
+        {
+            _stateMachine.ChangeState<MainMenuState>();
+            _fakeFactory.MenuPanels[0].StartGame();
+
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+            _fakeCoroutineService.FireScheduledCallback();
+
+            // The pause returned to gameplay — a second gameplay panel was shown and no menu panel
+            // was ever requested again.
+            Assert.That(_fakeFactory.Panels, Has.Count.EqualTo(2));
+            Assert.That(_fakeFactory.MenuPanels, Has.Count.EqualTo(1));
+            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        [Test]
+        public void Repeated_round_trips_through_the_menu_clear_the_board_exactly_once_per_game_ending()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                _stateMachine.ChangeState<MainMenuState>();
+                _fakeFactory.MenuPanels[_fakeFactory.MenuPanels.Count - 1].StartGame();
+
+                BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+                _fakeCoroutineService.FireScheduledCallback();
+            }
+
+            // Each round contributes exactly two clears: the Start reset and the ending reset.
+            // A subscription left behind by an earlier round trip would clear the board again.
+            Assert.That(_fakeBoardView.ClearCount, Is.EqualTo(6));
         }
     }
 }

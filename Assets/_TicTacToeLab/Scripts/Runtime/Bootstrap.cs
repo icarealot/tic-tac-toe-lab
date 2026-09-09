@@ -39,11 +39,13 @@ namespace TicTacToeLab.Runtime
             IUIService uiService = new UIService(factoryService, uiRoot, coroutineService);
 
             _stateMachine = new AppStateMachine(_inputService);
-            GameplayState gameplayState = new(_boardSession, _stateMachine, uiService, _inputService, logService);
+            MainMenuState mainMenuState = new(_boardSession, _stateMachine, uiService);
+            GameplayState gameplayState = new(_boardSession, _stateMachine, uiService, _inputService);
             GameCompleteState gameCompleteState = new(_boardSession, _stateMachine, coroutineService);
+            _stateMachine.Add(mainMenuState);
             _stateMachine.Add(gameplayState);
             _stateMachine.Add(gameCompleteState);
-            _stateMachine.ChangeState<GameplayState>();
+            _stateMachine.ChangeState<MainMenuState>();
 
             logService.Log("Setup is done!");
         }

@@ -27,15 +27,16 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator The_gameplay_panel_is_present_under_the_panel_layer_at_startup()
+        public IEnumerator The_menu_panel_is_present_under_the_panel_layer_at_startup()
         {
             yield return IE_LoadScene();
 
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
-            GameplayPanel gameplayPanel = Object.FindFirstObjectByType<GameplayPanel>();
+            MainMenuPanel menuPanel = Object.FindFirstObjectByType<MainMenuPanel>();
 
-            Assert.That(gameplayPanel, Is.Not.Null);
-            Assert.That(gameplayPanel.transform.parent, Is.EqualTo(uiRoot.PanelLayer));
+            Assert.That(menuPanel, Is.Not.Null);
+            Assert.That(menuPanel.transform.parent, Is.EqualTo(uiRoot.PanelLayer));
+            Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Null);
         }
 
         [UnityTest]
@@ -44,6 +45,8 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_LoadScene();
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
+            yield return IE_StartGame(mouse);
+
             TMPro.TMP_Text turnText = Object.FindFirstObjectByType<GameplayPanel>().GetComponentInChildren<TMPro.TMP_Text>();
             string turnTextBeforePress = turnText.text;
 
