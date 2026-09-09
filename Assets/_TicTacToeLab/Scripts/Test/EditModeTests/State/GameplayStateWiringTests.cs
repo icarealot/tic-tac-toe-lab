@@ -115,6 +115,24 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
+        public void A_panel_back_press_then_yes_round_trip_lands_on_the_menu_with_all_windows_cleaned_up()
+        {
+            _stateMachine.ChangeState<MainMenuState>();
+            _fakeFactory.MenuPanels[0].StartGame();
+
+            _fakeFactory.Panels[0].Back();
+            _fakeFactory.Popups[0].Yes();
+
+            Assert.That(_fakeFactory.MenuPanels, Has.Count.EqualTo(2));
+            Assert.That(_fakeFactory.Panels, Has.Count.EqualTo(1));
+            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
+            Assert.That(_uiService.HasPopup, Is.False);
+            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(_fakeFactory.Panels[0]));
+            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(_fakeFactory.Popups[0]));
+        }
+
+        [Test]
         public void The_full_round_trip_through_the_menu_ends_on_a_fresh_board()
         {
             _stateMachine.ChangeState<MainMenuState>();

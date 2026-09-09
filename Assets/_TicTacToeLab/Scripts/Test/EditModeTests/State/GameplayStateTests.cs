@@ -42,6 +42,40 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
+        public void A_back_press_on_the_panel_opens_the_confirm_popup_and_leaves_the_gameplay_panel_on_its_stack()
+        {
+            _gameplayState.Enter();
+
+            Panel.Back();
+
+            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
+            Assert.That(Popup.IsVisible, Is.True);
+            Assert.That(_fakeFactory.ReturnedWindows.Contains(Panel), Is.False);
+            Assert.That(_uiService.TryClosePanel(), Is.True);
+        }
+
+        [Test]
+        public void A_back_press_on_the_panel_disables_gameplay_input()
+        {
+            _gameplayState.Enter();
+
+            Panel.Back();
+
+            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.False);
+        }
+
+        [Test]
+        public void Answering_no_after_a_panel_back_press_re_enables_gameplay_input()
+        {
+            _gameplayState.Enter();
+            Panel.Back();
+
+            Popup.No();
+
+            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        [Test]
         public void Leaving_gameplay_closes_the_gameplay_panel()
         {
             _gameplayState.Enter();
@@ -120,6 +154,31 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
             Assert.That(_fakeFactory.ReturnedWindows.Contains(Popup), Is.True);
             Assert.That(Panel.IsVisible, Is.True);
+        }
+
+        [Test]
+        public void A_back_press_on_the_panel_while_the_confirmation_is_up_closes_it_and_opens_no_second_one()
+        {
+            _gameplayState.Enter();
+            Panel.Back();
+
+            Panel.Back();
+
+            Assert.That(_uiService.HasPopup, Is.False);
+            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
+            Assert.That(_fakeFactory.ReturnedWindows.Contains(Popup), Is.True);
+            Assert.That(Panel.IsVisible, Is.True);
+        }
+
+        [Test]
+        public void A_back_press_on_the_panel_while_the_confirmation_is_up_re_enables_gameplay_input()
+        {
+            _gameplayState.Enter();
+            Panel.Back();
+
+            Panel.Back();
+
+            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
         }
 
         [Test]

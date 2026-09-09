@@ -22,7 +22,7 @@ namespace TicTacToeLab.Runtime
         public void Enter()
         {
             _boardSession.GameEnded += OnGameEnded;
-            _uiService.ShowPanel<IGameplayPanel>(panel => panel.Setup(_boardSession));
+            _uiService.ShowPanel<IGameplayPanel>(panel => panel.Setup(_boardSession, onBack: Back));
         }
 
         public void Leave()

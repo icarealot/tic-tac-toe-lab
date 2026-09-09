@@ -133,7 +133,7 @@ Said of a window that still exists but is not shown — because something covers
 _Avoid_: Inactive, disabled, closed, off
 
 **Back**:
-The request to undo the last piece of navigation — the Android hardware back gesture, or Escape. It closes the topmost popup if there is one, and otherwise takes the topmost panel off its stack. What back actually does is decided by the state the app is in, not by the UI service; see [ADR 0007](./docs/adr/0007-states-decide-what-navigation-means.md).
+The request to undo the last piece of navigation — the Android hardware back gesture, Escape, or the on-screen back button. It closes the topmost popup if there is one, and otherwise takes the topmost panel off its stack. What back actually does is decided by the state the app is in, not by the UI service; see [ADR 0007](./docs/adr/0007-states-decide-what-navigation-means.md).
 _Avoid_: Cancel, escape, return, dismiss
 
 ### Architecture

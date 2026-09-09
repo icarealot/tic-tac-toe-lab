@@ -73,7 +73,7 @@ namespace TicTacToeLab.EditModeTests
         public void Closing_the_top_panel_returns_it_through_the_factory_and_reveals_the_one_beneath_with_its_configuration_intact()
         {
             FakeBoardSession boardSession = new();
-            _uiService.ShowPanel<IGameplayPanel>(panel => panel.Setup(boardSession));
+            _uiService.ShowPanel<IGameplayPanel>(panel => panel.Setup(boardSession, onBack: null));
             FakeGameplayPanel firstPanel = _fakeFactory.Panels[0];
             _uiService.ShowPanel<IGameplayPanel>();
             FakeGameplayPanel secondPanel = _fakeFactory.Panels[1];
