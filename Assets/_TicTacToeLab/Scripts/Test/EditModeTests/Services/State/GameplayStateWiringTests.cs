@@ -10,6 +10,7 @@ namespace TicTacToeLab.EditModeTests
         private BoardModel _boardModel;
         private FakeBoardView _fakeBoardView;
         private FakeInputService _fakeInputService;
+        private BoardPresser _presser;
         private FakeCoroutineService _fakeCoroutineService;
         private FakeFactoryService _fakeFactory;
         private BoardSession _boardSession;
@@ -22,6 +23,7 @@ namespace TicTacToeLab.EditModeTests
             _boardModel = new BoardModel();
             _fakeBoardView = new FakeBoardView();
             _fakeInputService = new FakeInputService();
+            _presser = new BoardPresser(_fakeInputService, _boardModel);
             BoardPresenter boardPresenter = new(_boardModel,
                                                 _fakeBoardView,
                                                 _fakeInputService,
@@ -60,11 +62,11 @@ namespace TicTacToeLab.EditModeTests
         {
             _stateMachine.ChangeState<GameplayState>();
 
-            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+            BoardMoves.WinRowZeroForX(_presser);
             _fakeCoroutineService.FireScheduledCallback();
-            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+            BoardMoves.WinRowZeroForX(_presser);
             _fakeCoroutineService.FireScheduledCallback();
-            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+            BoardMoves.WinRowZeroForX(_presser);
             _fakeCoroutineService.FireScheduledCallback();
 
             // An extra, leftover subscription from a prior game would clear the board more than once per ending.
@@ -78,7 +80,7 @@ namespace TicTacToeLab.EditModeTests
 
             for (int i = 0; i < 5; i++)
             {
-                BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+                BoardMoves.WinRowZeroForX(_presser);
                 _fakeCoroutineService.FireScheduledCallback();
             }
 
@@ -95,7 +97,7 @@ namespace TicTacToeLab.EditModeTests
 
             Assert.That(() =>
             {
-                BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+                BoardMoves.WinRowZeroForX(_presser);
                 _fakeCoroutineService.FireScheduledCallback();
             }, Throws.Nothing);
 
@@ -108,7 +110,7 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.ChangeState<GameplayState>();
 
             _stateMachine.Dispose();
-            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+            BoardMoves.WinRowZeroForX(_presser);
 
             Assert.That(_fakeBoardView.WasCleared, Is.False);
             Assert.That(_boardModel.Outcome, Is.Not.EqualTo(Outcome.InProgress));
@@ -138,7 +140,7 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.ChangeState<MainMenuState>();
             _fakeFactory.MenuPanels[0].StartGame();
 
-            BoardMoves.PressCell(_fakeInputService, _boardModel, 0, 0);
+            _presser.Press(0, 0);
             Assert.That(_boardModel.IsEmpty(0, 0), Is.False);
 
             _fakeInputService.RaiseBack();
@@ -166,7 +168,7 @@ namespace TicTacToeLab.EditModeTests
             _stateMachine.ChangeState<MainMenuState>();
             _fakeFactory.MenuPanels[0].StartGame();
 
-            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+            BoardMoves.WinRowZeroForX(_presser);
             _fakeCoroutineService.FireScheduledCallback();
 
             // The pause returned to gameplay — a second gameplay panel was shown and no menu panel
@@ -184,7 +186,7 @@ namespace TicTacToeLab.EditModeTests
                 _stateMachine.ChangeState<MainMenuState>();
                 _fakeFactory.MenuPanels[_fakeFactory.MenuPanels.Count - 1].StartGame();
 
-                BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+                BoardMoves.WinRowZeroForX(_presser);
                 _fakeCoroutineService.FireScheduledCallback();
             }
 

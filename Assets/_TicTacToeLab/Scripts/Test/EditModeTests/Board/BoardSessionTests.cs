@@ -10,6 +10,7 @@ namespace TicTacToeLab.EditModeTests
         private FakeBoardView _fakeBoardView;
         private FakeInputService _fakeInputService;
         private FakeLogService _fakeLogService;
+        private BoardPresser _presser;
         private BoardSession _boardSession;
 
         [SetUp]
@@ -19,6 +20,7 @@ namespace TicTacToeLab.EditModeTests
             _fakeBoardView = new FakeBoardView();
             _fakeInputService = new FakeInputService();
             _fakeLogService = new FakeLogService();
+            _presser = new BoardPresser(_fakeInputService, _boardModel);
             BoardPresenter boardPresenter = BoardPresenterBuilder.Build(
                 _boardModel, _fakeBoardView, _fakeInputService, _fakeLogService);
             _boardSession = new BoardSession(boardPresenter);
@@ -30,7 +32,7 @@ namespace TicTacToeLab.EditModeTests
             int gameEndedCount = 0;
             _boardSession.GameEnded += () => gameEndedCount++;
 
-            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+            BoardMoves.WinRowZeroForX(_presser);
 
             Assert.That(gameEndedCount, Is.EqualTo(1));
         }
@@ -38,7 +40,7 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void Resetting_the_game_through_the_session_reaches_the_presenter_and_clears_the_view()
         {
-            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+            BoardMoves.WinRowZeroForX(_presser);
 
             _boardSession.Reset();
 
@@ -54,7 +56,7 @@ namespace TicTacToeLab.EditModeTests
             _boardSession.GameEnded += () => gameEndedCount++;
 
             _boardSession.Dispose();
-            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
+            BoardMoves.WinRowZeroForX(_presser);
 
             Assert.That(gameEndedCount, Is.EqualTo(0));
             Assert.That(_fakeInputService.HasSubscribers, Is.False);
@@ -68,7 +70,7 @@ namespace TicTacToeLab.EditModeTests
 
             Assert.That(_boardSession.Turn, Is.EqualTo(Mark.X));
 
-            BoardMoves.PressCell(_fakeInputService, _boardModel, 0, 0);
+            _presser.Press(0, 0);
 
             Assert.That(_boardSession.Turn, Is.EqualTo(Mark.O));
             Assert.That(turns, Is.EqualTo(new[] { Mark.O }));
@@ -81,7 +83,7 @@ namespace TicTacToeLab.EditModeTests
             _boardSession.TurnChanged += _ => turnChangedCount++;
 
             _boardSession.Dispose();
-            BoardMoves.PressCell(_fakeInputService, _boardModel, 0, 0);
+            _presser.Press(0, 0);
 
             Assert.That(turnChangedCount, Is.EqualTo(0));
         }

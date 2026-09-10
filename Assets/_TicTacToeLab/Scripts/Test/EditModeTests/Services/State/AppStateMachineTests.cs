@@ -52,11 +52,26 @@ namespace TicTacToeLab.EditModeTests
             }
         }
 
+        private sealed class UnregisteredSpyState : SpyState
+        {
+            public UnregisteredSpyState(List<string> log) : base(log)
+            {
+            }
+        }
+
         private sealed class SecondSpyState : SpyState
         {
             public SecondSpyState(List<string> log) : base(log)
             {
             }
+        }
+
+        [Test]
+        public void Transitioning_to_a_state_type_that_was_never_added_throws()
+        {
+            Assert.That(() => _stateMachine.ChangeState<UnregisteredSpyState>(),
+                Throws.InvalidOperationException
+                    .With.Message.Contains(nameof(UnregisteredSpyState)));
         }
 
         [Test]

@@ -49,6 +49,21 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(insets.AnchorMax.y, Is.EqualTo(1f));
         }
 
+        [TestCase(0f, 0f)]
+        [TestCase(-1080f, 2340f)]
+        [TestCase(1080f, -2340f)]
+        [TestCase(0f, 2340f)]
+        [TestCase(1080f, 0f)]
+        public void A_zero_or_negative_screen_size_produces_a_full_stretch_rect(float screenWidth, float screenHeight)
+        {
+            Rect safeArea = new(0f, 100f, 1080f, 2000f);
+
+            SafeAreaInsets insets = SafeAreaCalculator.Calculate(safeArea, screenWidth, screenHeight);
+
+            Assert.That(insets.AnchorMin, Is.EqualTo(Vector2.zero));
+            Assert.That(insets.AnchorMax, Is.EqualTo(Vector2.one));
+        }
+
         [TestCase(1080f, 2340f)]
         [TestCase(1440f, 3200f)]
         [TestCase(750f, 1334f)]
