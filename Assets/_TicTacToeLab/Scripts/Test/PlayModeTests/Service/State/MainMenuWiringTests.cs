@@ -88,14 +88,6 @@ namespace TicTacToeLab.PlayModeTests
             factory.Return(panel);
             yield return null;
         }
-
-        private IEnumerator IE_PressBack(Keyboard keyboard)
-        {
-            Press(keyboard.escapeKey);
-            yield return null;
-            Release(keyboard.escapeKey);
-            yield return null;
-        }
     }
 }
 #endif

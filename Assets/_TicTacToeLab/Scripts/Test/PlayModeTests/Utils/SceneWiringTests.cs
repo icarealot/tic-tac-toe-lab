@@ -14,11 +14,22 @@ namespace TicTacToeLab.PlayModeTests
     /// app enables input actions the moment it comes up: one that ran outside the input fixture's
     /// sandbox would leave those actions bound to devices the next test's reset takes away, and the
     /// throw would land in that next test rather than in the one that caused it.
+    /// <para>
+    /// All input simulation — press, button activation, back — goes through the helpers below, and
+    /// each helper owns its frame-yield policy: it yields the frames its gesture needs to land, and
+    /// when the gesture closes a window it waits one frame further, because the closed window is
+    /// destroyed at the end of the frame that closes it. Change simulation timing here, in one
+    /// place — never in a test.
+    /// </para>
     /// </summary>
     public abstract class SceneWiringTests : InputTestFixture
     {
         protected const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
 
+        /// <summary>
+        /// Loads the real scene and yields one frame for its startup — the input actions coming up —
+        /// to settle.
+        /// </summary>
         protected IEnumerator IE_LoadScene()
         {
             yield return EditorSceneManager.LoadSceneInPlayMode(
@@ -26,6 +37,11 @@ namespace TicTacToeLab.PlayModeTests
             yield return null;
         }
 
+        /// <summary>
+        /// Simulates a press on the board: aims the mouse at the cell's screen point, pushes down
+        /// and releases in the same frame, then yields one frame for the mark to land. A press
+        /// destroys nothing, so no destruction wait applies.
+        /// </summary>
         protected IEnumerator IE_PressCell(Mouse mouse, Transform cellTransform)
         {
             Vector3 screenPoint = Camera.main.WorldToScreenPoint(cellTransform.position);
@@ -37,9 +53,20 @@ namespace TicTacToeLab.PlayModeTests
             yield return null;
         }
 
+        /// <summary>
+        /// Simulates a button activation through the Unity event system: aims the mouse at the
+        /// middle of the button's rect — not its transform position, which is the rect's center only
+        /// for a centered pivot, while the back button, for one, hangs from its top-left corner —
+        /// then yields for the hover, presses, yields for the press, and releases. The button
+        /// raises onClick on release, and a window the activation closes is destroyed at the end of
+        /// that frame; the two trailing yields cover the release and that end-of-frame destruction.
+        /// </summary>
         protected IEnumerator IE_ClickButton(Mouse mouse, Button button)
         {
-            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(null, button.transform.position);
+            RectTransform rect = button.GetComponent<RectTransform>();
+            Vector3[] corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(null, (corners[0] + corners[2]) / 2f);
 
             Set(mouse.position, screenPoint);
             yield return null;
@@ -47,8 +74,21 @@ namespace TicTacToeLab.PlayModeTests
             yield return null;
             Release(mouse.leftButton);
 
-            // The button raises onClick on release, and the closed window is destroyed at end of frame.
             yield return null;
+            yield return null;
+        }
+
+        /// <summary>
+        /// Simulates the back gesture: presses and releases the keyboard's escape key across frames.
+        /// The asking state closes its window on the press, and the closed window is destroyed at
+        /// the end of that frame; the final yield waits out that end-of-frame destruction.
+        /// </summary>
+        protected IEnumerator IE_PressBack(Keyboard keyboard)
+        {
+            Press(keyboard.escapeKey);
+            yield return null;
+            Release(keyboard.escapeKey);
+
             yield return null;
         }
 

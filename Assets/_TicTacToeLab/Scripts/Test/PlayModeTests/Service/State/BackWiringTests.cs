@@ -177,7 +177,7 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(backButton.GetComponent<Image>().raycastTarget, Is.True);
             Assert.That(backButton.GetComponentInChildren<TMPro.TMP_Text>().raycastTarget, Is.False);
 
-            yield return IE_ClickButtonCenter(mouse, backButton);
+            yield return IE_ClickButton(mouse, backButton);
 
             ConfirmQuitPopup popup = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>();
             GameplayPanel panel = uiRoot.PanelLayer.GetComponentInChildren<GameplayPanel>();
@@ -207,7 +207,7 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(button.anchorMin, Is.EqualTo(new Vector2(0f, 1f)));
             Assert.That(button.anchorMax, Is.EqualTo(new Vector2(0f, 1f)));
             Assert.That(button.pivot, Is.EqualTo(new Vector2(0f, 1f)));
-            Assert.That(button.sizeDelta, Is.EqualTo(new Vector2(330f, 130f)));
+            Assert.That(button.sizeDelta, Is.EqualTo(new Vector2(140f, 140f)));
             Assert.That(button.anchoredPosition, Is.EqualTo(new Vector2(60f, -60f)));
 
             Image image = button.GetComponent<Image>();
@@ -229,7 +229,7 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_StartGame(mouse);
             Button backButton = IE_FindBackButton();
 
-            yield return IE_ClickButtonCenter(mouse, backButton);
+            yield return IE_ClickButton(mouse, backButton);
             Button noButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
                 .Find("SafeArea/Dialog/NoButton").GetComponent<Button>();
             yield return IE_ClickButton(mouse, noButton);
@@ -238,7 +238,7 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(uiRoot.PanelLayer.GetComponentInChildren<GameplayPanel>(), Is.Not.Null);
 
             // Play continues, and the button answers again on the same path.
-            yield return IE_ClickButtonCenter(mouse, backButton);
+            yield return IE_ClickButton(mouse, backButton);
             Assert.That(uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>(), Is.Not.Null);
         }
 
@@ -252,14 +252,14 @@ namespace TicTacToeLab.PlayModeTests
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
 
             yield return IE_StartGame(mouse);
-            yield return IE_ClickButtonCenter(mouse, IE_FindBackButton());
+            yield return IE_ClickButton(mouse, IE_FindBackButton());
 
             ConfirmQuitPopup popup = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>();
             Assert.That(popup, Is.Not.Null);
 
             // The dimmer absorbs the press where the button sits: the question stays up,
             // and no second confirmation can stack on top of the first.
-            yield return IE_ClickButtonCenter(mouse, IE_FindBackButton());
+            yield return IE_ClickButton(mouse, IE_FindBackButton());
 
             ConfirmQuitPopup[] popups = uiRoot.PopupLayer.GetComponentsInChildren<ConfirmQuitPopup>();
             Assert.That(popups.Length, Is.EqualTo(1));
@@ -269,7 +269,7 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_PressBack(keyboard);
             Assert.That(uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>(), Is.Null);
 
-            yield return IE_ClickButtonCenter(mouse, IE_FindBackButton());
+            yield return IE_ClickButton(mouse, IE_FindBackButton());
             Assert.That(uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>(), Is.Not.Null);
         }
 
@@ -282,7 +282,7 @@ namespace TicTacToeLab.PlayModeTests
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
 
             yield return IE_StartGame(mouse);
-            yield return IE_ClickButtonCenter(mouse, IE_FindBackButton());
+            yield return IE_ClickButton(mouse, IE_FindBackButton());
 
             Button yesButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
                 .Find("SafeArea/Dialog/YesButton").GetComponent<Button>();
@@ -303,36 +303,6 @@ namespace TicTacToeLab.PlayModeTests
         {
             return Object.FindFirstObjectByType<GameplayPanel>().transform
                 .Find("SafeArea/BackButton").GetComponent<Button>();
-        }
-
-        // The back button is anchored at its top-left corner, so its transform position is a corner;
-        // a press meant for the button aims at the middle of its rect.
-        private IEnumerator IE_ClickButtonCenter(Mouse mouse, Button button)
-        {
-            RectTransform rect = button.GetComponent<RectTransform>();
-            Vector3[] corners = new Vector3[4];
-            rect.GetWorldCorners(corners);
-            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(null, (corners[0] + corners[2]) / 2f);
-
-            Set(mouse.position, screenPoint);
-            yield return null;
-            Press(mouse.leftButton);
-            yield return null;
-            Release(mouse.leftButton);
-
-            // The button raises onClick on release, and the closed window is destroyed at end of frame.
-            yield return null;
-            yield return null;
-        }
-
-        private IEnumerator IE_PressBack(Keyboard keyboard)
-        {
-            Press(keyboard.escapeKey);
-            yield return null;
-            Release(keyboard.escapeKey);
-
-            // The closed window is destroyed at the end of the frame, so let it go by.
-            yield return null;
         }
     }
 }

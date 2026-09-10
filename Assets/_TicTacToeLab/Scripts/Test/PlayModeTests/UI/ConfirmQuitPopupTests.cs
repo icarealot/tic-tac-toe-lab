@@ -58,14 +58,6 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(shownPopup.IsVisible, Is.True);
             Assert.That(uiRoot.PanelLayer.GetComponentInChildren<GameplayPanel>(), Is.Not.Null);
         }
-
-        private IEnumerator IE_PressBack(Keyboard keyboard)
-        {
-            Press(keyboard.escapeKey);
-            yield return null;
-            Release(keyboard.escapeKey);
-            yield return null;
-        }
     }
 }
 #endif
