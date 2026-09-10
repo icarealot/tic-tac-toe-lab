@@ -1,6 +1,6 @@
 ---
 name: unity-code-review
-description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (does the code follow CODING_STANDARDS.md?) and Spec (does the code match what the originating spec asked for?).
+description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (does the code follow CODING_STANDARDS.md?) and Spec (does the code match what the originating spec asked for?). Runs both reviews in parallel sub-agents and reports them side by side.
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Review the changes since a fixed point (commit, branch, tag, or merge-base) alon
 - **Standards** — does the code conform to [CODING_STANDARDS.md](CODING_STANDARDS.md)?
 - **Spec** — does the code faithfully implement the originating spec?
 
-Read the diff once, then perform two independent passes in this context — Standards followed by Spec — so findings stay separated.
+Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
 
 ## Process
 
@@ -19,7 +19,7 @@ Whatever the user said is the fixed point — a commit SHA, branch name, tag, `m
 
 Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
 
-Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff stops the review before analysis begins.
+Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here — not inside two parallel sub-agents.
 
 ### 2. Identify the spec source
 
@@ -27,7 +27,7 @@ Look for the originating spec, in this order:
 
 1. A path the user passed as an argument.
 2. A spec file under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
-3. If nothing is found, stop and ask the user.
+4. If nothing is found, ask the user. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
 
 ### 3. Standards source
 
@@ -51,22 +51,33 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 - **Middle Man** — a class or function that mostly just delegates onward. → cut it, call the real target direct.
 - **Refused Bequest** — a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
 
-### 4. Review the diff
+### 4. Spawn both sub-agents in parallel
 
-Read the captured diff once. Complete each pass before starting the next. Use only the sources listed for that pass, and rank findings within that pass.
+**Standards sub-agent prompt** — include:
 
-**Pass 1 — Standards.** Use the diff, [CODING_STANDARDS.md](CODING_STANDARDS.md), and the smell baseline. Report — per file/hunk where relevant — (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls — documented-standard breaches can be hard, but baseline smells are always judgement calls, and [CODING_STANDARDS.md](CODING_STANDARDS.md) overrides the baseline. Skip anything tooling enforces. Draft the findings under `## Standards`.
+- The full diff command and commit list.
+- The [CODING_STANDARDS.md](CODING_STANDARDS.md), **plus the smell baseline from step 3 pasted in full** — the sub-agent has no other access to it.
+- The brief: "Report — per file/hunk where relevant — (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls — documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard overrides the baseline. Skip anything tooling enforces. Under 400 words."
 
-**Pass 2 — Spec.** Use the diff and the selected spec. Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); and (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Draft the findings under `## Spec`.
+**Spec sub-agent prompt** — include:
 
-### 5. Report
+- The full diff command and commit list.
+- The path or fetched contents of the spec.
+- The brief: "Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Under 400 words."
 
-## Standards
+If the spec is missing, skip the Spec sub-agent and note this in the final report.
 
-<Standards findings>
+### 5. Aggregate
 
-## Spec
+Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings — the two axes are deliberately separate (see _Why two axes_).
 
-<Spec findings>
+End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
 
-Keep findings in their separate sections and rank each axis independently.
+## Why two axes
+
+A change can pass one axis and fail the other:
+
+- Code that follows every standard but implements the wrong thing → **Standards pass, Spec fail.**
+- Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
+
+Reporting them separately stops one axis from masking the other.
