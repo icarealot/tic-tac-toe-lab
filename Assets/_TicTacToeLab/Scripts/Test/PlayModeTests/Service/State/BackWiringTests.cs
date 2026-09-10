@@ -68,8 +68,8 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_StartGame(mouse);
             yield return IE_PressBack(keyboard);
 
-            Button noButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
-                .Find("SafeArea/Dialog/NoButton").GetComponent<Button>();
+            Button noButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>()
+                .NoButton();
 
             yield return IE_ClickButton(mouse, noButton);
 
@@ -93,8 +93,8 @@ namespace TicTacToeLab.PlayModeTests
 
             Assert.That(cellTransform.GetComponentInChildren<MarkView>(), Is.Null);
 
-            Button noButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
-                .Find("SafeArea/Dialog/NoButton").GetComponent<Button>();
+            Button noButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>()
+                .NoButton();
             yield return IE_ClickButton(mouse, noButton);
             yield return IE_PressCell(mouse, cellTransform);
 
@@ -113,8 +113,8 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_StartGame(mouse);
             yield return IE_PressBack(keyboard);
 
-            Button yesButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
-                .Find("SafeArea/Dialog/YesButton").GetComponent<Button>();
+            Button yesButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>()
+                .YesButton();
 
             yield return IE_ClickButton(mouse, yesButton);
 
@@ -141,8 +141,8 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_PressCell(mouse, cellTransform);
 
             yield return IE_PressBack(keyboard);
-            Button yesButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
-                .Find("SafeArea/Dialog/YesButton").GetComponent<Button>();
+            Button yesButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>()
+                .YesButton();
             yield return IE_ClickButton(mouse, yesButton);
 
             // The abandoned board keeps its mark, hidden behind the menu.
@@ -170,7 +170,7 @@ namespace TicTacToeLab.PlayModeTests
 
             yield return IE_StartGame(mouse);
 
-            Button backButton = IE_FindBackButton();
+            Button backButton = GameplayBackButton();
             Assert.That(backButton, Is.Not.Null, "The gameplay panel is missing its BackButton.");
 
             // The button takes the press; its label never competes for it.
@@ -201,7 +201,8 @@ namespace TicTacToeLab.PlayModeTests
 
             yield return IE_StartGame(InputSystem.AddDevice<Mouse>());
 
-            RectTransform button = IE_FindBackButton().GetComponent<RectTransform>();
+            Button backButton = GameplayBackButton();
+            RectTransform button = backButton.GetComponent<RectTransform>();
 
             // Anchored to the safe area's top-left corner, inset like the popup's own buttons.
             Assert.That(button.anchorMin, Is.EqualTo(new Vector2(0f, 1f)));
@@ -227,11 +228,11 @@ namespace TicTacToeLab.PlayModeTests
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
 
             yield return IE_StartGame(mouse);
-            Button backButton = IE_FindBackButton();
+            Button backButton = GameplayBackButton();
 
             yield return IE_ClickButton(mouse, backButton);
-            Button noButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
-                .Find("SafeArea/Dialog/NoButton").GetComponent<Button>();
+            Button noButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>()
+                .NoButton();
             yield return IE_ClickButton(mouse, noButton);
 
             Assert.That(uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>(), Is.Null);
@@ -252,14 +253,15 @@ namespace TicTacToeLab.PlayModeTests
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
 
             yield return IE_StartGame(mouse);
-            yield return IE_ClickButton(mouse, IE_FindBackButton());
+            Button backButton = GameplayBackButton();
+            yield return IE_ClickButton(mouse, backButton);
 
             ConfirmQuitPopup popup = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>();
             Assert.That(popup, Is.Not.Null);
 
             // The dimmer absorbs the press where the button sits: the question stays up,
             // and no second confirmation can stack on top of the first.
-            yield return IE_ClickButton(mouse, IE_FindBackButton());
+            yield return IE_ClickButton(mouse, backButton);
 
             ConfirmQuitPopup[] popups = uiRoot.PopupLayer.GetComponentsInChildren<ConfirmQuitPopup>();
             Assert.That(popups.Length, Is.EqualTo(1));
@@ -269,7 +271,7 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_PressBack(keyboard);
             Assert.That(uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>(), Is.Null);
 
-            yield return IE_ClickButton(mouse, IE_FindBackButton());
+            yield return IE_ClickButton(mouse, backButton);
             Assert.That(uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>(), Is.Not.Null);
         }
 
@@ -282,10 +284,11 @@ namespace TicTacToeLab.PlayModeTests
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
 
             yield return IE_StartGame(mouse);
-            yield return IE_ClickButton(mouse, IE_FindBackButton());
+            Button backButton = GameplayBackButton();
+            yield return IE_ClickButton(mouse, backButton);
 
-            Button yesButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>().transform
-                .Find("SafeArea/Dialog/YesButton").GetComponent<Button>();
+            Button yesButton = uiRoot.PopupLayer.GetComponentInChildren<ConfirmQuitPopup>()
+                .YesButton();
             yield return IE_ClickButton(mouse, yesButton);
 
             Assert.That(uiRoot.PanelLayer.GetComponentInChildren<GameplayPanel>(), Is.Null);
@@ -296,13 +299,15 @@ namespace TicTacToeLab.PlayModeTests
             GameplayPanel freshPanel = Object.FindFirstObjectByType<GameplayPanel>();
             Assert.That(freshPanel, Is.Not.Null);
             Assert.That(freshPanel.IsVisible, Is.True);
-            Assert.That(freshPanel.transform.Find("SafeArea/BackButton").GetComponent<Button>(), Is.Not.Null);
+            Assert.That(freshPanel.BackButton(), Is.Not.Null);
         }
 
-        private static Button IE_FindBackButton()
+        // The back button of the gameplay panel currently on its stack. The panel outlives the
+        // popup it opens, so a fetch made before opening the popup stays valid for every click
+        // that follows.
+        private static Button GameplayBackButton()
         {
-            return Object.FindFirstObjectByType<GameplayPanel>().transform
-                .Find("SafeArea/BackButton").GetComponent<Button>();
+            return Object.FindFirstObjectByType<GameplayPanel>().BackButton();
         }
     }
 }

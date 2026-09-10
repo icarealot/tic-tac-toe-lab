@@ -17,7 +17,7 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_LoadScene();
 
             MainMenuPanel menuPanel = Object.FindFirstObjectByType<MainMenuPanel>();
-            TMPro.TMP_Text titleText = menuPanel.transform.Find("SafeArea/TitleText").GetComponent<TMPro.TMP_Text>();
+            TMPro.TMP_Text titleText = menuPanel.Title();
 
             Assert.That(menuPanel.IsVisible, Is.True);
             Assert.That(titleText.text, Is.EqualTo("Tic Tac Toe"));

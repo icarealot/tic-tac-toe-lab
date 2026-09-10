@@ -282,7 +282,7 @@ GameObject:
   - component: {fileID: 984665468352689874}
   - component: {fileID: 2039391340041251401}
   m_Layer: 0
-  m_Name: Dialog
+  m_Name: Question
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
