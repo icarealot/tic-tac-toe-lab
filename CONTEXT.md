@@ -104,7 +104,11 @@ _Avoid_: Restart, clear, new game, replay
 
 **Press**:
 A complete pointer gesture over the board — down and then up — reported at the moment it completes. A press that never completes is not a press, so a player may push down on a cell, slide away, and release without placing a mark.
-_Avoid_: Click, tap, touch, input
+_Avoid_: Tap, touch, input
+
+**Click**:
+An activation of a button through the Unity event system. A click is delivered by the event system rather than resolved by arithmetic hit-testing, so it belongs to buttons and other uGUI interactables — never to the board. It is a distinct term from **Press**, not a synonym: the two words name different mechanisms, and collapsing them would blur which one a test or a component exercises.
+_Avoid_: Activate, invoke, button press
 
 ### User interface
 
