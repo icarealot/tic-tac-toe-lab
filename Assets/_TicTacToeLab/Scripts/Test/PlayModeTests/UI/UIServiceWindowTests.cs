@@ -84,34 +84,16 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(() => uiService.ShowPanel<IUnregisteredPanel>(), Throws.TypeOf<InvalidOperationException>());
         }
 
+        private interface IUnregisteredPanel : IPanel
+        {
+        }
+
         private UIService CreateUIService(out UIRoot uiRoot, out RecordingCoroutineService coroutineService)
         {
             IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
             uiRoot = UnityEngine.Object.FindFirstObjectByType<UIRoot>();
             coroutineService = new RecordingCoroutineService();
             return new UIService(factoryService, uiRoot, coroutineService);
-        }
-
-        private interface IUnregisteredPanel : IPanel
-        {
-        }
-
-        private sealed class RecordingCoroutineService : ICoroutineService
-        {
-            public int RunCount { get; private set; }
-            public int RunAfterCount { get; private set; }
-
-            public CoroutineHandle Run(IEnumerator routine)
-            {
-                RunCount++;
-                return new CoroutineHandle(() => { });
-            }
-
-            public CoroutineHandle RunAfter(float delaySeconds, Action callback)
-            {
-                RunAfterCount++;
-                return new CoroutineHandle(() => { });
-            }
         }
     }
 }

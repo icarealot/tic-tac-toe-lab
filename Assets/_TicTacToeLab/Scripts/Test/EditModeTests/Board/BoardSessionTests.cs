@@ -6,28 +6,31 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class BoardSessionTests
     {
-        private BoardSession CreateSession(
-            BoardModel boardModel,
-            FakeBoardView boardView,
-            FakeInputService inputService)
+        private BoardModel _boardModel;
+        private FakeBoardView _fakeBoardView;
+        private FakeInputService _fakeInputService;
+        private FakeLogService _fakeLogService;
+        private BoardSession _boardSession;
+
+        [SetUp]
+        public void SetUp()
         {
-            BoardPresenter boardPresenter = new(
-                boardModel, boardView,
-                inputService, new FakeCameraService(), new FakeLogService());
-            return new BoardSession(boardPresenter);
+            _boardModel = new BoardModel();
+            _fakeBoardView = new FakeBoardView();
+            _fakeInputService = new FakeInputService();
+            _fakeLogService = new FakeLogService();
+            BoardPresenter boardPresenter = BoardPresenterBuilder.Build(
+                _boardModel, _fakeBoardView, _fakeInputService, _fakeLogService);
+            _boardSession = new BoardSession(boardPresenter);
         }
 
         [Test]
         public void The_session_raises_its_ending_event_when_the_presenter_ends_the_game()
         {
-            BoardModel boardModel = new();
-            FakeBoardView fakeBoardView = new();
-            FakeInputService fakeInputService = new();
-            BoardSession boardSession = CreateSession(boardModel, fakeBoardView, fakeInputService);
             int gameEndedCount = 0;
-            boardSession.GameEnded += () => gameEndedCount++;
+            _boardSession.GameEnded += () => gameEndedCount++;
 
-            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
 
             Assert.That(gameEndedCount, Is.EqualTo(1));
         }
@@ -35,66 +38,50 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void Resetting_the_game_through_the_session_reaches_the_presenter_and_clears_the_view()
         {
-            BoardModel boardModel = new();
-            FakeBoardView fakeBoardView = new();
-            FakeInputService fakeInputService = new();
-            BoardSession boardSession = CreateSession(boardModel, fakeBoardView, fakeInputService);
-            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
 
-            boardSession.Reset();
+            _boardSession.Reset();
 
-            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
-            Assert.That(fakeBoardView.WasCleared, Is.True);
+            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
+            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(_fakeBoardView.WasCleared, Is.True);
         }
 
         [Test]
         public void Disposing_the_session_unsubscribes_from_and_disposes_the_presenter_so_a_later_ending_raises_nothing()
         {
-            BoardModel boardModel = new();
-            FakeBoardView fakeBoardView = new();
-            FakeInputService fakeInputService = new();
-            BoardSession boardSession = CreateSession(boardModel, fakeBoardView, fakeInputService);
             int gameEndedCount = 0;
-            boardSession.GameEnded += () => gameEndedCount++;
+            _boardSession.GameEnded += () => gameEndedCount++;
 
-            boardSession.Dispose();
-            BoardMoves.WinRowZeroForX(fakeInputService, boardModel);
+            _boardSession.Dispose();
+            BoardMoves.WinRowZeroForX(_fakeInputService, _boardModel);
 
             Assert.That(gameEndedCount, Is.EqualTo(0));
-            Assert.That(fakeInputService.HasSubscribers, Is.False);
+            Assert.That(_fakeInputService.HasSubscribers, Is.False);
         }
 
         [Test]
         public void The_session_reports_the_current_turn_and_raises_its_changed_event_as_marks_are_placed()
         {
-            BoardModel boardModel = new();
-            FakeBoardView fakeBoardView = new();
-            FakeInputService fakeInputService = new();
-            BoardSession boardSession = CreateSession(boardModel, fakeBoardView, fakeInputService);
             List<Mark> turns = new();
-            boardSession.TurnChanged += turn => turns.Add(turn);
+            _boardSession.TurnChanged += turn => turns.Add(turn);
 
-            Assert.That(boardSession.Turn, Is.EqualTo(Mark.X));
+            Assert.That(_boardSession.Turn, Is.EqualTo(Mark.X));
 
-            BoardMoves.PressCell(fakeInputService, boardModel, 0, 0);
+            BoardMoves.PressCell(_fakeInputService, _boardModel, 0, 0);
 
-            Assert.That(boardSession.Turn, Is.EqualTo(Mark.O));
+            Assert.That(_boardSession.Turn, Is.EqualTo(Mark.O));
             Assert.That(turns, Is.EqualTo(new[] { Mark.O }));
         }
 
         [Test]
         public void Disposing_the_session_stops_it_forwarding_turn_changes()
         {
-            BoardModel boardModel = new();
-            FakeBoardView fakeBoardView = new();
-            FakeInputService fakeInputService = new();
-            BoardSession boardSession = CreateSession(boardModel, fakeBoardView, fakeInputService);
             int turnChangedCount = 0;
-            boardSession.TurnChanged += _ => turnChangedCount++;
+            _boardSession.TurnChanged += _ => turnChangedCount++;
 
-            boardSession.Dispose();
-            BoardMoves.PressCell(fakeInputService, boardModel, 0, 0);
+            _boardSession.Dispose();
+            BoardMoves.PressCell(_fakeInputService, _boardModel, 0, 0);
 
             Assert.That(turnChangedCount, Is.EqualTo(0));
         }

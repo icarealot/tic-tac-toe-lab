@@ -6,6 +6,20 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class AppStateMachineTests
     {
+        private List<string> _log;
+        private FakeInputService _fakeInputService;
+        private AppStateMachine _stateMachine;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _log = new List<string>();
+            _fakeInputService = new FakeInputService();
+            _stateMachine = new AppStateMachine(_fakeInputService);
+            _stateMachine.Add(new FirstSpyState(_log));
+            _stateMachine.Add(new SecondSpyState(_log));
+        }
+
         private abstract class SpyState : IAppState
         {
             protected readonly List<string> Log;
@@ -48,79 +62,58 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void Changing_state_leaves_the_current_state_before_entering_the_next()
         {
-            List<string> log = new();
-            AppStateMachine stateMachine = new(new FakeInputService());
-            stateMachine.Add(new FirstSpyState(log));
-            stateMachine.Add(new SecondSpyState(log));
-            stateMachine.ChangeState<FirstSpyState>();
-            log.Clear();
+            _stateMachine.ChangeState<FirstSpyState>();
+            _log.Clear();
 
-            stateMachine.ChangeState<SecondSpyState>();
+            _stateMachine.ChangeState<SecondSpyState>();
 
-            Assert.That(log, Is.EqualTo(new[] { "FirstSpyState.Leave", "SecondSpyState.Enter" }));
+            Assert.That(_log, Is.EqualTo(new[] { "FirstSpyState.Leave", "SecondSpyState.Enter" }));
         }
 
         [Test]
         public void Disposing_the_machine_leaves_the_current_state()
         {
-            List<string> log = new();
-            AppStateMachine stateMachine = new(new FakeInputService());
-            stateMachine.Add(new FirstSpyState(log));
-            stateMachine.ChangeState<FirstSpyState>();
-            log.Clear();
+            _stateMachine.ChangeState<FirstSpyState>();
+            _log.Clear();
 
-            stateMachine.Dispose();
+            _stateMachine.Dispose();
 
-            Assert.That(log, Is.EqualTo(new[] { "FirstSpyState.Leave" }));
+            Assert.That(_log, Is.EqualTo(new[] { "FirstSpyState.Leave" }));
         }
 
         [Test]
         public void A_raised_back_reaches_the_current_state_and_no_other()
         {
-            List<string> log = new();
-            FakeInputService fakeInputService = new();
-            AppStateMachine stateMachine = new(fakeInputService);
-            stateMachine.Add(new FirstSpyState(log));
-            stateMachine.Add(new SecondSpyState(log));
-            stateMachine.ChangeState<FirstSpyState>();
-            log.Clear();
+            _stateMachine.ChangeState<FirstSpyState>();
+            _log.Clear();
 
-            fakeInputService.RaiseBack();
+            _fakeInputService.RaiseBack();
 
-            Assert.That(log, Is.EqualTo(new[] { "FirstSpyState.Back" }));
+            Assert.That(_log, Is.EqualTo(new[] { "FirstSpyState.Back" }));
         }
 
         [Test]
         public void After_a_transition_back_reaches_the_new_state_and_not_the_one_just_left()
         {
-            List<string> log = new();
-            FakeInputService fakeInputService = new();
-            AppStateMachine stateMachine = new(fakeInputService);
-            stateMachine.Add(new FirstSpyState(log));
-            stateMachine.Add(new SecondSpyState(log));
-            stateMachine.ChangeState<FirstSpyState>();
-            stateMachine.ChangeState<SecondSpyState>();
-            log.Clear();
+            _stateMachine.ChangeState<FirstSpyState>();
+            _stateMachine.ChangeState<SecondSpyState>();
+            _log.Clear();
 
-            fakeInputService.RaiseBack();
+            _fakeInputService.RaiseBack();
 
-            Assert.That(log, Is.EqualTo(new[] { "SecondSpyState.Back" }));
+            Assert.That(_log, Is.EqualTo(new[] { "SecondSpyState.Back" }));
         }
 
         [Test]
         public void After_disposal_back_reaches_nothing()
         {
-            List<string> log = new();
-            FakeInputService fakeInputService = new();
-            AppStateMachine stateMachine = new(fakeInputService);
-            stateMachine.Add(new FirstSpyState(log));
-            stateMachine.ChangeState<FirstSpyState>();
-            stateMachine.Dispose();
-            log.Clear();
+            _stateMachine.ChangeState<FirstSpyState>();
+            _stateMachine.Dispose();
+            _log.Clear();
 
-            fakeInputService.RaiseBack();
+            _fakeInputService.RaiseBack();
 
-            Assert.That(log, Is.Empty);
+            Assert.That(_log, Is.Empty);
         }
     }
 }
