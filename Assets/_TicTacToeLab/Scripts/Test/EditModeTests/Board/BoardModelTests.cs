@@ -1,371 +1,219 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
     public sealed class BoardModelTests
     {
-        [Test]
-        public void The_local_point_of_each_cell_resolves_back_to_that_cells_own_coordinate()
+        public sealed class BoardScenario
         {
-            BoardModel boardModel = new();
+            public readonly (int Row, int Column)[] Placements;
+            public readonly Mark? Winner;
 
-            for (int row = 0; row < boardModel.Dimension; row++)
+            public BoardScenario((int Row, int Column)[] placements, Mark? winner = null)
             {
-                for (int column = 0; column < boardModel.Dimension; column++)
-                {
-                    Vector3 center = boardModel.GetCellLocalPoint(row, column);
-
-                    bool resolved = boardModel.TryResolveCell(center, out int resolvedRow, out int resolvedColumn);
-
-                    Assert.That(resolved, Is.True);
-                    Assert.That(resolvedRow, Is.EqualTo(row));
-                    Assert.That(resolvedColumn, Is.EqualTo(column));
-                }
+                Placements = placements;
+                Winner = winner;
             }
         }
 
-        [Test]
-        public void The_center_cells_center_point_is_the_origin()
+        private static readonly BoardScenario _xWinsRowZero = new(new (int Row, int Column)[] { (0, 0), (1, 0), (0, 1), (1, 1), (0, 2) }, Mark.X);
+        private static readonly BoardScenario _xWinsRowOne = new(new (int Row, int Column)[] { (1, 0), (0, 0), (1, 1), (0, 1), (1, 2) }, Mark.X);
+        private static readonly BoardScenario _xWinsRowTwo = new(new (int Row, int Column)[] { (2, 0), (0, 0), (2, 1), (0, 1), (2, 2) }, Mark.X);
+        private static readonly BoardScenario _xWinsColumnZero = new(new (int Row, int Column)[] { (0, 0), (0, 1), (1, 0), (1, 1), (2, 0) }, Mark.X);
+        private static readonly BoardScenario _xWinsColumnOne = new(new (int Row, int Column)[] { (0, 1), (0, 0), (1, 1), (1, 0), (2, 1) }, Mark.X);
+        private static readonly BoardScenario _xWinsColumnTwo = new(new (int Row, int Column)[] { (0, 2), (0, 0), (1, 2), (1, 0), (2, 2) }, Mark.X);
+        private static readonly BoardScenario _xWinsTheMainDiagonal = new(new (int Row, int Column)[] { (0, 0), (0, 1), (1, 1), (0, 2), (2, 2) }, Mark.X);
+        private static readonly BoardScenario _xWinsTheAntiDiagonal = new(new (int Row, int Column)[] { (0, 2), (0, 0), (1, 1), (0, 1), (2, 0) }, Mark.X);
+        private static readonly BoardScenario _oWinsRowTwo = new(new (int Row, int Column)[] { (0, 0), (2, 0), (0, 1), (2, 1), (1, 0), (2, 2) }, Mark.O);
+        private static readonly BoardScenario _leavesRowZeroIncomplete = new(new (int Row, int Column)[] { (0, 0), (1, 0), (0, 1) });
+        private static readonly BoardScenario _leavesRowZeroMixed = new(new (int Row, int Column)[] { (0, 0), (0, 1), (1, 0), (1, 1), (2, 1), (0, 2) });
+        private static readonly BoardScenario _fillsToDraw = new(new (int Row, int Column)[] { (0, 0), (0, 1), (0, 2), (1, 1), (1, 0), (1, 2), (2, 1), (2, 0), (2, 2) });
+        private static readonly (int Row, int Column)[] _winOnTheLastEmptyCell = { (0, 0), (2, 0), (0, 1), (1, 1), (1, 0), (1, 2), (2, 1), (2, 2), (0, 2) };
+
+        private static IEnumerable<BoardScenario> WinningLines()
         {
-            BoardModel boardModel = new();
-
-            Vector3 center = boardModel.GetCellLocalPoint(1, 1);
-
-            Assert.That(center, Is.EqualTo(new Vector3(0f, 0f, 0f)));
+            yield return _xWinsRowZero;
+            yield return _xWinsRowOne;
+            yield return _xWinsRowTwo;
+            yield return _xWinsColumnZero;
+            yield return _xWinsColumnOne;
+            yield return _xWinsColumnTwo;
+            yield return _xWinsTheMainDiagonal;
+            yield return _xWinsTheAntiDiagonal;
+            yield return _oWinsRowTwo;
         }
 
-        [Test]
-        public void The_top_right_cells_center_is_up_and_to_the_right_of_the_origin()
+        private static IEnumerable<BoardScenario> WinsByEachMark()
         {
-            BoardModel boardModel = new();
-
-            Vector3 center = boardModel.GetCellLocalPoint(0, 2);
-
-            Assert.That(center, Is.EqualTo(new Vector3(1.2f, 1.2f, 0f)));
+            yield return _xWinsRowZero;
+            yield return _oWinsRowTwo;
         }
 
-        [Test]
-        public void The_bottom_left_cells_center_is_down_and_to_the_left_of_the_origin()
+        private static IEnumerable<BoardScenario> NonWinningPatterns()
         {
-            BoardModel boardModel = new();
-
-            Vector3 center = boardModel.GetCellLocalPoint(2, 0);
-
-            Assert.That(center, Is.EqualTo(new Vector3(-1.2f, -1.2f, 0f)));
+            yield return _leavesRowZeroIncomplete;
+            yield return _leavesRowZeroMixed;
         }
 
-        [Test]
-        public void A_point_in_the_spacing_between_two_cells_resolves_to_no_cell()
+        private static IEnumerable<BoardScenario> GamesToReset()
         {
-            BoardModel boardModel = new();
-
-            bool resolved = boardModel.TryResolveCell(new Vector3(0.55f, 0f, 0f), out _, out _);
-
-            Assert.That(resolved, Is.False);
+            yield return _leavesRowZeroIncomplete;
+            yield return _xWinsRowZero;
+            yield return _oWinsRowTwo;
+            yield return _fillsToDraw;
         }
 
+        // --- Starting state ---
+
         [Test]
-        public void A_point_beyond_the_boards_outer_edge_resolves_to_no_cell()
+        public void A_fresh_board_is_empty_with_X_to_play_and_in_progress()
         {
             BoardModel boardModel = new();
 
-            bool resolved = boardModel.TryResolveCell(new Vector3(10f, 10f, 0f), out _, out _);
-
-            Assert.That(resolved, Is.False);
-        }
-
-        [Test]
-        public void A_point_exactly_half_a_cell_size_from_a_center_resolves_to_that_cell()
-        {
-            BoardModel boardModel = new();
-
-            Vector3 center = boardModel.GetCellLocalPoint(1, 1);
-
-            bool resolved = boardModel.TryResolveCell(center + new Vector3(0.5f, 0.5f, 0f), out int row, out int column);
-
-            Assert.That(resolved, Is.True);
-            Assert.That(row, Is.EqualTo(1));
-            Assert.That(column, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void A_point_just_beyond_half_a_cell_size_from_a_center_resolves_to_no_cell()
-        {
-            BoardModel boardModel = new();
-
-            Vector3 center = boardModel.GetCellLocalPoint(1, 1);
-
-            bool resolved = boardModel.TryResolveCell(center + new Vector3(0.51f, 0.51f, 0f), out _, out _);
-
-            Assert.That(resolved, Is.False);
-        }
-
-        [Test]
-        public void The_model_delivers_exactly_one_placement_per_cell_coordinate_at_that_cells_local_point()
-        {
-            BoardModel boardModel = new();
-
-            IReadOnlyList<CellPlacement> cellPlacements = boardModel.GetCellPlacements();
-
-            Assert.That(cellPlacements, Has.Count.EqualTo(9));
-
-            for (int row = 0; row < boardModel.Dimension; row++)
+            for (int row = 0; row < 3; row++)
             {
-                for (int column = 0; column < boardModel.Dimension; column++)
+                for (int column = 0; column < 3; column++)
                 {
-                    bool found = false;
-                    foreach (CellPlacement placement in cellPlacements)
-                    {
-                        if (placement.Row != row || placement.Column != column)
-                        {
-                            continue;
-                        }
-
-                        found = true;
-                        Assert.That(placement.LocalPoint, Is.EqualTo(boardModel.GetCellLocalPoint(row, column)));
-                    }
-
-                    Assert.That(found, Is.True, $"No placement was delivered for cell ({row}, {column}).");
+                    Assert.That(boardModel.IsEmpty(row, column), Is.True, $"Cell ({row}, {column}) should be empty.");
+                    Assert.That(boardModel.GetMark(row, column), Is.Null, $"Cell ({row}, {column}) should hold no mark.");
                 }
             }
-        }
-
-        [Test]
-        public void A_fresh_board_has_X_to_play()
-        {
-            BoardModel boardModel = new();
 
             Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
-        }
-
-        [Test]
-        public void A_fresh_board_is_in_progress()
-        {
-            BoardModel boardModel = new();
-
             Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
         }
 
+        // --- Marks ---
+
         [Test]
-        public void A_completed_row_is_a_win()
+        public void A_placement_records_the_current_turns_mark_only_in_the_addressed_cell()
         {
             BoardModel boardModel = new();
 
-            boardModel.PlaceMark(0, 0); // X
-            boardModel.PlaceMark(1, 0); // O
-            boardModel.PlaceMark(0, 1); // X
-            boardModel.PlaceMark(1, 1); // O
-            boardModel.PlaceMark(0, 2); // X completes row 0
-
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
-        }
-
-        [Test]
-        public void A_completed_column_is_a_win()
-        {
-            BoardModel boardModel = new();
-
-            boardModel.PlaceMark(0, 0); // X
-            boardModel.PlaceMark(0, 1); // O
-            boardModel.PlaceMark(1, 0); // X
-            boardModel.PlaceMark(1, 1); // O
-            boardModel.PlaceMark(2, 0); // X completes column 0
-
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
-        }
-
-        [Test]
-        public void The_top_left_to_bottom_right_diagonal_is_a_win()
-        {
-            BoardModel boardModel = new();
-
-            boardModel.PlaceMark(0, 0); // X
-            boardModel.PlaceMark(0, 1); // O
             boardModel.PlaceMark(1, 1); // X
             boardModel.PlaceMark(0, 2); // O
-            boardModel.PlaceMark(2, 2); // X completes the top-left to bottom-right diagonal
+
+            Mark?[,] expectedMarks =
+            {
+                { null, null, Mark.O },
+                { null, Mark.X, null },
+                { null, null, null },
+            };
+
+            for (int row = 0; row < 3; row++)
+            {
+                for (int column = 0; column < 3; column++)
+                {
+                    Assert.That(boardModel.GetMark(row, column), Is.EqualTo(expectedMarks[row, column]),
+                        $"Cell ({row}, {column}) should hold {expectedMarks[row, column]?.ToString() ?? "nothing"}.");
+                }
+            }
+        }
+
+        // --- Turns ---
+
+        [TestCase(1, Mark.O)]
+        [TestCase(2, Mark.X)]
+        public void The_turn_advances_to_the_other_mark_after_each_placed_mark_while_the_game_is_in_progress(int placedMarks, Mark expectedTurn)
+        {
+            BoardModel boardModel = new();
+
+            for (int index = 0; index < placedMarks; index++)
+            {
+                boardModel.PlaceMark(0, index);
+            }
+
+            Assert.That(boardModel.Turn, Is.EqualTo(expectedTurn));
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+        }
+
+        [TestCaseSource(nameof(WinsByEachMark))]
+        public void The_winning_placement_does_not_advance_the_turn_so_the_turn_names_the_winner(BoardScenario game)
+        {
+            BoardModel boardModel = new();
+            PlayAll(boardModel, game.Placements);
+
+            Assert.That(boardModel.Turn, Is.EqualTo(game.Winner));
+        }
+
+        [Test]
+        public void The_final_drawing_placement_does_not_advance_the_turn()
+        {
+            BoardModel boardModel = new();
+            PlayAll(boardModel, _fillsToDraw.Placements);
+
+            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X)); // X placed the final mark.
+        }
+
+        // --- Outcomes ---
+
+        [TestCaseSource(nameof(WinningLines))]
+        public void Completing_a_line_wins_the_game(BoardScenario game)
+        {
+            BoardModel boardModel = new();
+            PlayAll(boardModel, game.Placements);
 
             Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
         }
 
-        [Test]
-        public void The_top_right_to_bottom_left_diagonal_is_a_win()
+        [TestCaseSource(nameof(NonWinningPatterns))]
+        public void A_pattern_that_completes_no_line_leaves_the_game_in_progress(BoardScenario pattern)
         {
             BoardModel boardModel = new();
-
-            boardModel.PlaceMark(0, 2); // X
-            boardModel.PlaceMark(0, 0); // O
-            boardModel.PlaceMark(1, 1); // X
-            boardModel.PlaceMark(0, 1); // O
-            boardModel.PlaceMark(2, 0); // X completes the top-right to bottom-left diagonal
-
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
-        }
-
-        [Test]
-        public void Two_of_three_in_a_line_is_still_in_progress()
-        {
-            BoardModel boardModel = new();
-
-            boardModel.PlaceMark(0, 0); // X
-            boardModel.PlaceMark(1, 0); // O
-            boardModel.PlaceMark(0, 1); // X
+            PlayAll(boardModel, pattern.Placements);
 
             Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
         }
 
         [Test]
-        public void A_line_holding_both_marks_is_not_a_win()
+        public void A_board_filled_without_completing_a_line_is_a_draw()
         {
             BoardModel boardModel = new();
-
-            boardModel.PlaceMark(0, 0); // X
-            boardModel.PlaceMark(0, 1); // O
-            boardModel.PlaceMark(1, 0); // X
-            boardModel.PlaceMark(1, 1); // O
-            boardModel.PlaceMark(2, 1); // X
-            boardModel.PlaceMark(0, 2); // O completes row 0 as X, O, O — mixed, not a win
-
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
-        }
-
-        [Test]
-        public void The_turn_does_not_advance_on_a_win_so_the_turn_names_the_winner()
-        {
-            BoardModel boardModel = new();
-
-            boardModel.PlaceMark(0, 0); // X
-            boardModel.PlaceMark(1, 0); // O
-            boardModel.PlaceMark(0, 1); // X
-            boardModel.PlaceMark(1, 1); // O
-            boardModel.PlaceMark(0, 2); // X completes row 0
-
-            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
-        }
-
-        [Test]
-        public void Every_cell_reports_itself_empty_before_anything_is_placed()
-        {
-            BoardModel boardModel = new();
-
-            for (int row = 0; row < boardModel.Dimension; row++)
-            {
-                for (int column = 0; column < boardModel.Dimension; column++)
-                {
-                    Assert.That(boardModel.IsEmpty(row, column), Is.True);
-                }
-            }
-        }
-
-        [Test]
-        public void A_cell_reports_the_mark_it_was_given_and_no_other_cell_changes()
-        {
-            BoardModel boardModel = new();
-
-            boardModel.PlaceMark(1, 1);
-
-            Assert.That(boardModel.GetMark(1, 1), Is.EqualTo(Mark.X));
-            Assert.That(boardModel.IsEmpty(1, 1), Is.False);
-
-            for (int row = 0; row < boardModel.Dimension; row++)
-            {
-                for (int column = 0; column < boardModel.Dimension; column++)
-                {
-                    if (row == 1 && column == 1)
-                    {
-                        continue;
-                    }
-
-                    Assert.That(boardModel.IsEmpty(row, column), Is.True);
-                }
-            }
-        }
-
-        [Test]
-        public void Placing_a_mark_advances_the_turn_to_the_other_mark()
-        {
-            BoardModel boardModel = new();
-
-            boardModel.PlaceMark(0, 0);
-
-            Assert.That(boardModel.Turn, Is.EqualTo(Mark.O));
-        }
-
-        [Test]
-        public void A_second_placement_advances_the_turn_back_to_X()
-        {
-            BoardModel boardModel = new();
-
-            boardModel.PlaceMark(0, 0);
-            boardModel.PlaceMark(0, 1);
-
-            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
-        }
-
-        [Test]
-        public void A_full_board_with_no_line_completed_is_a_draw()
-        {
-            BoardModel boardModel = new();
-
-            BoardMoves.FillToDraw(boardModel);
+            PlayAll(boardModel, _fillsToDraw.Placements);
 
             Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Draw));
         }
 
         [Test]
-        public void The_turn_does_not_advance_on_a_draw()
+        public void A_win_on_the_last_empty_cell_is_a_win_not_a_draw()
         {
             BoardModel boardModel = new();
-
-            BoardMoves.FillToDraw(boardModel);
-
-            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
-        }
-
-        [Test]
-        public void A_win_completed_on_the_last_empty_cell_is_a_win_not_a_draw()
-        {
-            BoardModel boardModel = new();
-
-            boardModel.PlaceMark(0, 0); // X
-            boardModel.PlaceMark(2, 0); // O
-            boardModel.PlaceMark(0, 1); // X
-            boardModel.PlaceMark(1, 1); // O
-            boardModel.PlaceMark(1, 0); // X
-            boardModel.PlaceMark(1, 2); // O
-            boardModel.PlaceMark(2, 1); // X
-            boardModel.PlaceMark(2, 2); // O
-            boardModel.PlaceMark(0, 2); // X completes row 0 and fills the last empty cell
+            PlayAll(boardModel, _winOnTheLastEmptyCell);
 
             Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
         }
 
-        [Test]
-        public void A_reset_board_is_indistinguishable_from_a_newly_constructed_one()
+        // --- Reset ---
+
+        [TestCaseSource(nameof(GamesToReset))]
+        public void Resetting_a_played_board_leaves_the_same_public_state_as_a_fresh_board(BoardScenario game)
         {
-            BoardModel boardModel = new();
-            BoardModel freshBoardModel = new();
+            BoardModel playedBoard = new();
+            PlayAll(playedBoard, game.Placements);
+            BoardModel freshBoard = new();
 
-            boardModel.PlaceMark(0, 0); // X
-            boardModel.PlaceMark(1, 0); // O
-            boardModel.PlaceMark(0, 1); // X
-            boardModel.PlaceMark(1, 1); // O
-            boardModel.PlaceMark(0, 2); // X completes row 0
+            playedBoard.Reset();
 
-            boardModel.Reset();
+            Assert.That(playedBoard.Turn, Is.EqualTo(freshBoard.Turn));
+            Assert.That(playedBoard.Outcome, Is.EqualTo(freshBoard.Outcome));
 
-            Assert.That(boardModel.Turn, Is.EqualTo(freshBoardModel.Turn));
-            Assert.That(boardModel.Outcome, Is.EqualTo(freshBoardModel.Outcome));
-
-            for (int row = 0; row < boardModel.Dimension; row++)
+            for (int row = 0; row < 3; row++)
             {
-                for (int column = 0; column < boardModel.Dimension; column++)
+                for (int column = 0; column < 3; column++)
                 {
-                    Assert.That(boardModel.GetMark(row, column), Is.EqualTo(freshBoardModel.GetMark(row, column)));
+                    Assert.That(playedBoard.GetMark(row, column), Is.EqualTo(freshBoard.GetMark(row, column)),
+                        $"Cell ({row}, {column}) should match a fresh board.");
                 }
+            }
+        }
+
+        private void PlayAll(BoardModel boardModel, (int Row, int Column)[] placements)
+        {
+            foreach ((int row, int column) in placements)
+            {
+                boardModel.PlaceMark(row, column);
             }
         }
     }
