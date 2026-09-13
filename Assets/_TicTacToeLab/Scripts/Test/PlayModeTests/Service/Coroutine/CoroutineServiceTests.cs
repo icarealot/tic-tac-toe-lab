@@ -4,20 +4,38 @@ using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
+using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class CoroutineServiceTests : SceneWiringTests
+    /// <summary>
+    /// CoroutineService frame behavior on one isolated component: a routine executes before and
+    /// continues after a yielded frame, RunAfter defers a callback and eventually runs it, and
+    /// disposing the handle before continuation stops the routine for good. No production scene
+    /// or prefab participates in this timing mechanism. CoroutineHandle state transitions
+    /// (stop-once, repeated disposal, completed-before-disposal) are plain EditMode tests.
+    /// </summary>
+    public sealed class CoroutineServiceTests
     {
         private CoroutineService _coroutineService;
+
+        [OneTimeSetUp]
+        public void CreateIsolatedService()
+        {
+            _coroutineService = new GameObject("CoroutineServiceTests")
+                .AddComponent<CoroutineService>();
+        }
+
+        [OneTimeTearDown]
+        public void DestroyIsolatedService()
+        {
+            UnityEngine.Object.Destroy(_coroutineService.gameObject);
+        }
 
         [UnityTest]
         public IEnumerator A_routine_handed_to_the_service_runs_and_continues_across_frames()
         {
-            yield return IE_LoadScene();
-
-            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
             List<int> steps = new();
 
             _ = _coroutineService.Run(IE_RecordSteps(steps));
@@ -28,27 +46,27 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator A_callback_scheduled_after_a_delay_runs_across_real_frames()
+        public IEnumerator A_callback_scheduled_after_a_short_delay_is_deferred_and_then_runs()
         {
-            yield return IE_LoadScene();
-
-            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
             bool callbackRan = false;
 
-            _ = _coroutineService.RunAfter(0.1f, () => callbackRan = true);
+            _ = _coroutineService.RunAfter(0.01f, () => callbackRan = true);
             Assert.That(callbackRan, Is.False);
 
-            yield return new UnityEngine.WaitForSeconds(0.2f);
+            // Poll instead of waiting a fixed duration: eventual execution is observed rather
+            // than assumed from frame pacing, and the one-second deadline only bounds failure.
+            float deadline = Time.realtimeSinceStartup + 1f;
+            while (!callbackRan && Time.realtimeSinceStartup < deadline)
+            {
+                yield return null;
+            }
 
             Assert.That(callbackRan, Is.True);
         }
 
         [UnityTest]
-        public IEnumerator Disposing_the_handle_before_the_routine_completes_stops_it()
+        public IEnumerator Disposing_the_handle_before_the_routine_continues_stops_it()
         {
-            yield return IE_LoadScene();
-
-            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
             bool ranAfterYield = false;
             CoroutineHandle handle = _coroutineService.Run(IE_SetFlagAfterYield(() => ranAfterYield = true));
 
@@ -58,34 +76,6 @@ namespace TicTacToeLab.PlayModeTests
             yield return null;
 
             Assert.That(ranAfterYield, Is.False);
-        }
-
-        [UnityTest]
-        public IEnumerator Disposing_a_handle_whose_routine_has_already_finished_does_nothing()
-        {
-            yield return IE_LoadScene();
-
-            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
-            CoroutineHandle handle = _coroutineService.Run(IE_Immediate());
-
-            yield return null;
-            yield return null;
-
-            Assert.DoesNotThrow(() => handle.Dispose());
-        }
-
-        [UnityTest]
-        public IEnumerator Disposing_the_same_handle_twice_does_nothing()
-        {
-            yield return IE_LoadScene();
-
-            _coroutineService = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
-            CoroutineHandle handle = _coroutineService.Run(IE_Immediate());
-
-            handle.Dispose();
-
-            Assert.DoesNotThrow(() => handle.Dispose());
-            yield return null;
         }
 
         private IEnumerator IE_RecordSteps(List<int> steps)
@@ -99,11 +89,6 @@ namespace TicTacToeLab.PlayModeTests
         {
             yield return null;
             setFlag();
-        }
-
-        private IEnumerator IE_Immediate()
-        {
-            yield break;
         }
     }
 }
