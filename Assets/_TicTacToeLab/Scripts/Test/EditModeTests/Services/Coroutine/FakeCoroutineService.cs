@@ -10,6 +10,7 @@ namespace TicTacToeLab.EditModeTests
         public bool HasScheduledCallback => _callback != null;
         public float ScheduledDelaySeconds { get; private set; }
         public bool WasStopped => _stopped;
+        public int RunAfterCount { get; private set; }
 
         private IEnumerator _routine;
         private Action _callback;
@@ -29,6 +30,7 @@ namespace TicTacToeLab.EditModeTests
             _callback = callback;
             ScheduledDelaySeconds = delaySeconds;
             _stopped = false;
+            RunAfterCount++;
             return new CoroutineHandle(() => _stopped = true);
         }
 

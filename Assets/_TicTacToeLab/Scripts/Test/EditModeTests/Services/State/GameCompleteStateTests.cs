@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 
@@ -5,62 +6,55 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class GameCompleteStateTests
     {
-        private FakeBoardSession _fakeBoardSession;
-        private FakeStateMachine _fakeStateMachine;
+        private List<string> _log;
         private FakeCoroutineService _fakeCoroutineService;
         private GameCompleteState _gameCompleteState;
 
         [SetUp]
         public void SetUp()
         {
-            _fakeBoardSession = new FakeBoardSession();
-            _fakeStateMachine = new FakeStateMachine();
+            _log = new List<string>();
             _fakeCoroutineService = new FakeCoroutineService();
-            _gameCompleteState = new GameCompleteState(
-                _fakeBoardSession, _fakeStateMachine, _fakeCoroutineService);
+            _gameCompleteState = new GameCompleteState(new RecordingBoardSession(_log), new RecordingStateMachine(_log), _fakeCoroutineService);
         }
 
         [Test]
-        public void Entering_the_state_schedules_a_reset_after_one_second_without_resetting_yet()
+        public void Entering_the_state_schedules_one_reset_after_a_one_second_pause_without_resetting_immediately()
         {
             _gameCompleteState.Enter();
 
             Assert.That(_fakeCoroutineService.HasScheduledCallback, Is.True);
+            Assert.That(_fakeCoroutineService.RunAfterCount, Is.EqualTo(1));
             Assert.That(_fakeCoroutineService.ScheduledDelaySeconds, Is.EqualTo(1f));
-            Assert.That(_fakeBoardSession.WasReset, Is.False);
+            Assert.That(_log, Is.Empty);
         }
 
         [Test]
-        public void Firing_the_scheduled_reset_resets_the_game_and_then_returns_to_gameplay()
+        public void The_delayed_reset_resets_the_board_session_before_returning_to_gameplay()
         {
             _gameCompleteState.Enter();
 
             _fakeCoroutineService.FireScheduledCallback();
 
-            Assert.That(_fakeBoardSession.WasReset, Is.True);
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(GameplayState)));
+            Assert.That(_log, Is.EqualTo(new[]
+            {
+                "BoardSession.Reset",
+                "StateMachine.ChangeState<GameplayState>",
+            }));
         }
 
         [Test]
-        public void Leaving_the_state_disposes_the_pending_handle()
+        public void Leaving_the_state_cancels_the_pending_reset()
         {
             _gameCompleteState.Enter();
 
             _gameCompleteState.Leave();
 
             Assert.That(_fakeCoroutineService.WasStopped, Is.True);
-        }
-
-        [Test]
-        public void A_disposed_pending_reset_does_not_later_reset_the_game()
-        {
-            _gameCompleteState.Enter();
-            _gameCompleteState.Leave();
 
             _fakeCoroutineService.FireScheduledCallback();
 
-            Assert.That(_fakeBoardSession.WasReset, Is.False);
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
+            Assert.That(_log, Is.Empty);
         }
     }
 }

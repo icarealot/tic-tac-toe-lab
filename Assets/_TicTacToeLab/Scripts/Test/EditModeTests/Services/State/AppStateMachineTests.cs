@@ -47,23 +47,17 @@ namespace TicTacToeLab.EditModeTests
 
         private sealed class FirstSpyState : SpyState
         {
-            public FirstSpyState(List<string> log) : base(log)
-            {
-            }
-        }
-
-        private sealed class UnregisteredSpyState : SpyState
-        {
-            public UnregisteredSpyState(List<string> log) : base(log)
-            {
-            }
+            public FirstSpyState(List<string> log) : base(log) { }
         }
 
         private sealed class SecondSpyState : SpyState
         {
-            public SecondSpyState(List<string> log) : base(log)
-            {
-            }
+            public SecondSpyState(List<string> log) : base(log) { }
+        }
+
+        private sealed class UnregisteredSpyState : SpyState
+        {
+            public UnregisteredSpyState(List<string> log) : base(log) { }
         }
 
         [Test]
@@ -86,29 +80,7 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Disposing_the_machine_leaves_the_current_state()
-        {
-            _stateMachine.ChangeState<FirstSpyState>();
-            _log.Clear();
-
-            _stateMachine.Dispose();
-
-            Assert.That(_log, Is.EqualTo(new[] { "FirstSpyState.Leave" }));
-        }
-
-        [Test]
-        public void A_raised_back_reaches_the_current_state_and_no_other()
-        {
-            _stateMachine.ChangeState<FirstSpyState>();
-            _log.Clear();
-
-            _fakeInputService.RaiseBack();
-
-            Assert.That(_log, Is.EqualTo(new[] { "FirstSpyState.Back" }));
-        }
-
-        [Test]
-        public void After_a_transition_back_reaches_the_new_state_and_not_the_one_just_left()
+        public void After_a_transition_back_reaches_only_the_new_current_state()
         {
             _stateMachine.ChangeState<FirstSpyState>();
             _stateMachine.ChangeState<SecondSpyState>();
@@ -120,15 +92,18 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void After_disposal_back_reaches_nothing()
+        public void Disposing_the_machine_leaves_the_current_state_and_detaches_back_input()
         {
             _stateMachine.ChangeState<FirstSpyState>();
-            _stateMachine.Dispose();
             _log.Clear();
+
+            _stateMachine.Dispose();
+
+            Assert.That(_log, Is.EqualTo(new[] { "FirstSpyState.Leave" }));
 
             _fakeInputService.RaiseBack();
 
-            Assert.That(_log, Is.Empty);
+            Assert.That(_log, Is.EqualTo(new[] { "FirstSpyState.Leave" }));
         }
     }
 }

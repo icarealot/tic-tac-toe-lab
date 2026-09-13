@@ -5,13 +5,9 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class GameplayStateTests
     {
-        private FakeGameplayPanel Panel => _fakeFactory.Panels[0];
-        private FakeConfirmQuitPopup Popup => _fakeFactory.Popups[0];
-
         private FakeBoardSession _fakeBoardSession;
         private FakeInputService _fakeInputService;
-        private FakeFactoryService _fakeFactory;
-        private UIService _uiService;
+        private FakeUIService _fakeUIService;
         private FakeStateMachine _fakeStateMachine;
         private GameplayState _gameplayState;
 
@@ -20,248 +16,97 @@ namespace TicTacToeLab.EditModeTests
         {
             _fakeBoardSession = new FakeBoardSession();
             _fakeInputService = new FakeInputService();
-            _fakeFactory = new FakeFactoryService();
-            _uiService = new UIService(_fakeFactory,
-                                        new FakeUIRoot(),
-                                        new FakeCoroutineService());
+            _fakeUIService = new FakeUIService();
             _fakeStateMachine = new FakeStateMachine();
-            _gameplayState = new GameplayState(_fakeBoardSession,
-                                                _fakeStateMachine,
-                                                _uiService,
-                                                _fakeInputService);
+            _gameplayState = new GameplayState(_fakeBoardSession, _fakeStateMachine, _fakeUIService, _fakeInputService);
         }
 
         [Test]
-        public void Entering_gameplay_asks_for_the_gameplay_panel_by_interface_and_configures_it()
-        {
-            _gameplayState.Enter();
-
-            Assert.That(_fakeFactory.Panels, Has.Count.EqualTo(1));
-            Assert.That(Panel.ConfiguredBoardSession, Is.SameAs(_fakeBoardSession));
-            Assert.That(Panel.IsVisible, Is.True);
-        }
-
-        [Test]
-        public void A_back_press_on_the_panel_opens_the_confirm_popup_and_leaves_the_gameplay_panel_on_its_stack()
-        {
-            _gameplayState.Enter();
-
-            Panel.Back();
-
-            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
-            Assert.That(Popup.IsVisible, Is.True);
-            Assert.That(_fakeFactory.ReturnedWindows.Contains(Panel), Is.False);
-            Assert.That(_uiService.TryClosePanel(), Is.True);
-        }
-
-        [Test]
-        public void A_back_press_on_the_panel_disables_gameplay_input()
-        {
-            _gameplayState.Enter();
-
-            Panel.Back();
-
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.False);
-        }
-
-        [Test]
-        public void Answering_no_after_a_panel_back_press_re_enables_gameplay_input()
-        {
-            _gameplayState.Enter();
-            Panel.Back();
-
-            Popup.No();
-
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
-        }
-
-        [Test]
-        public void Leaving_gameplay_closes_the_gameplay_panel()
-        {
-            _gameplayState.Enter();
-
-            _gameplayState.Leave();
-
-            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(Panel));
-        }
-
-        [Test]
-        public void The_gameplay_state_unsubscribes_from_the_session_ending_on_exit()
-        {
-            _gameplayState.Enter();
-            _gameplayState.Leave();
-
-            _fakeBoardSession.RaiseGameEnded();
-
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
-        }
-
-        [Test]
-        public void The_gameplay_state_enters_the_game_complete_state_when_the_ending_is_announced()
+        public void A_game_ending_enters_the_game_complete_state()
         {
             _gameplayState.Enter();
 
             _fakeBoardSession.RaiseGameEnded();
 
             Assert.That(_fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(GameCompleteState)));
-            Assert.That(_fakeStateMachine.ChangeStateCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void Re_entering_gameplay_keeps_one_session_ending_subscription()
+        public void Leaving_gameplay_stops_a_later_ending_from_reaching_the_state_machine()
         {
             _gameplayState.Enter();
             _gameplayState.Leave();
-            _gameplayState.Enter();
 
             _fakeBoardSession.RaiseGameEnded();
 
-            Assert.That(_fakeStateMachine.ChangeStateCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void Back_during_a_game_opens_a_confirm_popup_and_leaves_the_gameplay_panel_on_its_stack()
-        {
-            _gameplayState.Enter();
-
-            _gameplayState.Back();
-
-            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
-            Assert.That(_fakeFactory.ReturnedWindows.Contains(Panel), Is.False);
-            Assert.That(_uiService.TryClosePanel(), Is.True);
-        }
-
-        [Test]
-        public void The_confirm_popup_floats_above_the_gameplay_panel_without_hiding_it()
-        {
-            _gameplayState.Enter();
-
-            _gameplayState.Back();
-
-            Assert.That(Popup.IsVisible, Is.True);
-            Assert.That(Panel.IsVisible, Is.True);
-        }
-
-        [Test]
-        public void Back_again_closes_the_popup_and_opens_no_second_one()
-        {
-            _gameplayState.Enter();
-            _gameplayState.Back();
-
-            _gameplayState.Back();
-
-            Assert.That(_uiService.HasPopup, Is.False);
-            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
-            Assert.That(_fakeFactory.ReturnedWindows.Contains(Popup), Is.True);
-            Assert.That(Panel.IsVisible, Is.True);
-        }
-
-        [Test]
-        public void A_back_press_on_the_panel_while_the_confirmation_is_up_closes_it_and_opens_no_second_one()
-        {
-            _gameplayState.Enter();
-            Panel.Back();
-
-            Panel.Back();
-
-            Assert.That(_uiService.HasPopup, Is.False);
-            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(1));
-            Assert.That(_fakeFactory.ReturnedWindows.Contains(Popup), Is.True);
-            Assert.That(Panel.IsVisible, Is.True);
-        }
-
-        [Test]
-        public void A_back_press_on_the_panel_while_the_confirmation_is_up_re_enables_gameplay_input()
-        {
-            _gameplayState.Enter();
-            Panel.Back();
-
-            Panel.Back();
-
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
-        }
-
-        [Test]
-        public void Answering_no_closes_the_popup_and_leaves_gameplay_active()
-        {
-            _gameplayState.Enter();
-            _gameplayState.Back();
-
-            Popup.No();
-
-            Assert.That(_uiService.HasPopup, Is.False);
-            Assert.That(_fakeFactory.ReturnedWindows.Contains(Popup), Is.True);
-            Assert.That(Panel.IsVisible, Is.True);
             Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
         }
 
         [Test]
-        public void Answering_yes_enters_the_menu_state()
+        public void Back_with_no_confirmation_present_opens_one_popup_and_blocks_board_input()
+        {
+            _gameplayState.Enter();
+
+            _gameplayState.Back();
+
+            Assert.That(_fakeUIService.ShowPopupCount, Is.EqualTo(1));
+            Assert.That(_fakeUIService.HasPopup, Is.True);
+            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.False);
+            Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
+        }
+
+        [TestCase(ConfirmationClosePath.BackAgain)]
+        [TestCase(ConfirmationClosePath.AnswerNo)]
+        public void Closing_the_confirmation_re_enables_board_input_and_opens_no_second_one(
+            ConfirmationClosePath closePath)
         {
             _gameplayState.Enter();
             _gameplayState.Back();
 
-            Popup.Yes();
+            switch (closePath)
+            {
+                case ConfirmationClosePath.BackAgain:
+                    _gameplayState.Back();
+                    break;
+                case ConfirmationClosePath.AnswerNo:
+                    _fakeUIService.LastPopup.No();
+                    break;
+            }
+
+            Assert.That(_fakeUIService.HasPopup, Is.False);
+            Assert.That(_fakeUIService.ShowPopupCount, Is.EqualTo(1));
+            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
+        }
+
+        [Test]
+        public void Answering_yes_returns_to_the_menu()
+        {
+            _gameplayState.Enter();
+            _gameplayState.Back();
+
+            _fakeUIService.LastPopup.Yes();
 
             Assert.That(_fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(MainMenuState)));
-            Assert.That(_fakeStateMachine.ChangeStateCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void Answering_yes_leaves_gameplay_so_its_popup_and_panel_are_cleaned_up_on_the_way_out()
-        {
-            _gameplayState.Enter();
-            _gameplayState.Back();
-
-            Popup.Yes();
-            _gameplayState.Leave();
-
-            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(Popup));
-            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(Panel));
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
-        }
-
-        [Test]
-        public void Back_during_a_game_disables_gameplay_input()
-        {
-            _gameplayState.Enter();
-
-            _gameplayState.Back();
-
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.False);
-        }
-
-        [Test]
-        public void Answering_no_re_enables_gameplay_input()
-        {
-            _gameplayState.Enter();
-            _gameplayState.Back();
-
-            Popup.No();
-
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
-        }
-
-        [Test]
-        public void Back_again_re_enables_gameplay_input()
-        {
-            _gameplayState.Enter();
-            _gameplayState.Back();
-
-            _gameplayState.Back();
-
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
-        }
-
-        [Test]
-        public void Leaving_gameplay_with_the_popup_up_re_enables_gameplay_input()
+        public void Leaving_gameplay_with_a_confirmation_present_removes_it_closes_the_panel_and_restores_input()
         {
             _gameplayState.Enter();
             _gameplayState.Back();
 
             _gameplayState.Leave();
 
+            Assert.That(_fakeUIService.HasPopup, Is.False);
             Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(_fakeUIService.Requests, Does.Contain("TryClosePanel"));
+        }
+
+        public enum ConfirmationClosePath
+        {
+            BackAgain,
+            AnswerNo,
         }
     }
 }

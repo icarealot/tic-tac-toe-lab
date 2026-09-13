@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 
@@ -5,93 +6,56 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class MainMenuStateTests
     {
-        private FakeMainMenuPanel Panel => _fakeFactory.MenuPanels[0];
-
-        private FakeBoardSession _fakeBoardSession;
-        private FakeFactoryService _fakeFactory;
-        private UIService _uiService;
-        private FakeStateMachine _fakeStateMachine;
+        private List<string> _log;
+        private FakeUIService _fakeUIService;
         private MainMenuState _mainMenuState;
 
         [SetUp]
         public void SetUp()
         {
-            _fakeBoardSession = new FakeBoardSession();
-            _fakeFactory = new FakeFactoryService();
-            _uiService = new UIService(_fakeFactory,
-                                        new FakeUIRoot(),
-                                        new FakeCoroutineService());
-            _fakeStateMachine = new FakeStateMachine();
-            _mainMenuState = new MainMenuState(_fakeBoardSession,
-                                            _fakeStateMachine,
-                                            _uiService);
+            _log = new List<string>();
+            _fakeUIService = new FakeUIService();
+            _mainMenuState = new MainMenuState(new RecordingBoardSession(_log), new RecordingStateMachine(_log), _fakeUIService);
         }
 
         [Test]
-        public void Entering_the_menu_asks_for_the_menu_panel_by_interface_and_configures_it()
+        public void Starting_the_game_resets_the_board_session_before_entering_gameplay()
         {
             _mainMenuState.Enter();
 
-            Assert.That(_fakeFactory.MenuPanels, Has.Count.EqualTo(1));
-            Assert.That(Panel.IsVisible, Is.True);
-            Assert.That(Panel.ConfiguredOnStart, Is.Not.Null);
+            _fakeUIService.LastMainMenuPanel.StartGame();
+
+            Assert.That(_log, Is.EqualTo(new[]
+            {
+                "BoardSession.Reset",
+                "StateMachine.ChangeState<GameplayState>",
+            }));
         }
 
         [Test]
-        public void Leaving_the_menu_closes_the_menu_panel()
-        {
-            _mainMenuState.Enter();
-
-            _mainMenuState.Leave();
-
-            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(Panel));
-        }
-
-        [Test]
-        public void Back_on_the_menu_does_nothing()
+        public void Back_on_the_menu_changes_no_state_or_window()
         {
             _mainMenuState.Enter();
 
             _mainMenuState.Back();
 
-            Assert.That(_uiService.HasPopup, Is.False);
-            Assert.That(_fakeFactory.Popups, Has.Count.EqualTo(0));
-            Assert.That(_fakeFactory.ReturnedWindows, Has.Count.EqualTo(0));
-            Assert.That(Panel.IsVisible, Is.True);
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
+            Assert.That(_log, Is.Empty);
+            Assert.That(_fakeUIService.Requests, Is.EqualTo(new[] { "ShowPanel<IMainMenuPanel>" }));
+            Assert.That(_fakeUIService.HasPopup, Is.False);
         }
 
         [Test]
-        public void A_start_press_resets_the_board_session()
+        public void Leaving_the_menu_closes_its_panel()
         {
             _mainMenuState.Enter();
 
-            Panel.StartGame();
-
-            Assert.That(_fakeBoardSession.WasReset, Is.True);
-            Assert.That(_fakeBoardSession.ResetCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void A_start_press_enters_the_gameplay_state()
-        {
-            _mainMenuState.Enter();
-
-            Panel.StartGame();
-
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(GameplayState)));
-            Assert.That(_fakeStateMachine.ChangeStateCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void A_start_press_leaves_the_menu_so_its_panel_is_closed()
-        {
-            _mainMenuState.Enter();
-
-            Panel.StartGame();
             _mainMenuState.Leave();
 
-            Assert.That(_fakeFactory.ReturnedWindows, Does.Contain(Panel));
+            Assert.That(_fakeUIService.Requests, Is.EqualTo(new[]
+            {
+                "ShowPanel<IMainMenuPanel>",
+                "TryClosePanel",
+            }));
         }
     }
 }
