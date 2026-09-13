@@ -1,80 +1,87 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
+    /// <summary>
+    /// Safe-area-to-anchor conversion owned by SafeAreaCalculator, asserted with independent
+    /// literal expected values across representative and invalid dimensions. Exact production
+    /// layout, cutout usability, and on-device orientation changes belong to a representative
+    /// player build and human playtest, not this suite.
+    /// </summary>
     public sealed class SafeAreaCalculatorTests
     {
-        private float _screenWidth;
-        private float _screenHeight;
-
-        [SetUp]
-        public void SetUp()
+        public sealed class InsetScenario
         {
-            _screenWidth = 1080f;
-            _screenHeight = 2340f;
+            public readonly Rect SafeArea;
+            public readonly float ScreenWidth;
+            public readonly float ScreenHeight;
+            public readonly Vector2 ExpectedMin;
+            public readonly Vector2 ExpectedMax;
+
+            public InsetScenario(Rect safeArea, float screenWidth, float screenHeight, Vector2 expectedMin, Vector2 expectedMax)
+            {
+                SafeArea = safeArea;
+                ScreenWidth = screenWidth;
+                ScreenHeight = screenHeight;
+                ExpectedMin = expectedMin;
+                ExpectedMax = expectedMax;
+            }
+
+            public override string ToString()
+            {
+                return $"{SafeArea.width}x{SafeArea.height} safe area on a {ScreenWidth}x{ScreenHeight} screen";
+            }
         }
+
+        private static IEnumerable<InsetScenario> RepresentativeInsets()
+        {
+            // A top cutout of 234px on a 1080x2340 screen insets only the top.
+            yield return new InsetScenario(new Rect(0f, 0f, 1080f, 2106f), 1080f, 2340f, new Vector2(0f, 0f), new Vector2(1f, 0.9f));
+            // A bottom gesture bar of 320px on a 1440x3200 screen insets only the bottom.
+            yield return new InsetScenario(new Rect(0f, 320f, 1440f, 2880f), 1440f, 3200f, new Vector2(0f, 0.1f), new Vector2(1f, 1f));
+            // 60px side, 120px bottom, and 180px top insets combine on a 1200x2400 screen.
+            yield return new InsetScenario(new Rect(60f, 120f, 1080f, 2100f), 1200f, 2400f, new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.925f));
+        }
+
+        // --- Full screen ---
 
         [Test]
-        public void A_full_screen_safe_area_produces_a_full_stretch_rect_with_no_inset()
+        public void A_full_screen_safe_area_stretches_anchors_across_the_whole_screen()
         {
-            Rect safeArea = new(0f, 0f, _screenWidth, _screenHeight);
+            SafeAreaInsets insets = SafeAreaCalculator.Calculate(new Rect(0f, 0f, 1080f, 2340f), 1080f, 2340f);
 
-            SafeAreaInsets insets = SafeAreaCalculator.Calculate(safeArea, _screenWidth, _screenHeight);
-
-            Assert.That(insets.AnchorMin, Is.EqualTo(Vector2.zero));
-            Assert.That(insets.AnchorMax, Is.EqualTo(Vector2.one));
+            Assert.That(insets.AnchorMin, Is.EqualTo(new Vector2(0f, 0f)));
+            Assert.That(insets.AnchorMax, Is.EqualTo(new Vector2(1f, 1f)));
         }
 
-        [Test]
-        public void A_top_cutout_insets_only_the_top()
+        // --- Insets ---
+
+        [TestCaseSource(nameof(RepresentativeInsets))]
+        public void Insets_map_to_literal_normalized_anchors_across_representative_screens(InsetScenario scenario)
         {
-            Rect safeArea = new(0f, 0f, _screenWidth, 2200f);
+            SafeAreaInsets insets = SafeAreaCalculator.Calculate(scenario.SafeArea, scenario.ScreenWidth, scenario.ScreenHeight);
 
-            SafeAreaInsets insets = SafeAreaCalculator.Calculate(safeArea, _screenWidth, _screenHeight);
-
-            Assert.That(insets.AnchorMin.y, Is.EqualTo(0f));
-            Assert.That(insets.AnchorMax.y, Is.LessThan(1f));
+            Assert.That(insets.AnchorMin, Is.EqualTo(scenario.ExpectedMin));
+            Assert.That(insets.AnchorMax, Is.EqualTo(scenario.ExpectedMax));
         }
 
-        [Test]
-        public void A_bottom_gesture_bar_insets_only_the_bottom()
-        {
-            Rect safeArea = new(0f, 140f, _screenWidth, 2200f);
-
-            SafeAreaInsets insets = SafeAreaCalculator.Calculate(safeArea, _screenWidth, _screenHeight);
-
-            Assert.That(insets.AnchorMin.y, Is.GreaterThan(0f));
-            Assert.That(insets.AnchorMax.y, Is.EqualTo(1f));
-        }
+        // --- Invalid dimensions ---
 
         [TestCase(0f, 0f)]
         [TestCase(-1080f, 2340f)]
         [TestCase(1080f, -2340f)]
+        [TestCase(-1080f, -2340f)]
         [TestCase(0f, 2340f)]
         [TestCase(1080f, 0f)]
-        public void A_zero_or_negative_screen_size_produces_a_full_stretch_rect(float screenWidth, float screenHeight)
+        public void Zero_or_negative_screen_dimensions_fall_back_to_full_stretch_anchors(float screenWidth, float screenHeight)
         {
-            Rect safeArea = new(0f, 100f, 1080f, 2000f);
-
-            SafeAreaInsets insets = SafeAreaCalculator.Calculate(safeArea, screenWidth, screenHeight);
+            SafeAreaInsets insets = SafeAreaCalculator.Calculate(new Rect(0f, 100f, 1080f, 2000f), screenWidth, screenHeight);
 
             Assert.That(insets.AnchorMin, Is.EqualTo(Vector2.zero));
             Assert.That(insets.AnchorMax, Is.EqualTo(Vector2.one));
-        }
-
-        [TestCase(1080f, 2340f)]
-        [TestCase(1440f, 3200f)]
-        [TestCase(750f, 1334f)]
-        public void Insets_are_correct_across_different_screen_sizes(float screenWidth, float screenHeight)
-        {
-            Rect safeArea = new(0f, 100f, screenWidth, screenHeight - 150f);
-
-            SafeAreaInsets insets = SafeAreaCalculator.Calculate(safeArea, screenWidth, screenHeight);
-
-            Assert.That(insets.AnchorMin, Is.EqualTo(new Vector2(safeArea.xMin / screenWidth, safeArea.yMin / screenHeight)));
-            Assert.That(insets.AnchorMax, Is.EqualTo(new Vector2(safeArea.xMax / screenWidth, safeArea.yMax / screenHeight)));
         }
     }
 }
