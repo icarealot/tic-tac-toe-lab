@@ -3,147 +3,151 @@ using System;
 using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class FactoryServiceTests : SceneWiringTests
+    /// <summary>
+    /// FactoryService contracts exercised against the production factory prefab's serialized role
+    /// registry, instantiated directly instead of reached through application-scene bootstrap: the
+    /// registry is the configuration under test. Assertions stay on role resolution and return
+    /// lifecycle and never reach unrelated registry entries or visual prefab content. Frameless
+    /// contracts run as plain tests; only return destruction needs a frame, so only those two run
+    /// as coroutines.
+    /// </summary>
+    public sealed class FactoryServiceTests
     {
-        [UnityTest]
-        public IEnumerator A_uniquely_registered_interface_produces_a_new_implementation_from_its_prefab()
+        private interface IUnregisteredRole { }
+
+        private sealed class PlainImplementation : IUnregisteredRole { }
+
+        private const string FACTORY_PREFAB_PATH = "Assets/_TicTacToeLab/Prefabs/Services/Factory.prefab";
+
+        private FactoryService _factoryService;
+
+        [SetUp]
+        public void InstantiateProductionFactory()
         {
-            yield return IE_LoadScene();
+            GameObject factoryPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(FACTORY_PREFAB_PATH);
+            Assert.That(factoryPrefab, Is.Not.Null, "The production factory prefab must exist at its shipped path.");
 
-            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
-            CoroutineService productionInstance = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
-            ICoroutineService created = factoryService.Get<ICoroutineService>();
-
-            Assert.That(created, Is.Not.Null);
-            Assert.That(created, Is.TypeOf<CoroutineService>());
-            Assert.That((Component)created, Is.Not.SameAs(productionInstance));
-            Assert.That(((Component)created).transform.parent, Is.Null);
-
-            factoryService.Return(created);
+            _factoryService = UnityEngine.Object.Instantiate(factoryPrefab).GetComponent<FactoryService>();
+            Assert.That(_factoryService, Is.Not.Null, "The factory prefab must carry the FactoryService.");
         }
 
-        [UnityTest]
-        public IEnumerator A_supplied_parent_is_applied_during_instantiation()
+        [TearDown]
+        public void DestroyFactoryInstance()
         {
-            yield return IE_LoadScene();
+            if (_factoryService != null)
+            {
+                UnityEngine.Object.Destroy(_factoryService.gameObject);
+            }
+        }
 
-            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
+        [Test]
+        public void A_uniquely_registered_interface_produces_a_new_implementation_from_its_prefab()
+        {
+            ICoroutineService first = _factoryService.Get<ICoroutineService>();
+            ICoroutineService second = _factoryService.Get<ICoroutineService>();
+            Component firstComponent = (Component)first;
+            Component secondComponent = (Component)second;
+
+            // A repeat request creates another instance rather than reusing one.
+            Assert.That(secondComponent != firstComponent, Is.True);
+            Assert.That(firstComponent.transform.parent, Is.Null);
+
+            _factoryService.Return(first);
+            _factoryService.Return(second);
+        }
+
+        [Test]
+        public void A_supplied_parent_is_applied_during_instantiation()
+        {
             Transform parent = new GameObject("Parent").transform;
 
-            ICoroutineService created = factoryService.Get<ICoroutineService>(parent);
+            ICoroutineService created = _factoryService.Get<ICoroutineService>(parent);
 
             Assert.That(((Component)created).transform.parent, Is.EqualTo(parent));
 
-            factoryService.Return(created);
             UnityEngine.Object.Destroy(parent.gameObject);
         }
 
         [UnityTest]
         public IEnumerator Returning_an_interface_backed_object_destroys_its_gameobject()
         {
-            yield return IE_LoadScene();
+            IGameplayPanel panel = _factoryService.Get<IGameplayPanel>();
+            GameObject panelGameObject = ((Component)panel).gameObject;
 
-            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
-            IGameplayPanel panel = factoryService.Get<IGameplayPanel>();
-            Component panelComponent = (Component)panel;
-            GameObject panelGameObject = panelComponent.gameObject;
-
-            factoryService.Return(panel);
+            _factoryService.Return(panel);
             yield return null;
 
             Assert.That(panelGameObject == null, Is.True);
-            Assert.That(panelComponent == null, Is.True);
         }
 
         [UnityTest]
         public IEnumerator Returning_an_already_destroyed_interface_backed_object_is_a_no_op()
         {
-            yield return IE_LoadScene();
-
-            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
-            IGameplayPanel panel = factoryService.Get<IGameplayPanel>();
+            IGameplayPanel panel = _factoryService.Get<IGameplayPanel>();
 
             UnityEngine.Object.Destroy((Component)panel);
             yield return null;
 
-            Assert.That(() => factoryService.Return(panel), Throws.Nothing);
+            Assert.That(() => _factoryService.Return(panel), Throws.Nothing);
         }
 
-        [UnityTest]
-        public IEnumerator Returning_an_object_that_is_not_a_unity_component_throws()
+        [Test]
+        public void Returning_an_object_that_is_not_a_unity_component_throws()
         {
-            yield return IE_LoadScene();
-
-            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
             IUnregisteredRole plain = new PlainImplementation();
 
-            Assert.That(() => factoryService.Return(plain), Throws.TypeOf<InvalidOperationException>());
+            AssertFactoryRejects(() => _factoryService.Return(plain));
         }
 
-        [UnityTest]
-        public IEnumerator Requesting_a_concrete_type_is_rejected_even_when_it_is_registered()
+        [Test]
+        public void Requesting_a_concrete_type_is_rejected_even_when_it_is_registered()
         {
-            yield return IE_LoadScene();
-
-            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
-
-            Assert.That(() => factoryService.Get<CoroutineService>(), Throws.TypeOf<InvalidOperationException>());
+            AssertFactoryRejects(() => _factoryService.Get<CoroutineService>());
         }
 
-        [UnityTest]
-        public IEnumerator Returning_a_concrete_type_is_rejected_even_when_it_is_registered()
+        [Test]
+        public void Returning_a_concrete_type_is_rejected_even_when_it_is_registered()
         {
-            yield return IE_LoadScene();
+            CoroutineService concreteInstance = (CoroutineService)_factoryService.Get<ICoroutineService>();
 
-            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
-            CoroutineService productionInstance = UnityEngine.Object.FindFirstObjectByType<CoroutineService>();
+            AssertFactoryRejects(() => _factoryService.Return(concreteInstance));
+            Assert.That(concreteInstance == null, Is.False);
 
-            Assert.That(() => factoryService.Return(productionInstance), Throws.TypeOf<InvalidOperationException>());
-            Assert.That(productionInstance == null, Is.False);
+            UnityEngine.Object.Destroy(concreteInstance.gameObject);
         }
 
-        [UnityTest]
-        public IEnumerator Requesting_an_interface_without_a_registered_implementation_throws()
+        [Test]
+        public void Requesting_an_interface_without_a_registered_implementation_throws()
         {
-            yield return IE_LoadScene();
-
-            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
-
-            Assert.That(() => factoryService.Get<IUnregisteredRole>(), Throws.TypeOf<InvalidOperationException>());
+            AssertFactoryRejects(() => _factoryService.Get<IUnregisteredRole>());
         }
 
-        [UnityTest]
-        public IEnumerator An_interface_matched_by_multiple_registered_prefabs_throws_regardless_of_registry_order()
+        [Test]
+        public void An_interface_matched_by_multiple_registered_prefabs_throws_regardless_of_registry_order()
         {
-            yield return IE_LoadScene();
-
-            IFactoryService factoryService = UnityEngine.Object.FindFirstObjectByType<FactoryService>();
-
             // Both implementations of IWindow are registered and individually resolvable,
             // so the broad role is genuinely ambiguous rather than merely unregistered.
-            IGameplayPanel panel = factoryService.Get<IGameplayPanel>();
-            IConfirmQuitPopup popup = factoryService.Get<IConfirmQuitPopup>();
+            IGameplayPanel panel = _factoryService.Get<IGameplayPanel>();
+            IConfirmQuitPopup popup = _factoryService.Get<IConfirmQuitPopup>();
 
             Assert.That(panel, Is.Not.Null);
             Assert.That(popup, Is.Not.Null);
 
-            Assert.That(() => factoryService.Get<IWindow>(), Throws.TypeOf<InvalidOperationException>());
+            AssertFactoryRejects(() => _factoryService.Get<IWindow>());
 
-            factoryService.Return(panel);
-            factoryService.Return(popup);
+            _factoryService.Return(panel);
+            _factoryService.Return(popup);
         }
 
-        private interface IUnregisteredRole
+        private void AssertFactoryRejects(TestDelegate operation)
         {
-        }
-
-        private sealed class PlainImplementation : IUnregisteredRole
-        {
+            Assert.That(operation, Throws.TypeOf<InvalidOperationException>());
         }
     }
 }
