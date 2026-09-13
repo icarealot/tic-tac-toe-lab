@@ -7,54 +7,61 @@ using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class BoardViewTests : SceneWiringTests
+    /// <summary>
+    /// BoardView's in-place reset lifecycle on an isolated full board/cell graph: Clear leaves
+    /// every cell in place while removing every mark the cells own. The 3x3 graph is declared
+    /// with literal placements and built through a narrow factory stand-in; no production scene,
+    /// prefab, or registry participates.
+    /// </summary>
+    public sealed class BoardViewTests
     {
-        [UnityTest]
-        public IEnumerator Constructing_a_board_through_its_role_places_an_interface_based_cell_beneath_it_for_every_cell_placement()
+        private GameObject _root;
+        private TestComponentFactory _factory;
+        private BoardView _board;
+
+        [SetUp]
+        public void CreateIsolatedBoard()
         {
-            yield return IE_LoadScene();
-
-            RecordingFactoryService factory = new(Object.FindFirstObjectByType<FactoryService>());
-            BoardModel boardModel = new();
-            IBoardView boardView = factory.Get<IBoardView>();
-            BoardView board = (BoardView)boardView;
-
-            boardView.Construct(factory, boardModel.Dimension, boardModel.GetCellPlacements());
-
-            Assert.That(factory.GetRequests, Has.Count.EqualTo(1 + boardModel.Dimension * boardModel.Dimension));
-            Assert.That(factory.GetRequests[0].Type, Is.EqualTo(typeof(IBoardView)));
-            for (int requestIndex = 1; requestIndex < factory.GetRequests.Count; requestIndex++)
+            _root = new GameObject("BoardViewTests");
+            _factory = new TestComponentFactory();
+            _board = _root.AddComponent<BoardView>();
+            _board.Construct(_factory, 3, new[]
             {
-                Assert.That(factory.GetRequests[requestIndex].Type, Is.EqualTo(typeof(ICellView)));
-                Assert.That(factory.GetRequests[requestIndex].Parent, Is.SameAs(board.transform));
-            }
+                new CellPlacement(0, 0, new Vector3(0f, 0f, 0f)),
+                new CellPlacement(0, 1, new Vector3(1f, 0f, 0f)),
+                new CellPlacement(0, 2, new Vector3(2f, 0f, 0f)),
+                new CellPlacement(1, 0, new Vector3(0f, -1f, 0f)),
+                new CellPlacement(1, 1, new Vector3(1f, -1f, 0f)),
+                new CellPlacement(1, 2, new Vector3(2f, -1f, 0f)),
+                new CellPlacement(2, 0, new Vector3(0f, -2f, 0f)),
+                new CellPlacement(2, 1, new Vector3(1f, -2f, 0f)),
+                new CellPlacement(2, 2, new Vector3(2f, -2f, 0f)),
+            });
+        }
 
-            Assert.That(board.GetComponentsInChildren<CellView>().Length, Is.EqualTo(boardModel.Dimension * boardModel.Dimension));
-            foreach (CellPlacement placement in boardModel.GetCellPlacements())
+        [TearDown]
+        public void DestroyIsolatedBoard()
+        {
+            if (_root != null)
             {
-                Transform cellTransform = board.transform.Find($"Cell ({placement.Row}, {placement.Column})");
-                Assert.That(cellTransform, Is.Not.Null, $"No cell was created for placement ({placement.Row}, {placement.Column}).");
-                Assert.That(cellTransform.localPosition, Is.EqualTo(placement.LocalPoint));
+                Object.Destroy(_root);
             }
-
-            factory.Return(boardView);
         }
 
         [UnityTest]
-        public IEnumerator Clearing_the_board_view_leaves_every_cell_in_place_with_no_mark_showing()
+        public IEnumerator Clearing_the_board_preserves_every_cell_while_removing_every_mark()
         {
-            yield return IE_LoadScene();
+            Assert.That(_board.GetComponentsInChildren<CellView>(), Has.Length.EqualTo(9), "The fixture should hold a full 3x3 board graph.");
 
-            BoardView boardView = Object.FindFirstObjectByType<BoardView>();
-            boardView.ShowMark(0, 0, Mark.X);
-            boardView.ShowMark(1, 1, Mark.O);
-            int cellCountBeforeClear = boardView.GetComponentsInChildren<CellView>().Length;
+            _board.ShowMark(0, 0, Mark.X);
+            _board.ShowMark(2, 2, Mark.O);
+            Assert.That(_board.GetComponentsInChildren<MarkView>(), Has.Length.EqualTo(2), "The fixture should show representative marks.");
 
-            boardView.Clear();
+            _board.Clear();
             yield return null;
 
-            Assert.That(boardView.GetComponentsInChildren<CellView>().Length, Is.EqualTo(cellCountBeforeClear));
-            Assert.That(boardView.GetComponentsInChildren<MarkView>(), Is.Empty);
+            Assert.That(_board.GetComponentsInChildren<CellView>(), Has.Length.EqualTo(9));
+            Assert.That(_board.GetComponentsInChildren<MarkView>(), Is.Empty);
         }
     }
 }

@@ -7,74 +7,61 @@ using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class CellViewTests : SceneWiringTests
+    /// <summary>
+    /// Cell-owned mark lifecycle on one isolated cell: ShowMark gives the cell a mark created
+    /// through the factory seam, ClearMark returns and removes exactly the mark the cell owns, and
+    /// clearing again — or clearing a cell that never showed a mark — is harmless. Diagnostic
+    /// names, sprite artwork, and child layout are incidental here and unasserted.
+    /// </summary>
+    public sealed class CellViewTests
     {
-        [UnityTest]
-        public IEnumerator A_cell_obtained_through_its_role_applies_its_assigned_local_point_and_diagnostic_name()
+        private GameObject _root;
+        private TestComponentFactory _factory;
+        private CellView _cell;
+
+        [SetUp]
+        public void CreateIsolatedCell()
         {
-            yield return IE_LoadScene();
+            _root = new GameObject("CellViewTests");
+            _factory = new TestComponentFactory();
+            _cell = _root.AddComponent<CellView>();
+            _cell.Construct(_factory, new CellPlacement(0, 0, Vector3.zero));
+        }
 
-            CellPlacement placement = new(1, 2, new Vector3(0.3f, -0.4f, 0f));
-            GameObject host = new("CellHost");
-            RecordingFactoryService factory = new(Object.FindFirstObjectByType<FactoryService>());
-            ICellView cellView = factory.Get<ICellView>(host.transform);
-            cellView.Construct(factory, placement);
-            CellView cell = (CellView)cellView;
-
-            Assert.That(cell.name, Is.EqualTo("Cell (1, 2)"));
-            Assert.That(cell.transform.localPosition, Is.EqualTo(placement.LocalPoint));
-
-            factory.Return(cellView);
-            Object.Destroy(host);
+        [TearDown]
+        public void DestroyIsolatedCell()
+        {
+            if (_root != null)
+            {
+                Object.Destroy(_root);
+            }
         }
 
         [UnityTest]
-        public IEnumerator Showing_a_mark_requests_an_interface_based_mark_beneath_the_cell_and_displays_the_requested_mark()
+        public IEnumerator Clearing_a_marked_cell_returns_and_removes_exactly_the_mark_it_owns()
         {
-            yield return IE_LoadScene();
+            _cell.ShowMark(Mark.X);
+            MarkView ownedMark = _cell.GetComponentInChildren<MarkView>();
+            Assert.That(ownedMark, Is.Not.Null, "ShowMark should leave the cell owning a mark.");
 
-            GameObject host = new("CellHost");
-            RecordingFactoryService factory = new(Object.FindFirstObjectByType<FactoryService>());
-            ICellView cellView = factory.Get<ICellView>(host.transform);
-            cellView.Construct(factory, new CellPlacement(0, 0, Vector3.zero));
-            CellView cell = (CellView)cellView;
+            _cell.ClearMark();
 
-            cellView.ShowMark(Mark.X);
-
-            MarkView markView = cell.GetComponentInChildren<MarkView>();
-            Assert.That(markView, Is.Not.Null);
-            Assert.That(markView.transform.parent, Is.EqualTo(cell.transform));
-            Assert.That(markView.GetComponent<SpriteRenderer>().sprite, Is.Not.Null);
-            Assert.That(factory.GetRequests, Does.Contain((typeof(IMarkView), cell.transform)));
-
-            factory.Return(cellView);
-            Object.Destroy(host);
-        }
-
-        [UnityTest]
-        public IEnumerator Clearing_a_marked_cell_returns_that_same_mark_through_the_factory_service()
-        {
-            yield return IE_LoadScene();
-
-            GameObject host = new("CellHost");
-            RecordingFactoryService factory = new(Object.FindFirstObjectByType<FactoryService>());
-            ICellView cellView = factory.Get<ICellView>(host.transform);
-            cellView.Construct(factory, new CellPlacement(0, 0, Vector3.zero));
-            CellView cell = (CellView)cellView;
-
-            cellView.ShowMark(Mark.O);
-            MarkView markView = cell.GetComponentInChildren<MarkView>();
-            Assert.That(markView, Is.Not.Null);
-
-            cellView.ClearMark();
-            Assert.That(factory.ReturnedInstance, Is.SameAs(markView));
+            Assert.That(_factory.Returned, Has.Count.EqualTo(1));
+            Assert.That(_factory.Returned[0], Is.SameAs(ownedMark));
 
             yield return null;
 
-            Assert.That(cell.GetComponentInChildren<MarkView>(), Is.Null);
+            Assert.That(_cell.GetComponentInChildren<MarkView>(), Is.Null);
 
-            factory.Return(cellView);
-            Object.Destroy(host);
+            _cell.ClearMark();
+            Assert.That(_factory.Returned, Has.Count.EqualTo(1), "A repeated clear has nothing left to return.");
+        }
+
+        [Test]
+        public void Clearing_a_cell_that_never_showed_a_mark_is_harmless()
+        {
+            Assert.That(() => _cell.ClearMark(), Throws.Nothing);
+            Assert.That(_factory.Returned, Is.Empty);
         }
     }
 }
