@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TicTacToeLab.Runtime;
 
 namespace TicTacToeLab.EditModeTests
@@ -6,11 +5,10 @@ namespace TicTacToeLab.EditModeTests
     public abstract class FakeWindow : IWindow
     {
         public bool IsVisible { get; private set; }
-        public List<ICoroutineService> ConstructionServices { get; } = new();
 
+        /// <summary>Required by IWindow; UIService calls it on every show. The fake records nothing.</summary>
         public void Construct(ICoroutineService coroutineService)
         {
-            ConstructionServices.Add(coroutineService);
         }
 
         public void Show()

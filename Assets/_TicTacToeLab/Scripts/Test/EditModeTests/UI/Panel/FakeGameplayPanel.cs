@@ -5,21 +5,9 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class FakeGameplayPanel : FakeWindow, IGameplayPanel
     {
-        public IBoardSession ConfiguredBoardSession { get; private set; }
-        public Action ConfiguredOnBack { get; private set; }
-
-        private Action _onBack;
-
+        /// <summary>Required by IGameplayPanel; panel configuration is not part of the stack behavior under test.</summary>
         public void Setup(IBoardSession boardSession, Action onBack)
         {
-            ConfiguredBoardSession = boardSession;
-            _onBack = onBack;
-            ConfiguredOnBack = onBack;
-        }
-
-        public void Back()
-        {
-            _onBack?.Invoke();
         }
     }
 }
