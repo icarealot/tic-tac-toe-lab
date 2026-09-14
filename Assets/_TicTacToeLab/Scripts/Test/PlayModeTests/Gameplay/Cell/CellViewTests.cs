@@ -7,12 +7,6 @@ using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    /// <summary>
-    /// Cell-owned mark lifecycle on one isolated cell: ShowMark gives the cell a mark created
-    /// through the factory seam, ClearMark returns and removes exactly the mark the cell owns, and
-    /// clearing again — or clearing a cell that never showed a mark — is harmless. Diagnostic
-    /// names, sprite artwork, and child layout are incidental here and unasserted.
-    /// </summary>
     public sealed class CellViewTests
     {
         private GameObject _root;

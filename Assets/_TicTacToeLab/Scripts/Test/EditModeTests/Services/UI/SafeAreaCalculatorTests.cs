@@ -5,12 +5,6 @@ using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
-    /// <summary>
-    /// Safe-area-to-anchor conversion owned by SafeAreaCalculator, asserted with independent
-    /// literal expected values across representative and invalid dimensions. Exact production
-    /// layout, cutout usability, and on-device orientation changes belong to a representative
-    /// player build and human playtest, not this suite.
-    /// </summary>
     public sealed class SafeAreaCalculatorTests
     {
         public sealed class InsetScenario

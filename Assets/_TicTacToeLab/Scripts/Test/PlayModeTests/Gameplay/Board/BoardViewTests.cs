@@ -7,12 +7,6 @@ using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    /// <summary>
-    /// BoardView's in-place reset lifecycle on an isolated full board/cell graph: Clear leaves
-    /// every cell in place while removing every mark the cells own. The 3x3 graph is declared
-    /// with literal placements and built through a narrow factory stand-in; no production scene,
-    /// prefab, or registry participates.
-    /// </summary>
     public sealed class BoardViewTests
     {
         private GameObject _root;

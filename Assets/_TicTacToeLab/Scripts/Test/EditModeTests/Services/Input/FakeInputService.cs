@@ -10,7 +10,6 @@ namespace TicTacToeLab.EditModeTests
         public event Action BackPressed;
 
         public bool HasSubscribers => Pressed != null;
-
         public bool IsPlayerPressEnabled { get; private set; } = true;
 
         public void RaisePress(Vector2 screenPoint)

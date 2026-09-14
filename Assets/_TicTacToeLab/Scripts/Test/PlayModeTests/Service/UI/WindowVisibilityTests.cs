@@ -5,16 +5,11 @@ using UnityEngine;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    /// <summary>
-    /// Window visibility state on one isolated object: Hide and Show drive the window's CanvasGroup
-    /// between its hidden and shown states, and IsVisible reports which state the window is in.
-    /// Alpha, interaction, and raycast blocking are the contract; styling and the production
-    /// windows' content and layout are not.
-    /// </summary>
     public sealed class WindowVisibilityTests
     {
-        /// <summary>The production Window is abstract; this subclass carries no extra behavior.</summary>
-        private sealed class TestWindow : Window { }
+        private sealed class TestWindow : Window
+        {
+        }
 
         private GameObject _host;
         private Window _window;

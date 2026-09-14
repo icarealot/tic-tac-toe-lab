@@ -4,15 +4,6 @@ using TicTacToeLab.Runtime;
 
 namespace TicTacToeLab.EditModeTests
 {
-    /// <summary>
-    /// CoroutineHandle state transitions asserted on plain objects: disposing a running handle
-    /// stops the routine exactly once and repeated disposal is a no-op, while disposing a finished
-    /// handle never stops it. The constructor's rejection of a missing stop action is part of the
-    /// handle contract: a handle that cannot stop cannot fulfil cancellation. These lifecycle
-    /// rules need no frames, so EditMode is the smallest sufficient fixture; real frame
-    /// continuation and delayed execution belong to the isolated PlayMode component in
-    /// CoroutineServiceTests.
-    /// </summary>
     public sealed class CoroutineHandleTests
     {
         [Test]

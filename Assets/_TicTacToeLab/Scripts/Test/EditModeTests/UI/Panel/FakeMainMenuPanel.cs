@@ -5,9 +5,9 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class FakeMainMenuPanel : FakeWindow, IMainMenuPanel
     {
-        public Action ConfiguredOnStart { get; private set; }
-
         private Action _onStart;
+
+        public Action ConfiguredOnStart { get; private set; }
 
         public void Setup(Action onStart)
         {

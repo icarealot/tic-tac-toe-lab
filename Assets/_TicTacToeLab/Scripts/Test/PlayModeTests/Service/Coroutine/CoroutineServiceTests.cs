@@ -9,13 +9,6 @@ using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    /// <summary>
-    /// CoroutineService frame behavior on one isolated component: a routine executes before and
-    /// continues after a yielded frame, RunAfter defers a callback and eventually runs it, and
-    /// disposing the handle before continuation stops the routine for good. No production scene
-    /// or prefab participates in this timing mechanism. CoroutineHandle state transitions
-    /// (stop-once, repeated disposal, completed-before-disposal) are plain EditMode tests.
-    /// </summary>
     public sealed class CoroutineServiceTests
     {
         private CoroutineService _coroutineService;
@@ -23,8 +16,7 @@ namespace TicTacToeLab.PlayModeTests
         [OneTimeSetUp]
         public void CreateIsolatedService()
         {
-            _coroutineService = new GameObject("CoroutineServiceTests")
-                .AddComponent<CoroutineService>();
+            _coroutineService = new GameObject("CoroutineServiceTests").AddComponent<CoroutineService>();
         }
 
         [OneTimeTearDown]
@@ -53,8 +45,7 @@ namespace TicTacToeLab.PlayModeTests
             _ = _coroutineService.RunAfter(0.01f, () => callbackRan = true);
             Assert.That(callbackRan, Is.False);
 
-            // Poll instead of waiting a fixed duration: eventual execution is observed rather
-            // than assumed from frame pacing, and the one-second deadline only bounds failure.
+            // Poll instead of waiting a fixed duration: eventual execution is observed rather than assumed from frame pacing, and the one-second deadline only bounds failure.
             float deadline = Time.realtimeSinceStartup + 1f;
             while (!callbackRan && Time.realtimeSinceStartup < deadline)
             {

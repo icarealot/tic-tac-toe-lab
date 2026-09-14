@@ -6,7 +6,6 @@ namespace TicTacToeLab.EditModeTests
     {
         public bool IsVisible { get; private set; }
 
-        /// <summary>Required by IWindow; UIService calls it on every show. The fake records nothing.</summary>
         public void Construct(ICoroutineService coroutineService)
         {
         }

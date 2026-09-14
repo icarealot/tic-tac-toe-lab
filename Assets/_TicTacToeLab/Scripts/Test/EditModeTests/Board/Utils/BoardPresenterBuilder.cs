@@ -5,24 +5,11 @@ namespace TicTacToeLab.EditModeTests
 {
     public static class BoardPresenterBuilder
     {
-        public static BoardPresenter Build(
-            BoardModel boardModel,
-            FakeBoardView boardView,
-            FakeInputService inputService)
-        {
-            return new BoardPresenter(
-                boardModel,
-                boardView,
-                inputService,
-                new StubCameraService(),
-                new StubLogService());
-        }
-
         private sealed class StubCameraService : ICameraService
         {
             public Vector3 ScreenToWorldPoint(Vector2 screenPoint)
             {
-                return new Vector3(screenPoint.x, screenPoint.y, 0f);
+                return (Vector3)screenPoint;
             }
         }
 
@@ -39,6 +26,19 @@ namespace TicTacToeLab.EditModeTests
             public void LogError(string message)
             {
             }
+        }
+
+        public static BoardPresenter Build(
+            BoardModel boardModel,
+            FakeBoardView boardView,
+            FakeInputService inputService)
+        {
+            return new BoardPresenter(
+                boardModel,
+                boardView,
+                inputService,
+                new StubCameraService(),
+                new StubLogService());
         }
     }
 }

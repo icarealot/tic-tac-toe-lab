@@ -6,12 +6,6 @@ using UnityEngine;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    /// <summary>
-    /// A narrow factory stand-in for the isolated board and cell fixtures: it instantiates real
-    /// components for the two roles those fixtures request and parents them as asked. Any other
-    /// role is a test error, keeping the stand-in narrower than the production registry. Created
-    /// objects are parented under the fixture's own root, so the fixture's teardown owns them.
-    /// </summary>
     public sealed class TestComponentFactory : IFactoryService
     {
         public List<Component> Returned { get; } = new();
@@ -33,10 +27,6 @@ namespace TicTacToeLab.PlayModeTests
             return (T)(object)host.AddComponent(componentType);
         }
 
-        /// <summary>
-        /// Records the handed-back instance and destroys its GameObject at the end of the current
-        /// frame — the Unity destruction boundary the production factory also returns objects on.
-        /// </summary>
         public void Return<T>(T instance) where T : class
         {
             Component component = (Component)(object)instance;

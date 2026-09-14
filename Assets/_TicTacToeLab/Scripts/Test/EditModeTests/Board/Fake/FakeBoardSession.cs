@@ -5,10 +5,10 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class FakeBoardSession : IBoardSession
     {
-        public Mark Turn { get; private set; } = Mark.X;
-
         public event Action GameEnded;
         public event Action<Mark> TurnChanged;
+
+        public Mark Turn { get; private set; } = Mark.X;
 
         public void Reset()
         {

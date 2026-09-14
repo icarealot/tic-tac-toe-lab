@@ -9,7 +9,6 @@ namespace TicTacToeLab.EditModeTests
         public List<string> Requests { get; } = new();
         public bool HasPopup { get; private set; }
         public int ShowPopupCount { get; private set; }
-
         public FakeMainMenuPanel LastMainMenuPanel { get; private set; }
         public FakeGameplayPanel LastGameplayPanel { get; private set; }
         public FakeConfirmQuitPopup LastPopup { get; private set; }

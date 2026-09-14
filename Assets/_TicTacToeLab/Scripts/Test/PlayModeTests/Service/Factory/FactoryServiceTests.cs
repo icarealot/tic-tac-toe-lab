@@ -9,19 +9,15 @@ using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    /// <summary>
-    /// FactoryService contracts exercised against the production factory prefab's serialized role
-    /// registry, instantiated directly instead of reached through application-scene bootstrap: the
-    /// registry is the configuration under test. Assertions stay on role resolution and return
-    /// lifecycle and never reach unrelated registry entries or visual prefab content. Frameless
-    /// contracts run as plain tests; only return destruction needs a frame, so only those two run
-    /// as coroutines.
-    /// </summary>
     public sealed class FactoryServiceTests
     {
-        private interface IUnregisteredRole { }
+        private interface IUnregisteredRole
+        {
+        }
 
-        private sealed class PlainImplementation : IUnregisteredRole { }
+        private sealed class PlainImplementation : IUnregisteredRole
+        {
+        }
 
         private const string FACTORY_PREFAB_PATH = "Assets/_TicTacToeLab/Prefabs/Services/Factory.prefab";
 
@@ -131,8 +127,8 @@ namespace TicTacToeLab.PlayModeTests
         [Test]
         public void An_interface_matched_by_multiple_registered_prefabs_throws_regardless_of_registry_order()
         {
-            // Both implementations of IWindow are registered and individually resolvable,
-            // so the broad role is genuinely ambiguous rather than merely unregistered.
+
+            // Both implementations of IWindow are registered and individually resolvable, so the broad role is genuinely ambiguous rather than merely unregistered.
             IGameplayPanel panel = _factoryService.Get<IGameplayPanel>();
             IConfirmQuitPopup popup = _factoryService.Get<IConfirmQuitPopup>();
 
