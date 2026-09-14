@@ -10,14 +10,18 @@ This skill takes the current conversation context and codebase understanding and
 
 1. Explore the repo to understand the current state of the codebase if you haven't already. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
 
-2. Sketch out the EditMode, PlayMode, player-build, and human-playtest seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better - the ideal number is one.
+2. Map validation to risk. Every proposed automated test must protect a named game rule, calculation, meaningful branch, state change, lifecycle, infrastructure contract, or critical player journey. Do not propose tests for trivial forwarding or construction, incidental hierarchy, diagnostic text, styling, or the same outcome repeated at every layer.
 
-- EditMode for deterministic code that does not require a running scene. 
-- PlayMode for Unity lifecycle or engine integration. 
-- Player-build smoke tests for platform-sensitive behavior
-- Human playtests for feel, visuals, audio, and usability.
+Choose the **smallest sufficient fixture** for each behavior:
 
-Check with the user that these seams match their expectations.
+1. EditMode for deterministic behavior without scenes, assets, frames, or Unity object lifecycle.
+2. An isolated PlayMode `GameObject` for component, lifecycle, physics, or focused engine integration.
+3. A production prefab only when its serialized configuration is part of the behavior.
+4. A production scene only when bootstrap or cross-object production wiring is the behavior.
+
+Assert each rule primarily at its owning layer. Prefer an existing seam that proves the behavior; propose a new public seam only when none does. Use player-build checks for platform-sensitive behavior and human playtests for feel, visuals, audio, controls, camera behavior, and usability. Extend an existing critical journey when readable instead of proposing another production-scene load.
+
+Make these decisions from the agreed conversation and codebase evidence. Record unresolved validation assumptions in the spec rather than opening a new interview.
 
 3. Write the spec using the template below and save it to `docs/<feature-name>/SPEC.md`.
 
@@ -61,10 +65,13 @@ Do NOT include specific file paths or code snippets. They may end up being outda
 
 A list of testing decisions that were made. Include:
 
-- A description of what makes a good test (only test external behavior, not implementation details)
-- Which modules will be tested
-- Which checks belong in EditMode, PlayMode, a player build, or a human playtest
+- The named behavior or risk protected by each proposed automated check
+- The owning public seam and why the selected fixture is the smallest one that can prove it
+- Which checks belong in EditMode, isolated PlayMode, a production prefab, a production scene, a player build, or a human playtest
+- Which changed behavior intentionally has no dedicated automated test and why
 - Prior art for the tests (i.e. similar types of tests in the codebase)
+
+Tests observe public behavior and use independent expected values rather than mirroring implementation calculations.
 
 ## Out of Scope
 

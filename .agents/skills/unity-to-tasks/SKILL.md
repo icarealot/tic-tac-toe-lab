@@ -24,7 +24,7 @@ Break the work into **tracer bullet** tasks.
 
 <vertical-slice-rules>
 
-- Each slice cuts a narrow but COMPLETE path through every layer (schema, API, UI, tests): vertical, NOT a horizontal slice of one layer
+- Each slice cuts a narrow but COMPLETE path through every applicable layer (schema, API, UI, validation): vertical, NOT a horizontal slice of one layer
 - A completed slice is demoable or verifiable on its own
 - Each slice is sized to fit in a single fresh context window
 - Any prefactoring should be done first
@@ -32,6 +32,12 @@ Break the work into **tracer bullet** tasks.
 </vertical-slice-rules>
 
 Give each task its **blocking edges** — the other tasks that must complete before it can start. A task with no blockers can start immediately.
+
+For each slice, select validation by risk rather than requiring an automated test by default. Retain a test only when it protects a named game rule, calculation, meaningful branch, state change, lifecycle, infrastructure contract, or critical player journey. Trivial forwarding, construction, diagnostic text, styling, and incidental hierarchy do not justify dedicated tests.
+
+Choose the smallest sufficient fixture: plain EditMode; isolated PlayMode `GameObject`; production prefab when serialized configuration is the contract; production scene only for bootstrap or cross-object production wiring. Assert a rule at its owning layer instead of repeating the same outcome through every layer. Reserve player builds for platform-sensitive behavior and human playtests for feel, visuals, audio, controls, camera behavior, and usability.
+
+When a production prefab or scene is necessary, identify it by stable domain role and state the distinct configuration or wiring risk. Keep implementation paths out of the task.
 
 **Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own task blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a task blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify task; green is promised only there.
 
@@ -42,7 +48,7 @@ Present the proposed breakdown as a numbered list. For each task, show:
 - **Title**: short descriptive name
 - **Blocked by**: which other tasks (if any) must complete first
 - **What it delivers**: the end-to-end behaviour this task makes work
-- **Validation tier**: applicable EditMode, PlayMode, Player build, and Human playtest checks
+- **Validation tier**: the named behavior, smallest sufficient fixture, and applicable EditMode, PlayMode, Player build, and Human playtest checks; include the reason when no dedicated automated test is warranted
 
 Ask the user:
 
@@ -76,7 +82,7 @@ A reference to each blocking task, or "None (can start immediately)".
 
 ## Validation tier
 
-Applicable EditMode, PlayMode, Player build, and Human playtest checks.
+For each check, name the behavior or risk, its owning seam, and the smallest sufficient fixture: EditMode, isolated PlayMode, production prefab or scene identified by domain role, Player build, or Human playtest. State why any changed behavior has no dedicated automated test.
 
 ## Acceptance criteria
 

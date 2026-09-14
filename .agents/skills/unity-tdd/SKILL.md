@@ -9,23 +9,38 @@ TDD is the red → green loop. This skill is the reference that makes that loop 
 
 When exploring the codebase, read `CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching.
 
+## Risk gate
+
+A test earns its place by protecting a named game rule, calculation, meaningful branch, state change, lifecycle, infrastructure contract, or critical player journey. Test behavior according to failure risk, not a target count or coverage percentage. A past bug has no special status: retain its regression test only while the behavior independently clears this gate.
+
+Prioritize deterministic business logic, then infrastructure whose failure could break the app or lose player progress, then critical external-service contracts. Test glue only when it owns meaningful branching, coordination, state, or lifecycle behavior. Trivial forwarding and construction need no dedicated tests.
+
+Treat TDD as optional for visual polish, animation feel, audio, controls, camera feel, usability, and level design. Define human playtest criteria for those outcomes; an automated test cannot establish that an experience feels right.
+
 ## What a good test is
 
 Tests verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't. A good test reads like a specification — "player cannot spend more mana than is available" tells you exactly what capability exists — and survives refactors because it doesn't care about internal structure.
 
+Expected values come from an independent source of truth such as a rule, worked example, or known-good literal. Assert each rule primarily at its owning layer rather than repeating the same outcome through every architectural layer. Parameterize equivalent cases.
+
 See [tests.md](tests.md) for EditMode and PlayMode examples. Read [mocking.md](mocking.md) before the code under test depends on an engine static (`Time`, `Input`, `PlayerPrefs`, `SceneManager`), a backend client, or file IO — it covers where the seam goes and how to fake it.
 
-## Seams — where tests go
+## Smallest sufficient fixture
 
-A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
+A **seam** is the public boundary where a caller observes behavior. Choose the cheapest fixture that can prove the behavior:
 
-### Choose the Unity seam
+1. A plain EditMode test for deterministic behavior. Create no `GameObject`s and depend on no scene, prefab, frame, coroutine timing, or Unity lifecycle. Unity value types are fine.
+2. An isolated PlayMode `GameObject` for focused component, lifecycle, physics, or other engine integration.
+3. A production prefab only when its serialized configuration is part of the behavior.
+4. A production scene only when bootstrap or cross-object production wiring is part of the behavior.
 
-- Use EditMode tests for deterministic rules and code that does not require a running scene.
-- Use PlayMode tests only when behavior depends on Unity lifecycle, components, scenes, physics, or other engine integration.
-- Do not use a slow PlayMode seam when an EditMode seam fully verifies the same behavior.
-- Treat TDD as optional for visual polish, animation feel, audio, controls, camera feel, and level design. Require explicit human playtest criteria; do not present an automated test as evidence that the experience feels right.
-- Do not create or modify scenes, prefabs, `.asmdef` files, or other non-code assets merely to make a test convenient. If one is necessary, preview the proposed change and require task-specific approval naming the exact file or narrow file group before editing.
+Prefer an existing public seam. Do not load a production scene merely to obtain a component, and extend an existing scene-level critical journey when that remains readable. Create only the objects a focused PlayMode test needs and clean them up.
+
+Creating or modifying scenes, prefabs, `.asmdef` files, or other non-code assets merely to make a test convenient requires task-specific approval naming the exact file or narrow file group before editing.
+
+## Assertion boundaries
+
+Assert public, observable behavior. Exact ordering belongs in a test only when ordering is itself the contract. Exclude incidental collaborator call counts, private sequencing, exact diagnostic text, labels, colors, styling, layout, and hierarchy or object presence unless that structure is the agreed contract. One lifecycle round trip is enough when it establishes the invariant.
 
 ## Anti-patterns
 

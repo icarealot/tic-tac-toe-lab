@@ -2,7 +2,7 @@
 
 ## EditMode
 
-Use EditMode tests for deterministic game rules that do not need a running scene.
+Use EditMode tests for deterministic game rules. Keep the fixture plain: create no `GameObject`s and depend on no scene, prefab, frame, coroutine timing, or Unity lifecycle. Unity value types are fine.
 
 ```csharp
 using NUnit.Framework;
@@ -24,7 +24,7 @@ public sealed class ManaPoolTests
 
 ## PlayMode
 
-Use PlayMode tests only when behavior depends on Unity lifecycle or engine integration.
+Use PlayMode tests only when behavior depends on Unity lifecycle or engine integration. Start with an isolated `GameObject`; use a production prefab only for serialized-configuration behavior and a production scene only for bootstrap or cross-object wiring.
 
 ```csharp
 using System.Collections;
@@ -102,4 +102,4 @@ audioService.Received(1).Play("hit");
 Assert.That(target.Health, Is.EqualTo(7));
 ```
 
-Do not treat screenshots, snapshots of serialized YAML, or exact hierarchy layouts as default assertions. Use them only when the serialized or visual structure is itself the agreed public contract.
+Do not treat screenshots, snapshots of serialized YAML, diagnostic log text, styling, or exact hierarchy layouts as default assertions. Use them only when that output or structure is itself the agreed public contract. Avoid repeating the same behavioral assertion at every architectural layer.

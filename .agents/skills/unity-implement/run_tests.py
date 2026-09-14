@@ -163,6 +163,127 @@ def refresh_assets(
     print("assets: refresh completed", file=sys.stderr)
 
 
+_COMPILER_ERROR = re.compile(r"error CS\d+", re.IGNORECASE)
+
+
+def clear_console(pipeline: UnityPipeline) -> None:
+    """Empty the Editor console and the captured log buffer."""
+    pipeline.command("clear_console")
+
+
+def console_error_messages(pipeline: UnityPipeline, limit: int = 10) -> list[str]:
+    result = result_from(
+        pipeline.command("get_console_logs", "--severity", "error", "--limit", str(limit))
+    )
+    logs = result.get("logs") if isinstance(result, dict) else None
+    return [
+        str(entry.get("message"))
+        for entry in (logs or [])
+        if isinstance(entry, dict) and entry.get("message")
+    ]
+
+
+_RECOMPILE_REQUEST_EVAL = (
+    "UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation(); return true;"
+)
+_SCRIPT_COMPILATION_FAILED_EVAL = "return UnityEditor.EditorUtility.scriptCompilationFailed;"
+_IS_COMPILING_EVAL = "return UnityEditor.EditorApplication.isCompiling;"
+_START_GRACE_SECONDS = 15.0
+
+
+def eval_bool(pipeline: UnityPipeline, code: str) -> bool | None:
+    """Evaluate one boolean expression in the Editor; None when the answer is unclear."""
+    try:
+        evaluation = result_from(pipeline.command("eval", code))
+    except RunnerError:
+        return None
+    if isinstance(evaluation, dict) and isinstance(evaluation.get("result"), bool):
+        return bool(evaluation["result"])
+    return None
+
+
+def request_compile(
+    pipeline: UnityPipeline,
+    deadline: float,
+    poll_interval: float,
+    timeout: int,
+) -> None:
+    """Force a compilation attempt and wait until it has run to completion."""
+    last_error: RunnerError | None = None
+    while time.monotonic() < deadline:
+        try:
+            pipeline.command("eval", _RECOMPILE_REQUEST_EVAL)
+            break
+        except RunnerError as error:
+            last_error = error
+            time.sleep(poll_interval)
+    else:
+        detail = f": {last_error}" if last_error is not None else ""
+        raise RunnerError(f"recompile did not start within {timeout}s{detail}")
+
+    # The request queues compilation for the next editor update; wait until it runs,
+    # then until it finishes (the connection may drop across the domain reload).
+    start_deadline = min(time.monotonic() + _START_GRACE_SECONDS, deadline)
+    while time.monotonic() < start_deadline:
+        if eval_bool(pipeline, _IS_COMPILING_EVAL) is True:
+            break
+        time.sleep(poll_interval)
+    while time.monotonic() < deadline:
+        if eval_bool(pipeline, _IS_COMPILING_EVAL) is False:
+            return
+        time.sleep(poll_interval)
+    raise RunnerError(f"recompile did not finish within {timeout}s")
+
+
+def recompile_scripts(pipeline: UnityPipeline, timeout: int, poll_interval: float) -> None:
+    """Make sure this run's own compile succeeded before testing.
+
+    The console was cleared before the refresh, so every compiler error present now
+    belongs to this run — the console, not recompile_status, is the authority on
+    compile success. The pipeline never retries an attempted-but-failed compile (its
+    recompile command reports up_to_date and compiles nothing until a source file
+    changes), so when Unity's sticky scriptCompilationFailed flag says the last
+    compile failed, the runner forces RequestScriptCompilation to bring this run's
+    compile verdict into the clean console window.
+    """
+    print("scripts: recompile requested", file=sys.stderr)
+    deadline = time.monotonic() + timeout
+
+    if eval_bool(pipeline, _SCRIPT_COMPILATION_FAILED_EVAL) is not False:
+        request_compile(pipeline, deadline, poll_interval, timeout)
+
+    compiler_errors = list(
+        dict.fromkeys(
+            message
+            for message in console_error_messages(pipeline)
+            if _COMPILER_ERROR.search(message)
+        )
+    )
+    if compiler_errors:
+        raise RunnerError("script compilation failed: " + " | ".join(compiler_errors))
+    print("scripts: recompile completed", file=sys.stderr)
+
+
+def raise_with_console_errors(pipeline: UnityPipeline, error: RunnerError) -> RunnerError:
+    """Attach recent console errors so a compile-gate failure names the actual compiler errors."""
+    try:
+        result = result_from(
+            pipeline.command("get_console_logs", "--severity", "error", "--limit", "5")
+        )
+        logs = result.get("logs") if isinstance(result, dict) else None
+        messages = [
+            str(entry.get("message"))
+            for entry in (logs or [])
+            if isinstance(entry, dict) and entry.get("message")
+        ]
+        fresh = [message for message in messages if message not in str(error)]
+        if fresh:
+            return RunnerError(f"{error}; recent console errors: {' | '.join(fresh)}")
+    except RunnerError:
+        pass
+    return error
+
+
 def listed_tests(pipeline: UnityPipeline, mode: str) -> list[dict[str, Any]]:
     result = result_from(pipeline.command("list_tests", "--mode", mode))
     if not isinstance(result, dict) or result.get("success") is False:
@@ -316,7 +437,12 @@ def main() -> int:
 
     try:
         pipeline = UnityPipeline(arguments.project_path.resolve())
+        clear_console(pipeline)
         refresh_assets(pipeline, arguments.refresh_timeout, arguments.poll_interval)
+        try:
+            recompile_scripts(pipeline, arguments.refresh_timeout, arguments.poll_interval)
+        except RunnerError as error:
+            raise raise_with_console_errors(pipeline, error) from error
 
         if arguments.test_filter is not None:
             matches = matching_tests(
