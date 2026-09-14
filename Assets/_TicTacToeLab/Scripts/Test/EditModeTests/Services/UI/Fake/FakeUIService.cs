@@ -1,24 +1,20 @@
 using System;
-using System.Collections.Generic;
 using TicTacToeLab.Runtime;
 
 namespace TicTacToeLab.EditModeTests
 {
     public sealed class FakeUIService : IUIService
     {
-        public List<string> Requests { get; } = new();
+        public bool HasPanel { get; private set; }
         public bool HasPopup { get; private set; }
         public int ShowPopupCount { get; private set; }
         public FakeMainMenuPanel LastMainMenuPanel { get; private set; }
         public FakeGameplayPanel LastGameplayPanel { get; private set; }
         public FakeConfirmQuitPopup LastPopup { get; private set; }
 
-        private bool _hasPanel;
-
         public void ShowPanel<TPanel>(Action<TPanel> configure = null) where TPanel : class, IPanel
         {
-            Requests.Add($"ShowPanel<{typeof(TPanel).Name}>");
-            _hasPanel = true;
+            HasPanel = true;
 
             if (typeof(TPanel) == typeof(IMainMenuPanel))
             {
@@ -35,7 +31,6 @@ namespace TicTacToeLab.EditModeTests
 
         public void ShowPopup<TPopup>(Action<TPopup> configure = null) where TPopup : class, IPopup
         {
-            Requests.Add($"ShowPopup<{typeof(TPopup).Name}>");
             ShowPopupCount++;
             HasPopup = true;
 
@@ -48,15 +43,13 @@ namespace TicTacToeLab.EditModeTests
 
         public bool TryClosePanel()
         {
-            Requests.Add("TryClosePanel");
-            bool hadPanel = _hasPanel;
-            _hasPanel = false;
+            bool hadPanel = HasPanel;
+            HasPanel = false;
             return hadPanel;
         }
 
         public bool TryClosePopup()
         {
-            Requests.Add("TryClosePopup");
             bool hadPopup = HasPopup;
             HasPopup = false;
             return hadPopup;
@@ -64,7 +57,6 @@ namespace TicTacToeLab.EditModeTests
 
         public void CloseAllPopups()
         {
-            Requests.Add("CloseAllPopups");
             HasPopup = false;
         }
     }

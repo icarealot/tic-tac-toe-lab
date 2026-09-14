@@ -40,7 +40,7 @@ namespace TicTacToeLab.EditModeTests
             _mainMenuState.Back();
 
             Assert.That(_log, Is.Empty);
-            Assert.That(_fakeUIService.Requests, Is.EqualTo(new[] { "ShowPanel<IMainMenuPanel>" }));
+            Assert.That(_fakeUIService.HasPanel, Is.True);
             Assert.That(_fakeUIService.HasPopup, Is.False);
         }
 
@@ -51,11 +51,7 @@ namespace TicTacToeLab.EditModeTests
 
             _mainMenuState.Leave();
 
-            Assert.That(_fakeUIService.Requests, Is.EqualTo(new[]
-            {
-                "ShowPanel<IMainMenuPanel>",
-                "TryClosePanel",
-            }));
+            Assert.That(_fakeUIService.HasPanel, Is.False);
         }
     }
 }

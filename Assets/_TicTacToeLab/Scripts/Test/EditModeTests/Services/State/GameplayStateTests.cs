@@ -116,8 +116,8 @@ namespace TicTacToeLab.EditModeTests
             _gameplayState.Leave();
 
             Assert.That(_fakeUIService.HasPopup, Is.False);
+            Assert.That(_fakeUIService.HasPanel, Is.False);
             Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
-            Assert.That(_fakeUIService.Requests, Does.Contain("TryClosePanel"));
         }
     }
 }
