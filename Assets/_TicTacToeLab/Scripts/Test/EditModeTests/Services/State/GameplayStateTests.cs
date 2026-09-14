@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 
@@ -5,6 +6,22 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class GameplayStateTests
     {
+        public enum ConfirmationClosePath
+        {
+            BackAgain,
+            AnswerNo,
+        }
+
+        private sealed class FakeStateMachine : IStateMachine
+        {
+            public Type ChangedStateType { get; private set; }
+
+            public void ChangeState<TState>() where TState : IAppState
+            {
+                ChangedStateType = typeof(TState);
+            }
+        }
+
         private FakeBoardSession _fakeBoardSession;
         private FakeInputService _fakeInputService;
         private FakeUIService _fakeUIService;
@@ -101,12 +118,6 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_fakeUIService.HasPopup, Is.False);
             Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
             Assert.That(_fakeUIService.Requests, Does.Contain("TryClosePanel"));
-        }
-
-        public enum ConfirmationClosePath
-        {
-            BackAgain,
-            AnswerNo,
         }
     }
 }

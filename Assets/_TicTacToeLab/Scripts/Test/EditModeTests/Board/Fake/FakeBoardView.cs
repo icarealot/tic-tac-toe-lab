@@ -8,7 +8,6 @@ namespace TicTacToeLab.EditModeTests
     {
         public List<(int Row, int Column, Mark Mark)> ShownMarks { get; } = new();
         public bool WasCleared { get; private set; }
-        public int ClearCount { get; private set; }
 
         public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
         {
@@ -27,7 +26,6 @@ namespace TicTacToeLab.EditModeTests
         public void Clear()
         {
             WasCleared = true;
-            ClearCount++;
         }
     }
 }

@@ -1,16 +1,18 @@
 using System;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
+using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
-    /// <summary>
-    /// Panel and popup stack mechanics owned by UIService, observed through public window
-    /// visibility and factory returns. Construction forwarding and helper call order are
-    /// deliberately unasserted because they are not independent stack behavior.
-    /// </summary>
     public sealed class UIServiceTests
     {
+        private sealed class StubUIRoot : IUIRoot
+        {
+            public RectTransform PanelLayer => null;
+            public RectTransform PopupLayer => null;
+        }
+
         private FakeFactoryService _fakeFactory;
         private UIService _uiService;
 
@@ -18,7 +20,7 @@ namespace TicTacToeLab.EditModeTests
         public void SetUp()
         {
             _fakeFactory = new FakeFactoryService();
-            _uiService = new UIService(_fakeFactory, new FakeUIRoot(), new FakeCoroutineService());
+            _uiService = new UIService(_fakeFactory, new StubUIRoot(), new FakeCoroutineService());
         }
 
         [Test]

@@ -5,13 +5,8 @@ using UnityEngine;
 
 namespace TicTacToeLab.EditModeTests
 {
-    /// <summary>
-    /// Plain EditMode substitute for the consolidated factory. It resolves only the window roles the
-    /// UI service requests, records what it creates and returns, and never holds a GameObject.
-    /// </summary>
     public sealed class FakeFactoryService : IFactoryService
     {
-        public List<FakeMainMenuPanel> MenuPanels { get; } = new();
         public List<FakeGameplayPanel> Panels { get; } = new();
         public List<FakeConfirmQuitPopup> Popups { get; } = new();
         public List<IWindow> ReturnedWindows { get; } = new();
@@ -23,13 +18,6 @@ namespace TicTacToeLab.EditModeTests
 
         public T Get<T>(Transform parent) where T : class
         {
-            if (typeof(T) == typeof(IMainMenuPanel))
-            {
-                FakeMainMenuPanel panel = new();
-                MenuPanels.Add(panel);
-                return (T)(object)panel;
-            }
-
             if (typeof(T) == typeof(IGameplayPanel))
             {
                 FakeGameplayPanel panel = new();
