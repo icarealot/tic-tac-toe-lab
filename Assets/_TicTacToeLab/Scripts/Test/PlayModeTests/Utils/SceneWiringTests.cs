@@ -5,7 +5,6 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 namespace TicTacToeLab.PlayModeTests
 {
@@ -61,7 +60,7 @@ namespace TicTacToeLab.PlayModeTests
         /// raises onClick on release, and a window the activation closes is destroyed at the end of
         /// that frame; the two trailing yields cover the release and that end-of-frame destruction.
         /// </summary>
-        protected IEnumerator IE_ClickButton(Mouse mouse, Button button)
+        protected IEnumerator IE_ClickButton(Mouse mouse, UnityEngine.UI.Button button)
         {
             RectTransform rect = button.GetComponent<RectTransform>();
             Vector3[] corners = new Vector3[4];
@@ -95,7 +94,8 @@ namespace TicTacToeLab.PlayModeTests
         // The app opens on the main menu, so every test that plays a game begins by pressing Start.
         protected IEnumerator IE_StartGame(Mouse mouse)
         {
-            Button startButton = Object.FindFirstObjectByType<MainMenuPanel>().GetComponentInChildren<Button>();
+            UnityEngine.UI.Button startButton = Object.FindFirstObjectByType<MainMenuPanel>()
+                .GetComponentInChildren<UnityEngine.UI.Button>();
 
             yield return IE_ClickButton(mouse, startButton);
         }
