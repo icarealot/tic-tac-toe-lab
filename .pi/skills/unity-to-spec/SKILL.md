@@ -1,29 +1,18 @@
 ---
 name: unity-to-spec
-description: Turn the current conversation into a spec. No interview, just synthesis of what you've already discussed.
+description: Turn the current conversation into a spec. No feature interview, just synthesis of what has already been discussed.
 disable-model-invocation: true
 ---
 
-This skill takes the current conversation context and codebase understanding and produces a spec. Do NOT interview the user; just synthesize what you already know
+Turn the current conversation and codebase evidence into a spec. Do not interview the user; synthesize what is already known.
 
 ## Process
 
-1. Explore the repo to understand the current state of the codebase if you haven't already. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
+1. Explore the repository to understand its current state if needed. Use the project's domain glossary vocabulary, apply project standards throughout the spec and respect applicable ADRs.
 
-2. Map validation to risk. Every proposed automated test must protect a named game rule, calculation, meaningful branch, state change, lifecycle, infrastructure contract, or critical player journey. Do not propose tests for trivial forwarding or construction, incidental hierarchy, diagnostic text, styling, or the same outcome repeated at every layer.
+2. Derive the feature's validation decisions from the discovered standards and the agreed conversation. Record unresolved validation assumptions in the spec rather than opening a feature interview.
 
-Choose the **smallest sufficient fixture** for each behavior:
-
-1. EditMode for deterministic behavior without scenes, assets, frames, or Unity object lifecycle.
-2. An isolated PlayMode `GameObject` for component, lifecycle, physics, or focused engine integration.
-3. A production prefab only when its serialized configuration is part of the behavior.
-4. A production scene only when bootstrap or cross-object production wiring is the behavior.
-
-Assert each rule primarily at its owning layer. Prefer an existing seam that proves the behavior; propose a new public seam only when none does. Use player-build checks for platform-sensitive behavior and human playtests for feel, visuals, audio, controls, camera behavior, and usability. Extend an existing critical journey when readable instead of proposing another production-scene load.
-
-Make these decisions from the agreed conversation and codebase evidence. Record unresolved validation assumptions in the spec rather than opening a new interview.
-
-3. Write the spec using the template below and save it to `docs/<feature-name>/SPEC.md`.
+3. Write the spec to `docs/<feature-name>/SPEC.md` using this template:
 
 <spec-template>
 
@@ -37,48 +26,28 @@ The solution to the problem, from the user's perspective.
 
 ## User Stories
 
-A LONG, numbered list of user stories. Each user story should be in the format of:
+A long numbered list in this format:
 
 1. As an <actor>, I want a <feature>, so that <benefit>
 
-<user-story-example>
-1. As a player, I want an aiming indicator before releasing an ability, so that I can judge its direction and range
-</user-story-example>
-
-This list of user stories should be extremely extensive and cover all aspects of the feature.
+Cover every agreed aspect of the feature.
 
 ## Implementation Decisions
 
-A list of implementation decisions that were made. This can include:
+List agreed implementation decisions, including relevant modules, interfaces, technical clarifications, architecture, schemas, contracts, and interactions.
 
-- The modules that will be built/modified
-- The interfaces of those modules that will be modified
-- Technical clarifications from the developer
-- Architectural decisions
-- Schema changes
-- API contracts
-- Specific interactions
-
-Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
+Do not include file paths or code snippets; they become stale quickly.
 
 ## Testing Decisions
 
-A list of testing decisions that were made. Include:
-
-- The named behavior or risk protected by each proposed automated check
-- The owning public seam and why the selected fixture is the smallest one that can prove it
-- Which checks belong in EditMode, isolated PlayMode, a production prefab, a production scene, a player build, or a human playtest
-- Which changed behavior intentionally has no dedicated automated test and why
-- Prior art for the tests (i.e. similar types of tests in the codebase)
-
-Tests observe public behavior and use independent expected values rather than mirroring implementation calculations.
+Record the feature-specific validation decisions derived from the project standards, including the rationale for each selected check or deliberate omission and relevant codebase prior art.
 
 ## Out of Scope
 
-A description of the things that are out of scope for this spec.
+Describe what this spec excludes.
 
 ## Further Notes
 
-Any further notes about the feature.
+Record other relevant feature notes.
 
 </spec-template>

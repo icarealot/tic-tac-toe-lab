@@ -17,31 +17,31 @@
       "source": "icarealot/dotfiles",
       "sourceType": "github",
       "skillPath": "ai/skills/unity/unity-code-review/SKILL.md",
-      "computedHash": "e01de802392e42d3a726ecec462c79bf3fa259c5f366b41b7f699d5398c54905"
+      "computedHash": "451421aedf5a8a924289a2a858a4d26667018bb2fa0c0475449f26c3e946f1e5"
     },
     "unity-implement": {
       "source": "icarealot/dotfiles",
       "sourceType": "github",
       "skillPath": "ai/skills/unity/unity-implement/SKILL.md",
-      "computedHash": "eabe5fa0b172fad015d6560b25075c91b626487c4782c4fce29efcf2365f714a"
+      "computedHash": "988aa51b67af5ba0de2b93af46bfb4fab2cd4a5b7505a90a26df6ef49e1dc4c1"
     },
     "unity-tdd": {
       "source": "icarealot/dotfiles",
       "sourceType": "github",
       "skillPath": "ai/skills/unity/unity-tdd/SKILL.md",
-      "computedHash": "5eaf7857ad6600a2a065345f2515f8250baf310feb686bf4ab184699436b9f23"
+      "computedHash": "af466ecf4f7a0df4273ac90248ec6b94a111ec81517b0c48165d88b2d006c7d2"
     },
     "unity-to-spec": {
       "source": "icarealot/dotfiles",
       "sourceType": "github",
       "skillPath": "ai/skills/unity/unity-to-spec/SKILL.md",
-      "computedHash": "7c3d3cefbf019b3c1d13dea595d8c156637c09ad138ffb4754b02374c2ef6242"
+      "computedHash": "4c34d55f8e2082fe632b4082529c3f8707b9d8fe7f1c40797b7df13c7d562349"
     },
     "unity-to-tasks": {
       "source": "icarealot/dotfiles",
       "sourceType": "github",
       "skillPath": "ai/skills/unity/unity-to-tasks/SKILL.md",
-      "computedHash": "1cc8bc1fb1a2d4e06c79dd75c736aec08c79d77a65553918abd7f8c8bc2f3aea"
+      "computedHash": "2f025ba25699dfeedae03e8fc2ac7b11d3e5269dd0ba5cd6ade4aec9679e7757"
     }
   }
 }
