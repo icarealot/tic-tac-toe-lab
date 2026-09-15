@@ -17,23 +17,15 @@ namespace TicTacToeLab.EditModeTests
         public void Press(int row, int column)
         {
             Vector3 cellCenter = _boardModel.GetCellLocalPoint(row, column);
-            _inputService.RaisePress(new Vector2(cellCenter.x, cellCenter.y));
+            _inputService.RaisePress(cellCenter);
         }
     }
 
     public static class BoardMoves
     {
-        private static readonly (int Row, int Column)[] _xWinsRowZero =
-        {
-            (0, 0),
-            (1, 0),
-            (0, 1),
-            (1, 1),
-            (0, 2),
-        };
-
         public static void WinRowZeroForX(BoardPresser presser)
         {
+            (int Row, int Column)[] _xWinsRowZero = { (0, 0), (1, 0), (0, 1), (1, 1), (0, 2) };
             PressAll(presser, _xWinsRowZero);
         }
 

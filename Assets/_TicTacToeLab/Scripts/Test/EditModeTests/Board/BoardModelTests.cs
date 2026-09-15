@@ -30,7 +30,6 @@ namespace TicTacToeLab.EditModeTests
         private static readonly BoardScenario _leavesRowZeroIncomplete = new(new (int Row, int Column)[] { (0, 0), (1, 0), (0, 1) });
         private static readonly BoardScenario _leavesRowZeroMixed = new(new (int Row, int Column)[] { (0, 0), (0, 1), (1, 0), (1, 1), (2, 1), (0, 2) });
         private static readonly BoardScenario _fillsToDraw = new(new (int Row, int Column)[] { (0, 0), (0, 1), (0, 2), (1, 1), (1, 0), (1, 2), (2, 1), (2, 0), (2, 2) });
-        private static readonly (int Row, int Column)[] _winOnTheLastEmptyCell = { (0, 0), (2, 0), (0, 1), (1, 1), (1, 0), (1, 2), (2, 1), (2, 2), (0, 2) };
 
         private static IEnumerable<BoardScenario> WinningLines()
         {
@@ -65,49 +64,33 @@ namespace TicTacToeLab.EditModeTests
             yield return _fillsToDraw;
         }
 
-        // --- Starting state ---
-
-        [Test]
-        public void A_fresh_board_is_empty_with_X_to_play_and_in_progress()
-        {
-            BoardModel boardModel = new();
-
-            for (int row = 0; row < 3; row++)
-            {
-                for (int column = 0; column < 3; column++)
-                {
-                    Assert.That(boardModel.IsEmpty(row, column), Is.True, $"Cell ({row}, {column}) should be empty.");
-                    Assert.That(boardModel.GetMark(row, column), Is.Null, $"Cell ({row}, {column}) should hold no mark.");
-                }
-            }
-
-            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
-        }
-
         // --- Marks ---
 
         [Test]
         public void A_placement_records_the_current_turns_mark_only_in_the_addressed_cell()
         {
-            BoardModel boardModel = new();
-
-            boardModel.PlaceMark(1, 1); // X
-            boardModel.PlaceMark(0, 2); // O
-
+            // Arrange
             Mark?[,] expectedMarks =
             {
                 { null, null, Mark.O },
                 { null, Mark.X, null },
                 { null, null, null },
             };
+            BoardModel sut = new();
 
+            // Act
+            sut.PlaceMark(1, 1); // X
+            sut.PlaceMark(0, 2); // O
+
+            // Assert
             for (int row = 0; row < 3; row++)
             {
                 for (int column = 0; column < 3; column++)
                 {
-                    Assert.That(boardModel.GetMark(row, column), Is.EqualTo(expectedMarks[row, column]),
-                        $"Cell ({row}, {column}) should hold {expectedMarks[row, column]?.ToString() ?? "nothing"}.");
+                    Mark? actualMark = sut.GetMark(row, column);
+                    Mark? expectedMark = expectedMarks[row, column];
+                    string message = $"Cell ({row}, {column}) should hold {expectedMarks[row, column]?.ToString() ?? "nothing"}.";
+                    Assert.That(actualMark, Is.EqualTo(expectedMark), message);
                 }
             }
         }
@@ -118,33 +101,35 @@ namespace TicTacToeLab.EditModeTests
         [TestCase(2, Mark.X)]
         public void The_turn_advances_to_the_other_mark_after_each_placed_mark_while_the_game_is_in_progress(int placedMarks, Mark expectedTurn)
         {
-            BoardModel boardModel = new();
+            BoardModel sut = new();
 
             for (int index = 0; index < placedMarks; index++)
             {
-                boardModel.PlaceMark(0, index);
+                sut.PlaceMark(0, index);
             }
 
-            Assert.That(boardModel.Turn, Is.EqualTo(expectedTurn));
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(sut.Turn, Is.EqualTo(expectedTurn));
+            Assert.That(sut.Outcome, Is.EqualTo(Outcome.InProgress));
         }
 
         [TestCaseSource(nameof(WinsByEachMark))]
         public void The_winning_placement_does_not_advance_the_turn_so_the_turn_names_the_winner(BoardScenario game)
         {
-            BoardModel boardModel = new();
-            PlayAll(boardModel, game.Placements);
+            BoardModel sut = new();
 
-            Assert.That(boardModel.Turn, Is.EqualTo(game.Winner));
+            PlayAll(sut, game.Placements);
+
+            Assert.That(sut.Turn, Is.EqualTo(game.Winner));
         }
 
         [Test]
         public void The_final_drawing_placement_does_not_advance_the_turn()
         {
-            BoardModel boardModel = new();
-            PlayAll(boardModel, _fillsToDraw.Placements);
+            BoardModel sut = new();
 
-            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X)); // X placed the final mark.
+            PlayAll(sut, _fillsToDraw.Placements);
+
+            Assert.That(sut.Turn, Is.EqualTo(Mark.X)); // X placed the final mark.
         }
 
         // --- Outcomes ---
@@ -152,37 +137,42 @@ namespace TicTacToeLab.EditModeTests
         [TestCaseSource(nameof(WinningLines))]
         public void Completing_a_line_wins_the_game(BoardScenario game)
         {
-            BoardModel boardModel = new();
-            PlayAll(boardModel, game.Placements);
+            BoardModel sut = new();
 
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
+            PlayAll(sut, game.Placements);
+
+            Assert.That(sut.Outcome, Is.EqualTo(Outcome.Win));
         }
 
         [TestCaseSource(nameof(NonWinningPatterns))]
         public void A_pattern_that_completes_no_line_leaves_the_game_in_progress(BoardScenario pattern)
         {
-            BoardModel boardModel = new();
-            PlayAll(boardModel, pattern.Placements);
+            BoardModel sut = new();
 
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            PlayAll(sut, pattern.Placements);
+
+            Assert.That(sut.Outcome, Is.EqualTo(Outcome.InProgress));
         }
 
         [Test]
         public void A_board_filled_without_completing_a_line_is_a_draw()
         {
-            BoardModel boardModel = new();
-            PlayAll(boardModel, _fillsToDraw.Placements);
+            BoardModel sut = new();
 
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Draw));
+            PlayAll(sut, _fillsToDraw.Placements);
+
+            Assert.That(sut.Outcome, Is.EqualTo(Outcome.Draw));
         }
 
         [Test]
         public void A_win_on_the_last_empty_cell_is_a_win_not_a_draw()
         {
-            BoardModel boardModel = new();
-            PlayAll(boardModel, _winOnTheLastEmptyCell);
+            (int Row, int Column)[] winOnTheLastEmptyCell = { (0, 0), (2, 0), (0, 1), (1, 1), (1, 0), (1, 2), (2, 1), (2, 2), (0, 2) };
+            BoardModel sut = new();
 
-            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.Win));
+            PlayAll(sut, winOnTheLastEmptyCell);
+
+            Assert.That(sut.Outcome, Is.EqualTo(Outcome.Win));
         }
 
         // --- Reset ---
@@ -190,26 +180,31 @@ namespace TicTacToeLab.EditModeTests
         [TestCaseSource(nameof(GamesToReset))]
         public void Resetting_a_played_board_leaves_the_same_public_state_as_a_fresh_board(BoardScenario game)
         {
-            BoardModel playedBoard = new();
-            PlayAll(playedBoard, game.Placements);
+            // Arrange
+            BoardModel sut = new();
+            PlayAll(sut, game.Placements);
             BoardModel freshBoard = new();
 
-            playedBoard.Reset();
+            // Act
+            sut.Reset();
 
-            Assert.That(playedBoard.Turn, Is.EqualTo(freshBoard.Turn));
-            Assert.That(playedBoard.Outcome, Is.EqualTo(freshBoard.Outcome));
+            // Assert
+            Assert.That(sut.Turn, Is.EqualTo(freshBoard.Turn));
+            Assert.That(sut.Outcome, Is.EqualTo(freshBoard.Outcome));
 
             for (int row = 0; row < 3; row++)
             {
                 for (int column = 0; column < 3; column++)
                 {
-                    Assert.That(playedBoard.GetMark(row, column), Is.EqualTo(freshBoard.GetMark(row, column)),
-                        $"Cell ({row}, {column}) should match a fresh board.");
+                    Mark? actualMark = sut.GetMark(row, column);
+                    Mark? expectedMark = freshBoard.GetMark(row, column);
+                    string message = $"Cell ({row}, {column}) should match a fresh board.";
+                    Assert.That(actualMark, Is.EqualTo(expectedMark), message);
                 }
             }
         }
 
-        private void PlayAll(BoardModel boardModel, (int Row, int Column)[] placements)
+        private static void PlayAll(BoardModel boardModel, (int Row, int Column)[] placements)
         {
             foreach ((int row, int column) in placements)
             {

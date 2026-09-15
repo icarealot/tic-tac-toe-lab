@@ -8,38 +8,31 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class BoardPresenterTests
     {
-        private BoardModel _boardModel;
-        private FakeBoardView _fakeBoardView;
-        private FakeInputService _fakeInputService;
-        private BoardPresser _presser;
-        private BoardPresenter _boardPresenter;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _boardModel = new BoardModel();
-            _fakeBoardView = new FakeBoardView();
-            _fakeInputService = new FakeInputService();
-            _boardPresenter = BoardPresenterBuilder.Build(_boardModel, _fakeBoardView, _fakeInputService);
-            _presser = new BoardPresser(_fakeInputService, _boardModel);
-        }
-
         // --- Accepted presses ---
 
         [Test]
         public void An_accepted_press_shows_the_current_mark_and_records_it_and_raises_one_turn_change()
         {
+            // Arrange
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, fakeBoardView, fakeInputService);
+            BoardPresser presser = new(fakeInputService, boardModel);
+
             List<Mark> turnEvents = new();
             int gameEndedEvents = 0;
-            _boardPresenter.TurnChanged += turn => turnEvents.Add(turn);
-            _boardPresenter.GameEnded += () => gameEndedEvents++;
+            sut.TurnChanged += turn => turnEvents.Add(turn);
+            sut.GameEnded += () => gameEndedEvents++;
 
-            _presser.Press(0, 0);
-            _presser.Press(1, 1);
+            // Act
+            presser.Press(0, 0);
+            presser.Press(1, 1);
 
-            Assert.That(_fakeBoardView.ShownMarks, Is.EqualTo(new[] { (0, 0, Mark.X), (1, 1, Mark.O) }));
-            Assert.That(_boardModel.GetMark(0, 0), Is.EqualTo(Mark.X));
-            Assert.That(_boardModel.GetMark(1, 1), Is.EqualTo(Mark.O));
+            // Assert
+            Assert.That(fakeBoardView.ShownMarks, Is.EqualTo(new[] { (0, 0, Mark.X), (1, 1, Mark.O) }));
+            Assert.That(boardModel.GetMark(0, 0), Is.EqualTo(Mark.X));
+            Assert.That(boardModel.GetMark(1, 1), Is.EqualTo(Mark.O));
             Assert.That(turnEvents, Is.EqualTo(new[] { Mark.O, Mark.X }));
             Assert.That(gameEndedEvents, Is.EqualTo(0));
         }
@@ -79,49 +72,42 @@ namespace TicTacToeLab.EditModeTests
         [TestCaseSource(nameof(RejectedPresses))]
         public void A_rejected_press_leaves_the_game_unchanged(RejectedPress rejected)
         {
-            rejected.Setup(_presser);
+            // Arrange
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, fakeBoardView, fakeInputService);
+            BoardPresser presser = new(fakeInputService, boardModel);
 
-            List<(int Row, int Column, Mark Mark)> shownMarks = new(_fakeBoardView.ShownMarks);
-            Mark?[,] marks = CaptureMarks();
-            Mark turnBefore = _boardModel.Turn;
-            Outcome outcomeBefore = _boardModel.Outcome;
+            rejected.Setup(presser);
+
+            List<(int Row, int Column, Mark Mark)> shownMarks = new(fakeBoardView.ShownMarks);
+            Mark?[,] marks = CaptureMarks(boardModel);
+            Mark turnBefore = boardModel.Turn;
+            Outcome outcomeBefore = boardModel.Outcome;
             List<Mark> turnEvents = new();
             int gameEndedEvents = 0;
-            _boardPresenter.TurnChanged += turn => turnEvents.Add(turn);
-            _boardPresenter.GameEnded += () => gameEndedEvents++;
+            sut.TurnChanged += turn => turnEvents.Add(turn);
+            sut.GameEnded += () => gameEndedEvents++;
 
-            _fakeInputService.RaisePress(rejected.Point);
+            // Act
+            fakeInputService.RaisePress(rejected.Point);
 
-            Assert.That(_fakeBoardView.ShownMarks, Is.EqualTo(shownMarks), "The view should show no new mark.");
-            Assert.That(CaptureMarks(), Is.EqualTo(marks), "The model should record no new mark.");
-            Assert.That(_boardModel.Turn, Is.EqualTo(turnBefore));
-            Assert.That(_boardModel.Outcome, Is.EqualTo(outcomeBefore));
+            // Assert
+            Assert.That(fakeBoardView.ShownMarks, Is.EqualTo(shownMarks), "The view should show no new mark.");
+            Assert.That(CaptureMarks(boardModel), Is.EqualTo(marks), "The model should record no new mark.");
+            Assert.That(boardModel.Turn, Is.EqualTo(turnBefore));
+            Assert.That(boardModel.Outcome, Is.EqualTo(outcomeBefore));
             Assert.That(turnEvents, Is.Empty);
             Assert.That(gameEndedEvents, Is.EqualTo(0));
         }
 
-        private Mark?[,] CaptureMarks()
-        {
-            Mark?[,] marks = new Mark?[_boardModel.Dimension, _boardModel.Dimension];
-
-            for (int row = 0; row < _boardModel.Dimension; row++)
-            {
-                for (int column = 0; column < _boardModel.Dimension; column++)
-                {
-                    marks[row, column] = _boardModel.GetMark(row, column);
-                }
-            }
-
-            return marks;
-        }
-
         // --- Game-ended events ---
-
-        private static readonly (int Row, int Column)[] _drawFillOrder = { (0, 0), (0, 1), (0, 2), (1, 1), (1, 0), (1, 2), (2, 1), (2, 0), (2, 2) };
 
         private static void PressToDraw(BoardPresser presser)
         {
-            foreach ((int row, int column) in _drawFillOrder)
+            (int Row, int Column)[] drawFillOrder = { (0, 0), (0, 1), (0, 2), (1, 1), (1, 0), (1, 2), (2, 1), (2, 0), (2, 2) };
+            foreach ((int row, int column) in drawFillOrder)
             {
                 presser.Press(row, column);
             }
@@ -139,11 +125,20 @@ namespace TicTacToeLab.EditModeTests
         [TestCaseSource(nameof(CompletedGames))]
         public void Completing_the_game_raises_the_game_ended_event_exactly_once(Action<BoardPresser> completeGame)
         {
+            // Arrange
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, fakeBoardView, fakeInputService);
+            BoardPresser presser = new(fakeInputService, boardModel);
+
             int gameEndedEvents = 0;
-            _boardPresenter.GameEnded += () => gameEndedEvents++;
+            sut.GameEnded += () => gameEndedEvents++;
 
-            completeGame(_presser);
+            // Act
+            completeGame(presser);
 
+            // Assert
             Assert.That(gameEndedEvents, Is.EqualTo(1));
         }
 
@@ -152,27 +147,60 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void Resetting_the_presenter_returns_the_model_to_a_fresh_state_and_clears_the_view()
         {
-            BoardMoves.WinRowZeroForX(_presser);
+            // Arrange
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, fakeBoardView, fakeInputService);
+            BoardPresser presser = new(fakeInputService, boardModel);
 
-            _boardPresenter.Reset();
+            BoardMoves.WinRowZeroForX(presser);
 
-            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
-            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
-            Assert.That(_fakeBoardView.WasCleared, Is.True);
+            // Act
+            sut.Reset();
+
+            // Assert
+            Assert.That(boardModel.Turn, Is.EqualTo(Mark.X));
+            Assert.That(boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(fakeBoardView.WasCleared, Is.True);
         }
 
         [Test]
         public void Disposing_the_presenter_detaches_its_press_subscription()
         {
+            // Arrange
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, fakeBoardView, fakeInputService);
+            BoardPresser presser = new(fakeInputService, boardModel);
+
             List<Mark> turnEvents = new();
-            _boardPresenter.TurnChanged += turn => turnEvents.Add(turn);
+            sut.TurnChanged += turn => turnEvents.Add(turn);
 
-            _boardPresenter.Dispose();
-            _presser.Press(0, 0);
+            // Act
+            sut.Dispose();
+            presser.Press(0, 0);
 
-            Assert.That(_fakeBoardView.ShownMarks, Is.Empty);
-            Assert.That(_boardModel.IsEmpty(0, 0), Is.True);
+            // Assert
+            Assert.That(fakeBoardView.ShownMarks, Is.Empty);
+            Assert.That(boardModel.IsEmpty(0, 0), Is.True);
             Assert.That(turnEvents, Is.Empty);
+        }
+
+        private static Mark?[,] CaptureMarks(BoardModel boardModel)
+        {
+            Mark?[,] marks = new Mark?[boardModel.Dimension, boardModel.Dimension];
+
+            for (int row = 0; row < boardModel.Dimension; row++)
+            {
+                for (int column = 0; column < boardModel.Dimension; column++)
+                {
+                    marks[row, column] = boardModel.GetMark(row, column);
+                }
+            }
+
+            return marks;
         }
     }
 }

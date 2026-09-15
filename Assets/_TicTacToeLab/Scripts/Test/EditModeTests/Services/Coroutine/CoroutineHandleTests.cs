@@ -9,13 +9,20 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void Disposing_a_running_handle_stops_the_routine_once_and_a_second_disposal_does_nothing()
         {
+            // Arrange
             int stopCount = 0;
-            CoroutineHandle handle = new(() => stopCount++);
+            CoroutineHandle sut = new(() => stopCount++);
 
-            handle.Dispose();
+            // Act
+            sut.Dispose();
+
+            // Assert
             Assert.That(stopCount, Is.EqualTo(1));
 
-            handle.Dispose();
+            // Act
+            sut.Dispose();
+
+            // Assert
             Assert.That(stopCount, Is.EqualTo(1));
         }
 
@@ -23,10 +30,10 @@ namespace TicTacToeLab.EditModeTests
         public void Disposing_a_handle_marked_finished_does_not_stop_the_routine()
         {
             int stopCount = 0;
-            CoroutineHandle handle = new(() => stopCount++);
-            handle.MarkFinished();
+            CoroutineHandle sut = new(() => stopCount++);
+            sut.MarkFinished();
 
-            handle.Dispose();
+            sut.Dispose();
 
             Assert.That(stopCount, Is.EqualTo(0));
         }

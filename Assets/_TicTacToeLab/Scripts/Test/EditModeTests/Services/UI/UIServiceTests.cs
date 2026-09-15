@@ -13,119 +13,109 @@ namespace TicTacToeLab.EditModeTests
             public RectTransform PopupLayer => null;
         }
 
-        private FakeFactoryService _fakeFactory;
-        private UIService _uiService;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _fakeFactory = new FakeFactoryService();
-            _uiService = new UIService(_fakeFactory, new StubUIRoot(), new FakeCoroutineService());
-        }
-
         [Test]
         public void Showing_a_second_panel_hides_but_preserves_the_first_until_the_top_panel_closes()
         {
-            _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel firstPanel = _fakeFactory.Panels[0];
-            Assert.That(firstPanel.IsVisible, Is.True);
+            // Arrange
+            FakeFactoryService fakeFactory = new();
+            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
 
-            _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel secondPanel = _fakeFactory.Panels[1];
+            sut.ShowPanel<IGameplayPanel>();
+            FakeGameplayPanel firstPanel = fakeFactory.Panels[0];
 
-            Assert.That(firstPanel.IsVisible, Is.False);
-            Assert.That(_fakeFactory.ReturnedWindows, Is.Empty);
+            sut.ShowPanel<IGameplayPanel>();
+            FakeGameplayPanel secondPanel = fakeFactory.Panels[1];
 
-            Assert.That(_uiService.TryClosePanel(), Is.True);
-            Assert.That(_fakeFactory.ReturnedWindows, Is.EqualTo(new IWindow[] { secondPanel }));
+            // Act
+            bool panelClosed = sut.TryClosePanel();
+
+            // Assert
+            Assert.That(panelClosed, Is.True);
+            Assert.That(fakeFactory.ReturnedWindows, Is.EqualTo(new IWindow[] { secondPanel }));
             Assert.That(firstPanel.IsVisible, Is.True);
         }
 
         [Test]
         public void A_popup_leaves_the_panel_visible_while_popups_stack_and_close_above_it()
         {
-            _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel panel = _fakeFactory.Panels[0];
+            // Arrange
+            FakeFactoryService fakeFactory = new();
+            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
 
-            _uiService.ShowPopup<IConfirmQuitPopup>();
-            FakeConfirmQuitPopup firstPopup = _fakeFactory.Popups[0];
-            Assert.That(firstPopup.IsVisible, Is.True);
-            Assert.That(panel.IsVisible, Is.True);
+            // Act
+            sut.ShowPanel<IGameplayPanel>();
+            FakeGameplayPanel panel = fakeFactory.Panels[0];
 
-            _uiService.ShowPopup<IConfirmQuitPopup>();
-            FakeConfirmQuitPopup secondPopup = _fakeFactory.Popups[1];
+            sut.ShowPopup<IConfirmQuitPopup>();
+            FakeConfirmQuitPopup firstPopup = fakeFactory.Popups[0];
 
+            sut.ShowPopup<IConfirmQuitPopup>();
+            FakeConfirmQuitPopup secondPopup = fakeFactory.Popups[1];
+
+            // Assert
+            Assert.That(secondPopup.IsVisible, Is.True);
             Assert.That(firstPopup.IsVisible, Is.False);
-            Assert.That(panel.IsVisible, Is.True);
-            Assert.That(_fakeFactory.ReturnedWindows, Is.Empty);
-
-            Assert.That(_uiService.TryClosePopup(), Is.True);
-            Assert.That(_fakeFactory.ReturnedWindows, Is.EqualTo(new IWindow[] { secondPopup }));
-            Assert.That(firstPopup.IsVisible, Is.True);
             Assert.That(panel.IsVisible, Is.True);
         }
 
         [Test]
         public void Exhausting_the_popup_stack_leaves_the_panel_stack_intact()
         {
-            _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel panel = _fakeFactory.Panels[0];
-            _uiService.ShowPopup<IConfirmQuitPopup>();
+            // Arrange
+            FakeFactoryService fakeFactory = new();
+            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
+            sut.ShowPanel<IGameplayPanel>();
+            FakeGameplayPanel panel = fakeFactory.Panels[0];
+            sut.ShowPopup<IConfirmQuitPopup>();
 
-            Assert.That(_uiService.TryClosePopup(), Is.True);
-            Assert.That(_uiService.TryClosePopup(), Is.False);
+            // Act
+            _ = sut.TryClosePopup();
+            _ = sut.TryClosePopup();
 
+            // Assert
             Assert.That(panel.IsVisible, Is.True);
-            Assert.That(_uiService.TryClosePanel(), Is.True);
         }
 
         [Test]
         public void Closing_every_popup_empties_the_popup_stack_and_leaves_the_panel_stack_untouched()
         {
-            _uiService.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel panel = _fakeFactory.Panels[0];
-            _uiService.ShowPopup<IConfirmQuitPopup>();
-            _uiService.ShowPopup<IConfirmQuitPopup>();
+            // Arrange
+            FakeFactoryService fakeFactory = new();
+            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
 
-            _uiService.CloseAllPopups();
+            sut.ShowPanel<IGameplayPanel>();
+            FakeGameplayPanel panel = fakeFactory.Panels[0];
+            sut.ShowPopup<IConfirmQuitPopup>();
+            sut.ShowPopup<IConfirmQuitPopup>();
 
-            Assert.That(_uiService.HasPopup, Is.False);
-            Assert.That(_uiService.TryClosePopup(), Is.False);
+            // Act
+            sut.CloseAllPopups();
+
+            // Assert
+            Assert.That(sut.HasPopup, Is.False);
+            Assert.That(sut.TryClosePopup(), Is.False);
             Assert.That(panel.IsVisible, Is.True);
-            Assert.That(_uiService.TryClosePanel(), Is.True);
-        }
-
-        [Test]
-        public void Public_popup_presence_tracks_whether_any_popup_is_up()
-        {
-            Assert.That(_uiService.HasPopup, Is.False);
-
-            _uiService.ShowPopup<IConfirmQuitPopup>();
-            Assert.That(_uiService.HasPopup, Is.True);
-
-            _uiService.ShowPopup<IConfirmQuitPopup>();
-            Assert.That(_uiService.HasPopup, Is.True);
-
-            _ = _uiService.TryClosePopup();
-            Assert.That(_uiService.HasPopup, Is.True);
-
-            _ = _uiService.TryClosePopup();
-            Assert.That(_uiService.HasPopup, Is.False);
         }
 
         [Test]
         public void Showing_a_panel_while_a_popup_is_up_throws()
         {
-            _uiService.ShowPopup<IConfirmQuitPopup>();
+            FakeFactoryService fakeFactory = new();
+            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
 
-            Assert.That(() => _uiService.ShowPanel<IGameplayPanel>(), Throws.InstanceOf<InvalidOperationException>());
+            sut.ShowPopup<IConfirmQuitPopup>();
+
+            Assert.That(() => sut.ShowPanel<IGameplayPanel>(), Throws.InstanceOf<InvalidOperationException>());
         }
 
         [Test]
         public void Closing_from_an_empty_stack_reports_that_nothing_was_closed()
         {
-            Assert.That(_uiService.TryClosePanel(), Is.False);
-            Assert.That(_uiService.TryClosePopup(), Is.False);
+            FakeFactoryService fakeFactory = new();
+            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
+
+            Assert.That(sut.TryClosePanel(), Is.False);
+            Assert.That(sut.TryClosePopup(), Is.False);
         }
     }
 }

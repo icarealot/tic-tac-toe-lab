@@ -22,54 +22,69 @@ namespace TicTacToeLab.EditModeTests
             }
         }
 
-        private FakeBoardSession _fakeBoardSession;
-        private FakeInputService _fakeInputService;
-        private FakeUIService _fakeUIService;
-        private FakeStateMachine _fakeStateMachine;
-        private GameplayState _gameplayState;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _fakeBoardSession = new FakeBoardSession();
-            _fakeInputService = new FakeInputService();
-            _fakeUIService = new FakeUIService();
-            _fakeStateMachine = new FakeStateMachine();
-            _gameplayState = new GameplayState(_fakeBoardSession, _fakeStateMachine, _fakeUIService, _fakeInputService);
-        }
+        // --- Game ending ---
 
         [Test]
         public void A_game_ending_enters_the_game_complete_state()
         {
-            _gameplayState.Enter();
+            // Arrange
+            FakeBoardSession fakeBoardSession = new();
+            FakeInputService fakeInputService = new();
+            FakeUIService fakeUIService = new();
+            FakeStateMachine fakeStateMachine = new();
+            GameplayState sut = new(fakeBoardSession, fakeStateMachine, fakeUIService, fakeInputService);
 
-            _fakeBoardSession.RaiseGameEnded();
+            sut.Enter();
 
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(GameCompleteState)));
+            // Act
+            fakeBoardSession.RaiseGameEnded();
+
+            // Assert
+            Assert.That(fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(GameCompleteState)));
         }
 
         [Test]
         public void Leaving_gameplay_stops_a_later_ending_from_reaching_the_state_machine()
         {
-            _gameplayState.Enter();
-            _gameplayState.Leave();
+            // Arrange
+            FakeBoardSession fakeBoardSession = new();
+            FakeInputService fakeInputService = new();
+            FakeUIService fakeUIService = new();
+            FakeStateMachine fakeStateMachine = new();
+            GameplayState sut = new(fakeBoardSession, fakeStateMachine, fakeUIService, fakeInputService);
 
-            _fakeBoardSession.RaiseGameEnded();
+            sut.Enter();
+            sut.Leave();
 
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
+            // Act
+            fakeBoardSession.RaiseGameEnded();
+
+            // Assert
+            Assert.That(fakeStateMachine.ChangedStateType, Is.Null);
         }
+
+        // --- Confirmation popup ---
 
         [Test]
         public void Back_with_no_confirmation_present_opens_one_popup_and_blocks_board_input()
         {
-            _gameplayState.Enter();
+            // Arrange
+            FakeBoardSession fakeBoardSession = new();
+            FakeInputService fakeInputService = new();
+            FakeUIService fakeUIService = new();
+            FakeStateMachine fakeStateMachine = new();
+            GameplayState sut = new(fakeBoardSession, fakeStateMachine, fakeUIService, fakeInputService);
 
-            _gameplayState.Back();
+            sut.Enter();
 
-            Assert.That(_fakeUIService.ShowPopupCount, Is.EqualTo(1));
-            Assert.That(_fakeUIService.HasPopup, Is.True);
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.False);
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
+            // Act
+            sut.Back();
+
+            // Assert
+            Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
+            Assert.That(fakeUIService.HasPopup, Is.True);
+            Assert.That(fakeInputService.IsPlayerPressEnabled, Is.False);
+            Assert.That(fakeStateMachine.ChangedStateType, Is.Null);
         }
 
         [TestCase(ConfirmationClosePath.BackAgain)]
@@ -77,47 +92,73 @@ namespace TicTacToeLab.EditModeTests
         public void Closing_the_confirmation_re_enables_board_input_and_opens_no_second_one(
             ConfirmationClosePath closePath)
         {
-            _gameplayState.Enter();
-            _gameplayState.Back();
+            // Arrange
+            FakeBoardSession fakeBoardSession = new();
+            FakeInputService fakeInputService = new();
+            FakeUIService fakeUIService = new();
+            FakeStateMachine fakeStateMachine = new();
+            GameplayState sut = new(fakeBoardSession, fakeStateMachine, fakeUIService, fakeInputService);
+            sut.Enter();
+            sut.Back();
 
+            // Act
             switch (closePath)
             {
                 case ConfirmationClosePath.BackAgain:
-                    _gameplayState.Back();
+                    sut.Back();
                     break;
                 case ConfirmationClosePath.AnswerNo:
-                    _fakeUIService.LastPopup.No();
+                    fakeUIService.LastPopup.No();
                     break;
             }
 
-            Assert.That(_fakeUIService.HasPopup, Is.False);
-            Assert.That(_fakeUIService.ShowPopupCount, Is.EqualTo(1));
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.Null);
+            // Assert
+            Assert.That(fakeUIService.HasPopup, Is.False);
+            Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
+            Assert.That(fakeInputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(fakeStateMachine.ChangedStateType, Is.Null);
         }
 
         [Test]
         public void Answering_yes_returns_to_the_menu()
         {
-            _gameplayState.Enter();
-            _gameplayState.Back();
+            // Arrange
+            FakeBoardSession fakeBoardSession = new();
+            FakeInputService fakeInputService = new();
+            FakeUIService fakeUIService = new();
+            FakeStateMachine fakeStateMachine = new();
+            GameplayState sut = new(fakeBoardSession, fakeStateMachine, fakeUIService, fakeInputService);
 
-            _fakeUIService.LastPopup.Yes();
+            sut.Enter();
+            sut.Back();
 
-            Assert.That(_fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(MainMenuState)));
+            // Act
+            fakeUIService.LastPopup.Yes();
+
+            // Assert
+            Assert.That(fakeStateMachine.ChangedStateType, Is.EqualTo(typeof(MainMenuState)));
         }
 
         [Test]
         public void Leaving_gameplay_with_a_confirmation_present_removes_it_closes_the_panel_and_restores_input()
         {
-            _gameplayState.Enter();
-            _gameplayState.Back();
+            // Arrange
+            FakeBoardSession fakeBoardSession = new();
+            FakeInputService fakeInputService = new();
+            FakeUIService fakeUIService = new();
+            FakeStateMachine fakeStateMachine = new();
+            GameplayState sut = new(fakeBoardSession, fakeStateMachine, fakeUIService, fakeInputService);
 
-            _gameplayState.Leave();
+            sut.Enter();
+            sut.Back();
 
-            Assert.That(_fakeUIService.HasPopup, Is.False);
-            Assert.That(_fakeUIService.HasPanel, Is.False);
-            Assert.That(_fakeInputService.IsPlayerPressEnabled, Is.True);
+            // Act
+            sut.Leave();
+
+            // Arrange
+            Assert.That(fakeUIService.HasPopup, Is.False);
+            Assert.That(fakeUIService.HasPanel, Is.False);
+            Assert.That(fakeInputService.IsPlayerPressEnabled, Is.True);
         }
     }
 }

@@ -6,26 +6,21 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class MainMenuStateTests
     {
-        private List<string> _log;
-        private FakeUIService _fakeUIService;
-        private MainMenuState _mainMenuState;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _log = new List<string>();
-            _fakeUIService = new FakeUIService();
-            _mainMenuState = new MainMenuState(new RecordingBoardSession(_log), new RecordingStateMachine(_log), _fakeUIService);
-        }
-
         [Test]
         public void Starting_the_game_resets_the_board_session_before_entering_gameplay()
         {
-            _mainMenuState.Enter();
+            // Arrange
+            List<string> log = new();
+            FakeUIService fakeUIService = new();
+            MainMenuState sut = new(new RecordingBoardSession(log), new RecordingStateMachine(log), fakeUIService);
 
-            _fakeUIService.LastMainMenuPanel.StartGame();
+            sut.Enter();
 
-            Assert.That(_log, Is.EqualTo(new[]
+            // Act
+            fakeUIService.LastMainMenuPanel.StartGame();
+
+            // Assert
+            Assert.That(log, Is.EqualTo(new[]
             {
                 "BoardSession.Reset",
                 "StateMachine.ChangeState<GameplayState>",
@@ -35,23 +30,37 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void Back_on_the_menu_changes_no_state_or_window()
         {
-            _mainMenuState.Enter();
+            // Arrange
+            List<string> log = new();
+            FakeUIService fakeUIService = new();
+            MainMenuState sut = new(new RecordingBoardSession(log), new RecordingStateMachine(log), fakeUIService);
 
-            _mainMenuState.Back();
+            sut.Enter();
 
-            Assert.That(_log, Is.Empty);
-            Assert.That(_fakeUIService.HasPanel, Is.True);
-            Assert.That(_fakeUIService.HasPopup, Is.False);
+            // Act
+            sut.Back();
+
+            // Assert
+            Assert.That(log, Is.Empty);
+            Assert.That(fakeUIService.HasPanel, Is.True);
+            Assert.That(fakeUIService.HasPopup, Is.False);
         }
 
         [Test]
         public void Leaving_the_menu_closes_its_panel()
         {
-            _mainMenuState.Enter();
+            // Arrange
+            List<string> log = new();
+            FakeUIService fakeUIService = new();
+            MainMenuState sut = new(new RecordingBoardSession(log), new RecordingStateMachine(log), fakeUIService);
 
-            _mainMenuState.Leave();
+            sut.Enter();
 
-            Assert.That(_fakeUIService.HasPanel, Is.False);
+            // Act
+            sut.Leave();
+
+            // Assert
+            Assert.That(fakeUIService.HasPanel, Is.False);
         }
     }
 }

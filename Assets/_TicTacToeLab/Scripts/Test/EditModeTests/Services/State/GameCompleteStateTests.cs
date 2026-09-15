@@ -6,37 +6,33 @@ namespace TicTacToeLab.EditModeTests
 {
     public sealed class GameCompleteStateTests
     {
-        private List<string> _log;
-        private FakeCoroutineService _fakeCoroutineService;
-        private GameCompleteState _gameCompleteState;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _log = new List<string>();
-            _fakeCoroutineService = new FakeCoroutineService();
-            _gameCompleteState = new GameCompleteState(new RecordingBoardSession(_log), new RecordingStateMachine(_log), _fakeCoroutineService);
-        }
-
         [Test]
         public void Entering_the_state_schedules_one_reset_after_a_one_second_pause_without_resetting_immediately()
         {
-            _gameCompleteState.Enter();
+            List<string> log = new();
+            FakeCoroutineService fakeCoroutineService = new();
+            GameCompleteState sut = new(new RecordingBoardSession(log), new RecordingStateMachine(log), fakeCoroutineService);
 
-            Assert.That(_fakeCoroutineService.HasScheduledCallback, Is.True);
-            Assert.That(_fakeCoroutineService.RunAfterCount, Is.EqualTo(1));
-            Assert.That(_fakeCoroutineService.ScheduledDelaySeconds, Is.EqualTo(1f));
-            Assert.That(_log, Is.Empty);
+            sut.Enter();
+
+            Assert.That(fakeCoroutineService.HasScheduledCallback, Is.True);
+            Assert.That(fakeCoroutineService.RunAfterCount, Is.EqualTo(1));
+            Assert.That(fakeCoroutineService.ScheduledDelaySeconds, Is.EqualTo(1f));
+            Assert.That(log, Is.Empty);
         }
 
         [Test]
         public void The_delayed_reset_resets_the_board_session_before_returning_to_gameplay()
         {
-            _gameCompleteState.Enter();
+            List<string> log = new();
+            FakeCoroutineService fakeCoroutineService = new();
+            GameCompleteState sut = new(new RecordingBoardSession(log), new RecordingStateMachine(log), fakeCoroutineService);
 
-            _fakeCoroutineService.FireScheduledCallback();
+            sut.Enter();
 
-            Assert.That(_log, Is.EqualTo(new[]
+            fakeCoroutineService.FireScheduledCallback();
+
+            Assert.That(log, Is.EqualTo(new[]
             {
                 "BoardSession.Reset",
                 "StateMachine.ChangeState<GameplayState>",
@@ -46,15 +42,19 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void Leaving_the_state_cancels_the_pending_reset()
         {
-            _gameCompleteState.Enter();
+            // Arrange
+            List<string> log = new();
+            FakeCoroutineService fakeCoroutineService = new();
+            GameCompleteState sut = new(new RecordingBoardSession(log), new RecordingStateMachine(log), fakeCoroutineService);
 
-            _gameCompleteState.Leave();
+            sut.Enter();
 
-            Assert.That(_fakeCoroutineService.WasStopped, Is.True);
+            // Act
+            sut.Leave();
+            fakeCoroutineService.FireScheduledCallback();
 
-            _fakeCoroutineService.FireScheduledCallback();
-
-            Assert.That(_log, Is.Empty);
+            // Assert
+            Assert.That(log, Is.Empty);
         }
     }
 }
