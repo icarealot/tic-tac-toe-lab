@@ -9,17 +9,15 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class BoardViewTests
     {
-        private GameObject _root;
-        private TestComponentFactory _factory;
-        private BoardView _board;
 
-        [SetUp]
-        public void CreateIsolatedBoard()
+        [UnityTest]
+        public IEnumerator Clearing_the_board_preserves_every_cell_while_removing_every_mark()
         {
-            _root = new GameObject("BoardViewTests");
-            _factory = new TestComponentFactory();
-            _board = _root.AddComponent<BoardView>();
-            _board.Construct(_factory, 3, new[]
+            // Arrange
+            GameObject root = new("BoardViewTests");
+            TestComponentFactory factory = new();
+            BoardView sut = root.AddComponent<BoardView>();
+            sut.Construct(factory, 3, new[]
             {
                 new CellPlacement(0, 0, new Vector3(0f, 0f, 0f)),
                 new CellPlacement(0, 1, new Vector3(1f, 0f, 0f)),
@@ -31,31 +29,23 @@ namespace TicTacToeLab.PlayModeTests
                 new CellPlacement(2, 1, new Vector3(1f, -2f, 0f)),
                 new CellPlacement(2, 2, new Vector3(2f, -2f, 0f)),
             });
-        }
 
-        [TearDown]
-        public void DestroyIsolatedBoard()
-        {
-            if (_root != null)
-            {
-                Object.Destroy(_root);
-            }
-        }
+            sut.ShowMark(0, 0, Mark.X);
+            sut.ShowMark(2, 2, Mark.O);
+            Assert.That(sut.GetComponentsInChildren<MarkView>(), Has.Length.EqualTo(2), "The fixture should show representative marks.");
 
-        [UnityTest]
-        public IEnumerator Clearing_the_board_preserves_every_cell_while_removing_every_mark()
-        {
-            Assert.That(_board.GetComponentsInChildren<CellView>(), Has.Length.EqualTo(9), "The fixture should hold a full 3x3 board graph.");
-
-            _board.ShowMark(0, 0, Mark.X);
-            _board.ShowMark(2, 2, Mark.O);
-            Assert.That(_board.GetComponentsInChildren<MarkView>(), Has.Length.EqualTo(2), "The fixture should show representative marks.");
-
-            _board.Clear();
+            // Act
+            sut.Clear();
             yield return null;
 
-            Assert.That(_board.GetComponentsInChildren<CellView>(), Has.Length.EqualTo(9));
-            Assert.That(_board.GetComponentsInChildren<MarkView>(), Is.Empty);
+            // Assert
+            Assert.That(sut.GetComponentsInChildren<CellView>(), Has.Length.EqualTo(9));
+            Assert.That(sut.GetComponentsInChildren<MarkView>(), Is.Empty);
+
+            // Clean up
+            yield return null;
+
+            Object.Destroy(root);
         }
     }
 }

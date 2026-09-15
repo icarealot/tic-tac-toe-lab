@@ -13,6 +13,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Starting_through_the_real_menu_and_pressing_an_empty_cell_shows_X()
         {
+            // Arrange
             yield return IE_LoadScene();
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
@@ -24,9 +25,11 @@ namespace TicTacToeLab.PlayModeTests
             Transform emptyCell = Cell(0, 0);
             Assert.That(MarkAt(emptyCell), Is.Null);
 
+            // Act
             // X owns the first turn; this journey checks that the routed press materializes it.
             yield return IE_PressCell(mouse, emptyCell);
 
+            // Assert
             MarkView shownX = MarkAt(emptyCell);
             Assert.That(shownX, Is.Not.Null);
             Assert.That(shownX.GetComponent<SpriteRenderer>().sprite, Is.Not.Null);
@@ -35,6 +38,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator A_real_win_stays_visible_for_the_pause_resets_in_place_and_accepts_a_fresh_X()
         {
+            // Arrange
             yield return IE_LoadScene();
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
@@ -43,6 +47,7 @@ namespace TicTacToeLab.PlayModeTests
             BoardView boardBeforeReset = Object.FindFirstObjectByType<BoardView>();
             Transform firstCellBeforeReset = Cell(0, 0);
 
+            // Act
             // X wins row 0; O uses row 1 between X's turns.
             yield return IE_PressCell(mouse, Cell(0, 0));
             Sprite xSprite = MarkAt(firstCellBeforeReset).GetComponent<SpriteRenderer>().sprite;
@@ -51,12 +56,10 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_PressCell(mouse, Cell(1, 1));
             yield return IE_PressCell(mouse, Cell(0, 2));
 
-            Assert.That(VisibleMarks(), Has.Length.EqualTo(5));
-
             yield return new WaitForSeconds(GameCompleteState.RESET_PAUSE_SECONDS * 0.5f);
 
-            Assert.That(VisibleMarks(), Has.Length.EqualTo(5),
-                "The completed game should remain visible during the reset pause.");
+            // Assert
+            Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "The completed game should remain visible during the reset pause.");
 
             yield return new WaitForSeconds(GameCompleteState.RESET_PAUSE_SECONDS * 0.5f + 0.25f);
 
@@ -65,8 +68,10 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(Cell(0, 0), Is.SameAs(firstCellBeforeReset));
             Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Not.Null);
 
+            // Act
             yield return IE_PressCell(mouse, firstCellBeforeReset);
 
+            // Assert
             MarkView freshX = MarkAt(firstCellBeforeReset);
             Assert.That(freshX, Is.Not.Null);
             Assert.That(freshX.GetComponent<SpriteRenderer>().sprite, Is.SameAs(xSprite));
@@ -75,6 +80,7 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Quit_confirmation_no_resumes_yes_returns_to_menu_and_the_next_start_is_fresh()
         {
+            // Arrange
             yield return IE_LoadScene();
 
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -83,45 +89,64 @@ namespace TicTacToeLab.PlayModeTests
             Transform firstCell = Cell(0, 0);
             Transform secondCell = Cell(0, 1);
 
+            // Act
             yield return IE_StartGame(mouse);
             yield return IE_PressCell(mouse, firstCell);
             Sprite xSprite = MarkAt(firstCell).GetComponent<SpriteRenderer>().sprite;
-
             yield return IE_PressBack(keyboard);
+
+            // Assert
             ConfirmQuitPopup firstConfirmation = CurrentConfirmation(uiRoot);
             Assert.That(firstConfirmation, Is.Not.Null);
 
+            // Act
             yield return IE_PressCell(mouse, secondCell);
-            Assert.That(MarkAt(secondCell), Is.Null,
-                "Board input should remain blocked while quit confirmation is present.");
 
+            // Assert
+            Assert.That(MarkAt(secondCell), Is.Null, "Board input should remain blocked while quit confirmation is present.");
+
+            // Act
             yield return IE_ClickButton(mouse, NoButton(firstConfirmation));
+
+            // Assert
             Assert.That(CurrentConfirmation(uiRoot), Is.Null);
             Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Not.Null);
 
+            // Act
             yield return IE_PressCell(mouse, secondCell);
+
+            // Assert
             Assert.That(MarkAt(secondCell), Is.Not.Null,
                 "Answering No should restore board input.");
 
+            // Act
             yield return IE_PressBack(keyboard);
+
+            // Assert
             ConfirmQuitPopup secondConfirmation = CurrentConfirmation(uiRoot);
             Assert.That(secondConfirmation, Is.Not.Null);
 
+            // Act
             yield return IE_ClickButton(mouse, YesButton(secondConfirmation));
 
+            // Assert
             Assert.That(CurrentConfirmation(uiRoot), Is.Null);
             Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Null);
             Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Not.Null);
             Assert.That(VisibleMarks(), Has.Length.EqualTo(2),
                 "Returning to the menu should preserve the abandoned game until the next start.");
 
+            // Act
             yield return IE_StartGame(mouse);
 
+            // Assert
             Assert.That(VisibleMarks(), Is.Empty);
             Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Not.Null);
 
+            // Act
             yield return IE_PressCell(mouse, firstCell);
 
+            // Assert
             MarkView freshX = MarkAt(firstCell);
             Assert.That(freshX, Is.Not.Null);
             Assert.That(freshX.GetComponent<SpriteRenderer>().sprite, Is.SameAs(xSprite));

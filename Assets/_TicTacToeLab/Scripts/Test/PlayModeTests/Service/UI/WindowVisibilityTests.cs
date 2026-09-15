@@ -12,13 +12,13 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         private GameObject _host;
-        private Window _window;
+        private Window _sut;
 
         [SetUp]
         public void CreateIsolatedWindow()
         {
             _host = new GameObject("WindowVisibilityTests");
-            _window = _host.AddComponent<TestWindow>();
+            _sut = _host.AddComponent<TestWindow>();
         }
 
         [TearDown]
@@ -33,10 +33,10 @@ namespace TicTacToeLab.PlayModeTests
         [Test]
         public void A_hidden_window_is_invisible_non_interactive_and_stops_blocking_raycasts()
         {
-            _window.Hide();
+            _sut.Hide();
 
-            CanvasGroup canvasGroup = _window.GetComponent<CanvasGroup>();
-            Assert.That(_window.IsVisible, Is.False);
+            CanvasGroup canvasGroup = _sut.GetComponent<CanvasGroup>();
+            Assert.That(_sut.IsVisible, Is.False);
             Assert.That(canvasGroup.alpha, Is.Zero);
             Assert.That(canvasGroup.interactable, Is.False);
             Assert.That(canvasGroup.blocksRaycasts, Is.False);
@@ -45,11 +45,11 @@ namespace TicTacToeLab.PlayModeTests
         [Test]
         public void A_window_shown_after_hiding_is_visible_interactive_and_blocks_raycasts()
         {
-            _window.Hide();
-            _window.Show();
+            _sut.Hide();
+            _sut.Show();
 
-            CanvasGroup canvasGroup = _window.GetComponent<CanvasGroup>();
-            Assert.That(_window.IsVisible, Is.True);
+            CanvasGroup canvasGroup = _sut.GetComponent<CanvasGroup>();
+            Assert.That(_sut.IsVisible, Is.True);
             Assert.That(canvasGroup.alpha, Is.EqualTo(1f));
             Assert.That(canvasGroup.interactable, Is.True);
             Assert.That(canvasGroup.blocksRaycasts, Is.True);

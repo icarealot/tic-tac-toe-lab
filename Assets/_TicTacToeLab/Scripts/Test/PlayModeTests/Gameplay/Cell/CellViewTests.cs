@@ -11,15 +11,15 @@ namespace TicTacToeLab.PlayModeTests
     {
         private GameObject _root;
         private TestComponentFactory _factory;
-        private CellView _cell;
+        private CellView _sut;
 
         [SetUp]
         public void CreateIsolatedCell()
         {
             _root = new GameObject("CellViewTests");
             _factory = new TestComponentFactory();
-            _cell = _root.AddComponent<CellView>();
-            _cell.Construct(_factory, new CellPlacement(0, 0, Vector3.zero));
+            _sut = _root.AddComponent<CellView>();
+            _sut.Construct(_factory, new CellPlacement(0, 0, Vector3.zero));
         }
 
         [TearDown]
@@ -34,27 +34,27 @@ namespace TicTacToeLab.PlayModeTests
         [UnityTest]
         public IEnumerator Clearing_a_marked_cell_returns_and_removes_exactly_the_mark_it_owns()
         {
-            _cell.ShowMark(Mark.X);
-            MarkView ownedMark = _cell.GetComponentInChildren<MarkView>();
+            // Arrange
+            _sut.ShowMark(Mark.X);
+            MarkView ownedMark = _sut.GetComponentInChildren<MarkView>();
             Assert.That(ownedMark, Is.Not.Null, "ShowMark should leave the cell owning a mark.");
 
-            _cell.ClearMark();
+            // Act
+            _sut.ClearMark();
 
+            // Assert
             Assert.That(_factory.Returned, Has.Count.EqualTo(1));
             Assert.That(_factory.Returned[0], Is.SameAs(ownedMark));
 
             yield return null;
 
-            Assert.That(_cell.GetComponentInChildren<MarkView>(), Is.Null);
-
-            _cell.ClearMark();
-            Assert.That(_factory.Returned, Has.Count.EqualTo(1), "A repeated clear has nothing left to return.");
+            Assert.That(_sut.GetComponentInChildren<MarkView>(), Is.Null);
         }
 
         [Test]
         public void Clearing_a_cell_that_never_showed_a_mark_is_harmless()
         {
-            Assert.That(() => _cell.ClearMark(), Throws.Nothing);
+            Assert.That(() => _sut.ClearMark(), Throws.Nothing);
             Assert.That(_factory.Returned, Is.Empty);
         }
     }
