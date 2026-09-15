@@ -10,6 +10,7 @@ namespace TicTacToeLab.EditModeTests
         public event Action<Mark> TurnChanged;
 
         public Mark Turn => Mark.X;
+        public Outcome Outcome => Outcome.InProgress;
 
         private readonly List<string> _log;
 

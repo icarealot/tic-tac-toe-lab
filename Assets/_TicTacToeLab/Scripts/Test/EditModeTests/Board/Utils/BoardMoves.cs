@@ -29,6 +29,18 @@ namespace TicTacToeLab.EditModeTests
             PressAll(presser, _xWinsRowZero);
         }
 
+        public static void WinRowZeroForO(BoardPresser presser)
+        {
+            (int Row, int Column)[] _oWinsRowZero = { (1, 0), (0, 0), (1, 1), (0, 1), (2, 2), (0, 2) };
+            PressAll(presser, _oWinsRowZero);
+        }
+
+        public static void FillForDraw(BoardPresser presser)
+        {
+            (int Row, int Column)[] _drawFillOrder = { (0, 0), (0, 1), (0, 2), (1, 1), (1, 0), (1, 2), (2, 1), (2, 0), (2, 2) };
+            PressAll(presser, _drawFillOrder);
+        }
+
         private static void PressAll(BoardPresser presser, (int Row, int Column)[] moves)
         {
             foreach ((int row, int column) in moves)

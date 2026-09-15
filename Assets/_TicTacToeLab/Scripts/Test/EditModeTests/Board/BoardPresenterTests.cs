@@ -104,21 +104,12 @@ namespace TicTacToeLab.EditModeTests
 
         // --- Game-ended events ---
 
-        private static void PressToDraw(BoardPresser presser)
-        {
-            (int Row, int Column)[] drawFillOrder = { (0, 0), (0, 1), (0, 2), (1, 1), (1, 0), (1, 2), (2, 1), (2, 0), (2, 2) };
-            foreach ((int row, int column) in drawFillOrder)
-            {
-                presser.Press(row, column);
-            }
-        }
-
         private static IEnumerable<TestCaseData> CompletedGames()
         {
             yield return new TestCaseData((Action<BoardPresser>)BoardMoves.WinRowZeroForX)
                 .SetName("Completing_a_line_raises_the_game_ended_event_exactly_once");
 
-            yield return new TestCaseData((Action<BoardPresser>)PressToDraw)
+            yield return new TestCaseData((Action<BoardPresser>)BoardMoves.FillForDraw)
                 .SetName("Filling_the_board_without_a_line_raises_the_game_ended_event_exactly_once");
         }
 
@@ -140,6 +131,28 @@ namespace TicTacToeLab.EditModeTests
 
             // Assert
             Assert.That(gameEndedEvents, Is.EqualTo(1));
+        }
+
+        // --- Outcome exposure ---
+
+        [Test]
+        public void The_presenter_exposes_the_board_model_outcome_as_read_only_information()
+        {
+            // Arrange
+            BoardModel boardModel = new();
+            FakeBoardView fakeBoardView = new();
+            FakeInputService fakeInputService = new();
+            BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, fakeBoardView, fakeInputService);
+            BoardPresser presser = new(fakeInputService, boardModel);
+
+            // Assert — a fresh game
+            Assert.That(sut.Outcome, Is.EqualTo(Outcome.InProgress));
+
+            // Act
+            BoardMoves.WinRowZeroForX(presser);
+
+            // Assert — a completed win
+            Assert.That(sut.Outcome, Is.EqualTo(Outcome.Win));
         }
 
         // --- Reset and disposal ---

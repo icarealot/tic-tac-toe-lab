@@ -9,6 +9,7 @@ namespace TicTacToeLab.EditModeTests
         public event Action<Mark> TurnChanged;
 
         public Mark Turn { get; private set; } = Mark.X;
+        public Outcome Outcome { get; private set; } = Outcome.InProgress;
 
         public void Reset()
         {

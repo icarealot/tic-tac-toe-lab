@@ -9,6 +9,7 @@ namespace TicTacToeLab.Runtime
         public event Action<Mark> TurnChanged;
 
         public Mark Turn => _boardModel.Turn;
+        public Outcome Outcome => _boardModel.Outcome;
 
         private readonly BoardModel _boardModel;
         private readonly IBoardView _boardView;
