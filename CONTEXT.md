@@ -37,7 +37,7 @@ A line of three cells running corner to corner — either `(0, 0)` to `(2, 2)` o
 _Avoid_: Cross, slant
 
 **Cell coordinate**:
-A cell's address, written and spoken as `(row, column)` — row always first. `(0, 0)` is the top-left cell and `(2, 2)` is the bottom-right. Note that row numbers grow downwards, which is the opposite direction to Unity's world Y axis; see [ADR 0001](./docs/adr/0001-row-column-cell-coordinates.md).
+A cell's address, written and spoken as `(row, column)` — row always first. `(0, 0)` is the top-left cell and `(2, 2)` is the bottom-right. Note that row numbers grow downwards, which is the opposite direction to Unity's world Y axis; see ADR 0001.
 _Avoid_: (x, y), index, position
 
 **Point**:
@@ -65,7 +65,7 @@ _Avoid_: Cross, ex
 ### Turns
 
 **Turn**:
-The mark that the next mark placed on the board will be. The turn is always an X or an O, never empty. It advances to the other mark each time a mark is placed while the game is in progress, and only then — a press that places nothing leaves the turn where it was. X has the first turn of a game. When a game ends the turn stops advancing, so once the outcome is a win the turn names the winner; after a draw it names nobody meaningful. Resetting a game returns the turn to X. See [ADR 0006](./docs/adr/0006-a-game-is-reset-rather-than-recreated.md).
+The mark that the next mark placed on the board will be. The turn is always an X or an O, never empty. It advances to the other mark each time a mark is placed while the game is in progress, and only then — a press that places nothing leaves the turn where it was. X has the first turn of a game. When a game ends the turn stops advancing, so once the outcome is a win the turn names the winner; after a draw it names nobody meaningful. Resetting a game returns the turn to X. See ADR 0013.
 _Avoid_: Player, side, current mark, go
 
 ### Outcome
@@ -89,11 +89,11 @@ _Avoid_: Tie, stalemate, deadlock, full board
 ### Games
 
 **Game**:
-One playthrough, from an empty board to a win or a draw. A game is not an object that is created and thrown away — it is a phase the board passes through, and the board outlives it. See [ADR 0006](./docs/adr/0006-a-game-is-reset-rather-than-recreated.md).
+One playthrough, from an empty board to a win or a draw. A game is not an object that is created and thrown away — it is a phase the board passes through, and the board outlives it. See ADR 0013.
 _Avoid_: Round, match, play, session
 
 **Board session**:
-The long-lived pairing of one board's model, view and presenter, on which a series of games is played. A board session is created once, when the app starts, and is never replaced; when a game ends it resets that game after a pause and play continues. Its boundary is the board and the types that make it work — a scoreboard, a menu or an opponent is not part of it.
+The long-lived pairing of one board's model, view and presenter, on which a series of games is played. A board session is created once when the app starts and is never replaced; starting a game resets it in place. Its boundary is the board and the types that make it work — a scoreboard, a menu or an opponent is not part of it.
 _Avoid_: Game session, match, board manager
 
 **Reset**:
@@ -113,7 +113,7 @@ _Avoid_: Activate, invoke, button press
 ### User interface
 
 **Window**:
-A piece of user interface that the app shows, hides and stacks as a unit. Every window is either a panel or a popup; there is no third kind. A window is created when it is first shown and destroyed when it is taken off its stack, and it is hidden — rather than deactivated — while something covers it. See [ADR 0008](./docs/adr/0008-panels-and-popups-are-two-stacks.md).
+A piece of user interface that the app shows, hides and stacks as a unit. Every window is either a panel or a popup; there is no third kind. A window is created when it is first shown and destroyed when it is taken off its stack, and it is hidden — rather than deactivated — while something covers it. See ADR 0008.
 _Avoid_: Screen, view, widget, UI element, dialog
 
 **Panel**:
@@ -121,8 +121,12 @@ The kind of window that covers the whole display. Only the topmost panel is visi
 _Avoid_: Screen, page, menu, layout
 
 **Popup**:
-The kind of window that sits above the panels without hiding them. Only the topmost popup is visible; showing a popup hides the popup beneath it, but never the panel beneath it. A popup is what asks a question or interrupts, and it is the first thing back closes. See [ADR 0008](./docs/adr/0008-panels-and-popups-are-two-stacks.md).
+The kind of window that sits above the panels without hiding them. Only the topmost popup is visible; showing a popup hides the popup beneath it, but never the panel beneath it. A popup is what asks a question or interrupts, and it is the first thing back closes. See ADR 0008.
 _Avoid_: Dialog, modal, overlay, prompt, toast
+
+**Outcome popup**:
+The popup presented when a game ends. It names the winning mark or says Draw, and Continue or Back takes the player to the main menu.
+_Avoid_: Result popup, game-over popup
 
 **Layer**:
 One of the two places a window lives on screen — the panel layer or the popup layer. Every popup is drawn above every panel, because the popup layer sits above the panel layer. Layers fill the whole display and are never inset.
@@ -137,7 +141,7 @@ Said of a window that still exists but is not shown — because something covers
 _Avoid_: Inactive, disabled, closed, off
 
 **Back**:
-The request to undo the last piece of navigation — the Android hardware back gesture, Escape, or the on-screen back button. It closes the topmost popup if there is one, and otherwise takes the topmost panel off its stack. What back actually does is decided by the state the app is in, not by the UI service; see [ADR 0007](./docs/adr/0007-states-decide-what-navigation-means.md).
+The request to undo the last piece of navigation — the Android hardware back gesture, Escape, or the on-screen back button. It closes the topmost popup if there is one, and otherwise takes the topmost panel off its stack. What back actually does is decided by the state the app is in, not by the UI service; see ADR 0007.
 _Avoid_: Cancel, escape, return, dismiss
 
 ### Architecture
@@ -167,7 +171,7 @@ The single service that instantiates and destroys runtime Unity objects from the
 _Avoid_: ComponentFactoryService, UIFactoryService, WindowFactoryService
 
 **BoardModel**:
-The state of the board — the mark in each cell or its emptiness, whose turn it is, and the outcome of the game — together with the board's dimensions, the cell placements derived from those dimensions, and the geometry that resolves a local point to the cell containing it. It can be reset, which returns all three pieces of game state to their starting values. See [ADR 0006](./docs/adr/0006-a-game-is-reset-rather-than-recreated.md).
+The state of the board — the mark in each cell or its emptiness, whose turn it is, and the outcome of the game — together with the board's dimensions, the cell placements derived from those dimensions, and the geometry that resolves a local point to the cell containing it. It can be reset, which returns all three pieces of game state to their starting values. See ADR 0013.
 
 **BoardView**:
 The visual representation of the board. Owns the arrangement of cell views on screen, and can be cleared of every mark shown on it without losing its cells.
@@ -194,7 +198,7 @@ The state the app is in while the main menu is shown. The menu is the app's entr
 The state the app is in while a game is being played. It listens for the game to end.
 
 **GameCompleteState**:
-The state the app enters when a game has ended. It waits, resets the game, and returns to gameplay.
+The state the app enters when a game has ended. It leaves the completed board visible for a brief pause, then presents the outcome; once presented, Continue or Back takes the player to the main menu.
 
 **CoroutineService**:
 The service that runs a coroutine or schedules a callback after a delay on behalf of a type that is not a `MonoBehaviour`, and hands back a handle for cancelling the work.

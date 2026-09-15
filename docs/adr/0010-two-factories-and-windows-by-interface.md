@@ -2,7 +2,7 @@
 
 ## Status
 
-Superseded by [ADR 0011](./0011-one-interface-based-factory-for-runtime-unity-objects.md).
+Superseded by ADR 0011
 
 ## Context and Problem Statement
 

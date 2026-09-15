@@ -2,7 +2,7 @@
 
 ## Status
 
-Superseded by [ADR 0012](./0012-unity-tests-use-the-smallest-sufficient-fixture.md).
+Superseded by ADR 0012
 
 ## Context and Problem Statement
 

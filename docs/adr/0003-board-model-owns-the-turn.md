@@ -2,7 +2,7 @@
 
 ## Status
 
-Superseded by [ADR 0004](./0004-the-board-model-owns-the-turn.md).
+Superseded by ADR 0004
 
 ## Context and Problem Statement
 
