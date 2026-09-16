@@ -13,6 +13,8 @@ namespace TicTacToeLab.Runtime
         private CoroutineHandle _pendingPresentation;
         private Outcome _capturedOutcome;
         private Mark _capturedTurn;
+        private bool _hasPresentedOutcome;
+        private bool _hasAcknowledged;
 
         public GameCompleteState(
             IBoardSession boardSession,
@@ -30,6 +32,8 @@ namespace TicTacToeLab.Runtime
 
         public void Enter()
         {
+            _hasPresentedOutcome = false;
+            _hasAcknowledged = false;
             _inputService.DisablePlayerPress();
             _capturedOutcome = _boardSession.Outcome;
             _capturedTurn = _boardSession.Turn;
@@ -57,12 +61,24 @@ namespace TicTacToeLab.Runtime
 
         private void PresentOutcomePopup()
         {
+            if (_hasPresentedOutcome || _hasAcknowledged)
+            {
+                return;
+            }
+
+            _hasPresentedOutcome = true;
             _pendingPresentation = null;
             _uiService.ShowPopup<IOutcomePopup>(popup => popup.Setup(_capturedOutcome, _capturedTurn, EnterMainMenu));
         }
 
         private void EnterMainMenu()
         {
+            if (_hasAcknowledged)
+            {
+                return;
+            }
+
+            _hasAcknowledged = true;
             _stateMachine.ChangeState<MainMenuState>();
         }
     }

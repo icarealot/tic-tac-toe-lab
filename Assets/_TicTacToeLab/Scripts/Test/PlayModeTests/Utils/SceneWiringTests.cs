@@ -37,6 +37,11 @@ namespace TicTacToeLab.PlayModeTests
             rect.GetWorldCorners(corners);
             Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(null, (corners[0] + corners[2]) / 2f);
 
+            yield return IE_ClickScreenPoint(mouse, screenPoint);
+        }
+
+        protected IEnumerator IE_ClickScreenPoint(Mouse mouse, Vector2 screenPoint)
+        {
             Set(mouse.position, screenPoint);
             yield return null;
             Press(mouse.leftButton);

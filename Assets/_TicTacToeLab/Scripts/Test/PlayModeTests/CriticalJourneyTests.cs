@@ -49,13 +49,8 @@ namespace TicTacToeLab.PlayModeTests
             Transform firstCellBeforeReset = Cell(0, 0);
 
             // Act
-            // X wins row 0; O uses row 1 between X's turns.
-            yield return IE_PressCell(mouse, Cell(0, 0));
+            yield return IE_CompleteXWin(mouse);
             Sprite xSprite = MarkAt(firstCellBeforeReset).GetComponent<SpriteRenderer>().sprite;
-            yield return IE_PressCell(mouse, Cell(1, 0));
-            yield return IE_PressCell(mouse, Cell(0, 1));
-            yield return IE_PressCell(mouse, Cell(1, 1));
-            yield return IE_PressCell(mouse, Cell(0, 2));
 
             yield return new WaitForSeconds(GameCompleteState.OUTCOME_PRESENTATION_DELAY_SECONDS * 0.5f);
 
@@ -104,6 +99,80 @@ namespace TicTacToeLab.PlayModeTests
             MarkView freshX = MarkAt(firstCellBeforeReset);
             Assert.That(freshX, Is.Not.Null);
             Assert.That(freshX.GetComponent<SpriteRenderer>().sprite, Is.SameAs(xSprite));
+        }
+
+        [UnityTest]
+        public IEnumerator Routed_back_and_board_presses_do_nothing_during_the_outcome_pause_then_back_returns_to_the_menu_once_the_popup_is_visible()
+        {
+            // Arrange
+            yield return IE_LoadScene();
+
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
+            yield return IE_StartGame(mouse);
+            yield return IE_CompleteXWin(mouse);
+
+            yield return new WaitForSeconds(GameCompleteState.OUTCOME_PRESENTATION_DELAY_SECONDS * 0.5f);
+
+            // Act
+            yield return IE_PressCell(mouse, Cell(2, 0));
+            yield return IE_PressBack(keyboard);
+
+            // Assert
+            // Board presses and Back are ignored while the completed board receives its viewing pause.
+            Assert.That(MarkAt(Cell(2, 0)), Is.Null, "Board input should stay blocked during the outcome pause.");
+            Assert.That(CurrentOutcomePopup(uiRoot), Is.Null);
+            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Null);
+            Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "Back during the pause must not leave the completed game.");
+
+            // Act
+            yield return new WaitForSeconds(GameCompleteState.OUTCOME_PRESENTATION_DELAY_SECONDS * 0.5f + 0.25f);
+            OutcomePopup outcomePopup = CurrentOutcomePopup(uiRoot);
+            Assert.That(outcomePopup, Is.Not.Null, "The outcome popup should be visible once the pause ends.");
+            yield return IE_PressCell(mouse, Cell(2, 1));
+
+            // Assert
+            Assert.That(MarkAt(Cell(2, 1)), Is.Null, "Board input should stay blocked while the outcome popup is presented.");
+
+            // Act
+            yield return IE_PressBack(keyboard);
+
+            // Assert
+            Assert.That(CurrentOutcomePopup(uiRoot), Is.Null, "Back acknowledgement should close the popup.");
+            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Not.Null);
+            Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "Back should preserve the completed board exactly like Continue.");
+        }
+
+        [UnityTest]
+        public IEnumerator Clicking_the_scrim_outside_the_card_leaves_the_outcome_popup_and_the_completed_board_unchanged()
+        {
+            // Arrange
+            yield return IE_LoadScene();
+
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
+            yield return IE_StartGame(mouse);
+            yield return IE_CompleteXWin(mouse);
+
+            yield return new WaitForSeconds(GameCompleteState.OUTCOME_PRESENTATION_DELAY_SECONDS + 0.25f);
+
+            OutcomePopup outcomePopup = CurrentOutcomePopup(uiRoot);
+            Assert.That(outcomePopup, Is.Not.Null);
+            RectTransform scrim = (RectTransform)outcomePopup.transform.Find("Scrim");
+            RectTransform card = (RectTransform)outcomePopup.transform.Find("SafeArea/Card");
+            Rect scrimRect = ScreenRect(scrim);
+            Rect cardRect = ScreenRect(card);
+            Vector2 scrimPoint = new(scrimRect.xMin + 16f, scrimRect.yMin + 16f);
+            Assert.That(cardRect.Contains(scrimPoint), Is.False, "The chosen scrim point must lie outside the outcome card.");
+
+            // Act
+            yield return IE_ClickScreenPoint(mouse, scrimPoint);
+
+            // Assert
+            Assert.That(CurrentOutcomePopup(uiRoot), Is.SameAs(outcomePopup), "The scrim must not dismiss the outcome popup.");
+            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Null);
+            Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "The completed board should be unchanged behind the scrim.");
         }
 
         [UnityTest]
@@ -182,6 +251,26 @@ namespace TicTacToeLab.PlayModeTests
         private static Transform Cell(int row, int column)
         {
             return GameObject.Find($"Cell ({row}, {column})").transform;
+        }
+
+        private IEnumerator IE_CompleteXWin(Mouse mouse)
+        {
+            // X wins row 0; O uses row 1 between X's turns.
+            yield return IE_PressCell(mouse, Cell(0, 0));
+            yield return IE_PressCell(mouse, Cell(1, 0));
+            yield return IE_PressCell(mouse, Cell(0, 1));
+            yield return IE_PressCell(mouse, Cell(1, 1));
+            yield return IE_PressCell(mouse, Cell(0, 2));
+        }
+
+        private static Rect ScreenRect(RectTransform rect)
+        {
+            Vector3[] corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(null, corners[0]);
+            Vector2 max = RectTransformUtility.WorldToScreenPoint(null, corners[2]);
+
+            return new Rect(min, max - min);
         }
 
         private static MarkView MarkAt(Transform cell)

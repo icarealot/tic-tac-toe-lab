@@ -32,19 +32,26 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Entering_the_state_disables_player_presses()
+        public void Board_presses_stay_disabled_during_the_delay_and_the_outcome_popup()
         {
             // Arrange
             FakeInputService fakeInputService = new();
+            FakeCoroutineService fakeCoroutineService = new();
             GameCompleteState sut = new(
                 new RecordingBoardSession(new List<string>()),
                 new RecordingStateMachine(new List<string>()),
                 new FakeUIService(),
-                new FakeCoroutineService(),
+                fakeCoroutineService,
                 fakeInputService);
 
             // Act
             sut.Enter();
+
+            // Assert
+            Assert.That(fakeInputService.IsPlayerPressEnabled, Is.False);
+
+            // Act
+            fakeCoroutineService.FireScheduledCallback();
 
             // Assert
             Assert.That(fakeInputService.IsPlayerPressEnabled, Is.False);
@@ -126,6 +133,15 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(log, Is.Empty);
             Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(0));
             Assert.That(fakeCoroutineService.HasScheduledCallback, Is.True);
+            Assert.That(fakeCoroutineService.WasStopped, Is.False);
+
+            // Act
+            fakeCoroutineService.FireScheduledCallback();
+
+            // Assert
+            // Back neither cancelled the delay nor showed the popup early.
+            Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
+            Assert.That(log, Is.Empty);
         }
 
         [Test]
@@ -182,6 +198,116 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
         }
 
+        [Test]
+        public void A_repeated_continue_causes_only_one_main_menu_transition_without_resetting_the_board_session()
+        {
+            // Arrange
+            List<string> log = new();
+            FakeCoroutineService fakeCoroutineService = new();
+            FakeUIService fakeUIService = new();
+            GameCompleteState sut = new(
+                new RecordingBoardSession(log),
+                new RecordingStateMachine(log),
+                fakeUIService,
+                fakeCoroutineService,
+                new FakeInputService());
+            sut.Enter();
+            fakeCoroutineService.FireScheduledCallback();
+
+            // Act
+            fakeUIService.LastOutcomePopup.Continue();
+            fakeUIService.LastOutcomePopup.Continue();
+
+            // Assert
+            Assert.That(log, Is.EqualTo(new[]
+            {
+                "StateMachine.ChangeState<MainMenuState>",
+            }));
+            Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Back_acknowledgement_closes_the_popup_before_the_main_menu_panel_is_shown()
+        {
+            // Arrange
+            // The real state machine performs the Leave-before-Enter sequence the ordering depends on,
+            // and the fake UI service upholds the same no-panel-over-popup invariant as the real one.
+            List<string> log = new();
+            FakeInputService fakeInputService = new();
+            FakeCoroutineService fakeCoroutineService = new();
+            FakeUIService fakeUIService = new();
+            RecordingBoardSession boardSession = new(log);
+            AppStateMachine stateMachine = new(fakeInputService);
+            stateMachine.Add(new MainMenuState(boardSession, stateMachine, fakeUIService));
+            stateMachine.Add(new GameCompleteState(boardSession, stateMachine, fakeUIService, fakeCoroutineService, fakeInputService));
+            stateMachine.ChangeState<GameCompleteState>();
+            fakeCoroutineService.FireScheduledCallback();
+            Assert.That(fakeUIService.HasPopup, Is.True);
+
+            // Act
+            fakeInputService.RaiseBack();
+
+            // Assert
+            Assert.That(fakeUIService.HasPopup, Is.False);
+            Assert.That(fakeUIService.LastMainMenuPanel, Is.Not.Null);
+            Assert.That(fakeInputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(log, Is.Empty);
+        }
+
+        // --- The outcome is presented and acknowledged only once ---
+
+        [Test]
+        public void A_repeated_outcome_presentation_shows_no_second_popup_or_transition()
+        {
+            // Arrange
+            List<string> log = new();
+            FakeCoroutineService fakeCoroutineService = new();
+            FakeUIService fakeUIService = new();
+            GameCompleteState sut = new(
+                new RecordingBoardSession(log),
+                new RecordingStateMachine(log),
+                fakeUIService,
+                fakeCoroutineService,
+                new FakeInputService());
+            sut.Enter();
+            fakeCoroutineService.FireScheduledCallback();
+
+            // Act
+            fakeCoroutineService.ReplayLastCallback();
+
+            // Assert
+            Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
+            Assert.That(log, Is.Empty);
+        }
+
+        [Test]
+        public void A_late_outcome_presentation_after_acknowledgement_shows_no_second_popup_or_second_transition()
+        {
+            // Arrange
+            List<string> log = new();
+            FakeCoroutineService fakeCoroutineService = new();
+            FakeUIService fakeUIService = new();
+            GameCompleteState sut = new(
+                new RecordingBoardSession(log),
+                new RecordingStateMachine(log),
+                fakeUIService,
+                fakeCoroutineService,
+                new FakeInputService());
+            sut.Enter();
+            fakeCoroutineService.FireScheduledCallback();
+            fakeUIService.LastOutcomePopup.Continue();
+
+            // Act
+            fakeCoroutineService.ReplayLastCallback();
+
+            // Assert
+            Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
+            Assert.That(log, Is.EqualTo(new[]
+            {
+                "StateMachine.ChangeState<MainMenuState>",
+            }));
+        }
+
         // --- Leaving restores input and cleans up its popup ---
 
         [Test]
@@ -233,6 +359,42 @@ namespace TicTacToeLab.EditModeTests
             // Assert
             Assert.That(fakeUIService.HasPopup, Is.False);
             Assert.That(fakeInputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        // --- The state repeats for a second completed game ---
+
+        [Test]
+        public void A_second_completed_game_presents_and_acknowledges_its_outcome_again()
+        {
+            // Arrange
+            List<string> log = new();
+            FakeCoroutineService fakeCoroutineService = new();
+            FakeUIService fakeUIService = new();
+            RecordingBoardSession boardSession = new(log) { Outcome = Outcome.Win, Turn = Mark.X };
+            GameCompleteState sut = new(
+                boardSession,
+                new RecordingStateMachine(log),
+                fakeUIService,
+                fakeCoroutineService,
+                new FakeInputService());
+
+            sut.Enter();
+            fakeCoroutineService.FireScheduledCallback();
+            fakeUIService.LastOutcomePopup.Continue();
+            sut.Leave();
+
+            // Act
+            sut.Enter();
+            fakeCoroutineService.FireScheduledCallback();
+            fakeUIService.LastOutcomePopup.Continue();
+
+            // Assert
+            Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(2));
+            Assert.That(log, Is.EqualTo(new[]
+            {
+                "StateMachine.ChangeState<MainMenuState>",
+                "StateMachine.ChangeState<MainMenuState>",
+            }));
         }
     }
 }

@@ -15,6 +15,11 @@ namespace TicTacToeLab.EditModeTests
 
         public void ShowPanel<TPanel>(Action<TPanel> configure = null) where TPanel : class, IPanel
         {
+            if (HasPopup)
+            {
+                throw new InvalidOperationException($"Cannot show {typeof(TPanel).Name} while a popup is up. Close the popups first.");
+            }
+
             HasPanel = true;
 
             if (typeof(TPanel) == typeof(IMainMenuPanel))

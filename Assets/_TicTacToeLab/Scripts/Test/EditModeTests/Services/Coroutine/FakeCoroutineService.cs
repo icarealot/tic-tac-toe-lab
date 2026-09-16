@@ -12,6 +12,7 @@ namespace TicTacToeLab.EditModeTests
         public int RunAfterCount { get; private set; }
 
         private Action _callback;
+        private Action _lastFiredCallback;
         private bool _stopped;
 
         public CoroutineHandle Run(IEnumerator routine)
@@ -28,6 +29,9 @@ namespace TicTacToeLab.EditModeTests
             return new CoroutineHandle(() => _stopped = true);
         }
 
+        // Delivery is one-shot like the real service, and a disposed handle cancels
+        // the callback. ReplayLastCallback re-delivers the last fired callback so the
+        // state under test can prove that repeated or late delivery is inert.
         public void FireScheduledCallback()
         {
             if (_stopped || _callback == null)
@@ -37,7 +41,18 @@ namespace TicTacToeLab.EditModeTests
 
             Action callback = _callback;
             _callback = null;
+            _lastFiredCallback = callback;
             callback();
+        }
+
+        public void ReplayLastCallback()
+        {
+            if (_stopped || _lastFiredCallback == null)
+            {
+                return;
+            }
+
+            _lastFiredCallback();
         }
     }
 }
