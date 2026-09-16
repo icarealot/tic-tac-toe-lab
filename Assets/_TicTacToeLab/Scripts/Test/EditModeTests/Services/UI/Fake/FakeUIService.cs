@@ -11,6 +11,7 @@ namespace TicTacToeLab.EditModeTests
         public FakeMainMenuPanel LastMainMenuPanel { get; private set; }
         public FakeGameplayPanel LastGameplayPanel { get; private set; }
         public FakeConfirmQuitPopup LastPopup { get; private set; }
+        public FakeOutcomePopup LastOutcomePopup { get; private set; }
 
         public void ShowPanel<TPanel>(Action<TPanel> configure = null) where TPanel : class, IPanel
         {
@@ -38,6 +39,12 @@ namespace TicTacToeLab.EditModeTests
             {
                 LastPopup = new FakeConfirmQuitPopup();
                 configure?.Invoke((TPopup)(object)LastPopup);
+            }
+
+            if (typeof(TPopup) == typeof(IOutcomePopup))
+            {
+                LastOutcomePopup = new FakeOutcomePopup();
+                configure?.Invoke((TPopup)(object)LastOutcomePopup);
             }
         }
 

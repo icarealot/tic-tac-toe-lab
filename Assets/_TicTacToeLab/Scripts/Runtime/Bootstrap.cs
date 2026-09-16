@@ -41,7 +41,7 @@ namespace TicTacToeLab.Runtime
             _stateMachine = new AppStateMachine(_inputService);
             MainMenuState mainMenuState = new(_boardSession, _stateMachine, uiService);
             GameplayState gameplayState = new(_boardSession, _stateMachine, uiService, _inputService);
-            GameCompleteState gameCompleteState = new(_boardSession, _stateMachine, coroutineService);
+            GameCompleteState gameCompleteState = new(_boardSession, _stateMachine, uiService, coroutineService, _inputService);
             _stateMachine.Add(mainMenuState);
             _stateMachine.Add(gameplayState);
             _stateMachine.Add(gameCompleteState);

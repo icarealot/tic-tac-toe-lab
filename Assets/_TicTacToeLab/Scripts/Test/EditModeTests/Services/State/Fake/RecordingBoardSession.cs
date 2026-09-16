@@ -9,8 +9,8 @@ namespace TicTacToeLab.EditModeTests
         public event Action GameEnded;
         public event Action<Mark> TurnChanged;
 
-        public Mark Turn => Mark.X;
-        public Outcome Outcome => Outcome.InProgress;
+        public Mark Turn { get; set; } = Mark.X;
+        public Outcome Outcome { get; set; } = Outcome.InProgress;
 
         private readonly List<string> _log;
 

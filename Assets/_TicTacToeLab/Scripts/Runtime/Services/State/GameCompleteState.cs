@@ -2,36 +2,68 @@ namespace TicTacToeLab.Runtime
 {
     public sealed class GameCompleteState : IAppState
     {
-        public const float RESET_PAUSE_SECONDS = 1f;
+        public const float OUTCOME_PRESENTATION_DELAY_SECONDS = 1f;
 
         private readonly IBoardSession _boardSession;
         private readonly IStateMachine _stateMachine;
+        private readonly IUIService _uiService;
         private readonly ICoroutineService _coroutineService;
+        private readonly IInputService _inputService;
 
-        private CoroutineHandle _pendingReset;
+        private CoroutineHandle _pendingPresentation;
+        private Outcome _capturedOutcome;
+        private Mark _capturedTurn;
 
-        public GameCompleteState(IBoardSession boardSession, IStateMachine stateMachine, ICoroutineService coroutineService)
+        public GameCompleteState(
+            IBoardSession boardSession,
+            IStateMachine stateMachine,
+            IUIService uiService,
+            ICoroutineService coroutineService,
+            IInputService inputService)
         {
             _boardSession = boardSession;
             _stateMachine = stateMachine;
+            _uiService = uiService;
             _coroutineService = coroutineService;
+            _inputService = inputService;
         }
 
         public void Enter()
         {
-            _pendingReset = _coroutineService.RunAfter(RESET_PAUSE_SECONDS, ResetAfterPause);
+            _inputService.DisablePlayerPress();
+            _capturedOutcome = _boardSession.Outcome;
+            _capturedTurn = _boardSession.Turn;
+            _pendingPresentation = _coroutineService.RunAfter(OUTCOME_PRESENTATION_DELAY_SECONDS, PresentOutcomePopup);
         }
 
         public void Leave()
         {
-            _pendingReset?.Dispose();
-            _pendingReset = null;
+            _pendingPresentation?.Dispose();
+            _pendingPresentation = null;
+
+            _uiService.CloseAllPopups();
+            _inputService.EnablePlayerPress();
         }
 
-        private void ResetAfterPause()
+        public void Back()
         {
-            _boardSession.Reset();
-            _stateMachine.ChangeState<GameplayState>();
+            if (_pendingPresentation != null)
+            {
+                return;
+            }
+
+            EnterMainMenu();
+        }
+
+        private void PresentOutcomePopup()
+        {
+            _pendingPresentation = null;
+            _uiService.ShowPopup<IOutcomePopup>(popup => popup.Setup(_capturedOutcome, _capturedTurn, EnterMainMenu));
+        }
+
+        private void EnterMainMenu()
+        {
+            _stateMachine.ChangeState<MainMenuState>();
         }
     }
 }

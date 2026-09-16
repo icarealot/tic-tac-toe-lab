@@ -28,6 +28,20 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
+        public void Entering_the_menu_leaves_the_board_session_unreset()
+        {
+            // Arrange
+            List<string> log = new();
+            MainMenuState sut = new(new RecordingBoardSession(log), new RecordingStateMachine(log), new FakeUIService());
+
+            // Act
+            sut.Enter();
+
+            // Assert
+            Assert.That(log, Is.Empty);
+        }
+
+        [Test]
         public void Back_on_the_menu_changes_no_state_or_window()
         {
             // Arrange
