@@ -14,9 +14,12 @@ Satisfy every gate before editing. Stop and ask when a gate fails:
 - `/unity-cli` is available.
 - For UI work, `/ui-ugui` is available for Runtime/Canvas UI or `/ui-imgui` is available for Editor IMGUI.
 - The task needs no external package the project does not already reference, including one requiring an `.asmdef` reference, `Packages/manifest.json` change, or editor-resource import such as TMP Essentials.
-- Discover the project standards if not already known.
 
 Run `unity status`. If no Editor is open, ask the user to open it.
+
+## 2. Identify the sources
+
+Look for the project standards in `docs/` when present.
 
 ## 2. Implement
 
@@ -37,4 +40,3 @@ Report:
 - Checks and results, including failure diagnoses required by the test protocol.
 - Deferred or unavailable validation.
 - Whether `/unity-tdd` was applied and why.
-

@@ -8,11 +8,13 @@ Turn the current conversation and codebase evidence into a spec. Do not intervie
 
 ## Process
 
-1. Explore the repository to understand its current state if needed. Use the project's domain glossary vocabulary, apply project standards throughout the spec and respect applicable ADRs.
+1. Explore the repository, project standards in `docs/` if needed.
 
-2. Derive the feature's validation decisions from the discovered standards and the agreed conversation. Record unresolved validation assumptions in the spec rather than opening a feature interview.
+2. Use the project's domain glossary vocabulary, apply project standards throughout the spec and respect applicable ADRs.
 
-3. Write the spec to `docs/<feature-name>/SPEC.md` using this template:
+3. Derive the feature's validation decisions from the discovered standards and the agreed conversation. Record unresolved validation assumptions in the spec rather than opening a feature interview.
+
+4. Write the spec to `docs/<feature-name>/SPEC.md` using this template:
 
 <spec-template>
 

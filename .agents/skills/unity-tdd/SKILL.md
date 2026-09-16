@@ -5,10 +5,12 @@ description: Test-drive Unity features or fixes when the user requests test-firs
 
 Run a red → green loop for one behavior slice at a time.
 
-## Standards preflight
+## Identify the sources
 
-- Discover the project standards if not already known.
-- Read `CONTEXT.md` when present so names and interfaces use the project's domain language, and respect applicable ADRs.
+Look for these sources when present:
+
+- Project standards in `docs/`
+- `CONTEXT.md` so names and interfaces use the project's domain language, and respect applicable ADRs.
 
 ## Loop
 
@@ -21,7 +23,3 @@ For each behavior selected under the discovered testing standard:
 3. Continue with the next behavior only after the current slice is green.
 
 Do not anticipate later tests or add speculative production behavior. End the loop after green; handle refactoring as follow-up work informed by `/unity-code-review`.
-
-## Report
-
-Report each completed red–green cycle and its result.

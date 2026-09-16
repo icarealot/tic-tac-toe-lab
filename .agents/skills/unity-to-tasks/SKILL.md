@@ -14,9 +14,9 @@ Use the context already in the conversation. If the user supplies a spec path, r
 
 ### 2. Explore the codebase when needed
 
-Understand the current code before planning. Use the project's domain glossary vocabulary, apply the project standards and respect applicable ADRs.
-
-Look for opportunities to prefactor: make the change easy, then make the easy change.
+- Explore the repository, project standards in `docs/` if needed.
+- Use the project's domain glossary vocabulary, apply the project standards and respect applicable ADRs.
+- Look for opportunities to prefactor: make the change easy, then make the easy change.
 
 ### 3. Draft vertical slices
 

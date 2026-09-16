@@ -23,19 +23,16 @@ Capture these commands once:
 
 Confirm the fixed point resolves with `git rev-parse <fixed-point>` and the diff is non-empty. Stop on a bad ref or empty diff before spawning sub-agents.
 
-## 2. Identify the spec source
+## 2. Identify the sources
 
-Look for the originating spec in this order:
+Look for these sources in `docs/` when present:
 
-1. A path supplied by the user.
-2. A spec under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
-3. Ask the user when none is found. If the user confirms there is no spec, skip the Spec axis and report that no spec was available.
+- Project standards
+- Originating spec
 
-## 3. Identify the standards
+If either is missing, skip this axis.
 
-Discover the project standards if not already known.
-
-## 4. Spawn all review axes in parallel
+## 3. Spawn all review axes in parallel
 
 Give every sub-agent the captured diff command, commit list, and any temporary standards exception relevant to its axis.
 
@@ -55,7 +52,9 @@ Pass the spec path or complete fetched contents and this brief:
 
 Pass the complete discovered testing standards contents and this brief:
 
-> Review all changed production and test code against every documented testing rule. Report every retained test that violates the standard and every changed behavior that the standard says warrants validation but leaves unprotected. Quote the relevant hunk, name the behavior involved, identify the sufficient fixture, and suggest an action.
+> Apply every testing rule to changed production and test code. Report each retained test that violates one and each changed behavior that warrants validation but remains unprotected. Quote the relevant hunk, name the behavior and sufficient fixture, and suggest an action.
+>
+> Account for every behavior or assertion in each added or modified test retained at `HEAD`: after searching all repository test code—not only the diff—mark it unique or place it in an overlap group containing a changed test. Report every group, including justified ones. Name the shared behavior; identify exact test methods and assertions at `file:line`; state each fixture's distinct integration, configuration, lifecycle, or wiring risk; and classify each relationship as **Justified** or **Redundant**. Label groups containing both **Mixed**. Recommend retaining justified coverage and consolidating or removing redundant coverage.
 
 ## 5. Aggregate
 
@@ -65,6 +64,7 @@ Merge findings in axis order. Omit any axis without findings.
 ## Standards
 
 1. **<finding name>**
+
 - `<path/to/file>`
 - <What the issue could hide>.
 - Action: <suggested fix>.
@@ -72,16 +72,18 @@ Merge findings in axis order. Omit any axis without findings.
 ## Spec
 
 1. **<finding name>**
+
 - `<quoted spec requirement>`
 - <What the deviation could hide>.
 - Action: <suggested fix>.
 
 ## Testing
 
-1. **<finding name>**
+1. **<finding name or Coverage overlap — behavior [Justified, Redundant, or Mixed]>**
+
 - `<path/to/file>`
-- <The behavior left unprotected or the assertion problem>.
-- Action: <suggested fix>.
+- <The behavior left unprotected, assertion problem, or distinct risk protected by each overlapping fixture>.
+- Action: <suggested fix, retention, consolidation, or removal>.
 ```
 
 ## Why multiple axes
