@@ -257,19 +257,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 7427212462862414676}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 3178248131174421384}
-        m_TargetAssemblyTypeName: TicTacToeLab.Runtime.GameplayPanel, TicTacToeLab.Runtime
-        m_MethodName: Back
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &4167464831266619357
 GameObject:
   m_ObjectHideFlags: 0
@@ -383,6 +371,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.GameplayPanel
   _safeAreaRect: {fileID: 1039090634464656362}
+  _backButton: {fileID: 806408431020827984}
   _turnText: {fileID: 5555539559444288933}
 --- !u!1 &8903818481764627849
 GameObject:

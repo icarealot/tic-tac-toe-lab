@@ -57,7 +57,7 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             OutcomePopup outcomePopup = CurrentOutcomePopup(uiRoot);
-            UnityEngine.UI.Button continueButton = ContinueButton(outcomePopup);
+            UnityEngine.UI.Button continueButton = outcomePopup.ContinueButton;
             Assert.That(continueButton, Is.Not.Null, "The outcome popup should provide a button wired to Continue.");
             Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "The popup should appear over the completed board, not a reset one.");
 
@@ -114,7 +114,7 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(MarkAt(secondCell), Is.Null);
 
             // Act
-            NoButton(confirmation).onClick.Invoke();
+            confirmation.NoButton.onClick.Invoke();
             yield return IE_WaitUntil(
                 () => CurrentConfirmation(uiRoot) == null,
                 "Answering No should close quit confirmation.");
@@ -160,29 +160,6 @@ namespace TicTacToeLab.PlayModeTests
             return uiRoot.PopupLayer.GetComponentInChildren<OutcomePopup>();
         }
 
-        private static UnityEngine.UI.Button ContinueButton(OutcomePopup popup)
-        {
-            UnityEngine.UI.Button[] buttons = popup.GetComponentsInChildren<UnityEngine.UI.Button>();
-            foreach (UnityEngine.UI.Button button in buttons)
-            {
-                for (int listenerIndex = 0; listenerIndex < button.onClick.GetPersistentEventCount(); listenerIndex++)
-                {
-                    bool invokesContinue = button.onClick.GetPersistentTarget(listenerIndex) == popup &&
-                                           button.onClick.GetPersistentMethodName(listenerIndex) == nameof(OutcomePopup.Continue);
-                    if (invokesContinue)
-                    {
-                        return button;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private static UnityEngine.UI.Button NoButton(ConfirmQuitPopup popup)
-        {
-            return popup.transform.Find("SafeArea/Question/NoButton").GetComponent<UnityEngine.UI.Button>();
-        }
     }
 }
 #endif

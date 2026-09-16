@@ -463,6 +463,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.MainMenuPanel
   _safeAreaRect: {fileID: 8732087392333390395}
+  _startButton: {fileID: 240719815863700468}
 --- !u!1 &7280169203113401455
 GameObject:
   m_ObjectHideFlags: 0
@@ -583,16 +584,4 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 879622127204066250}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8594677800741898960}
-        m_TargetAssemblyTypeName: TicTacToeLab.Runtime.MainMenuPanel, TicTacToeLab.Runtime
-        m_MethodName: StartGame
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []

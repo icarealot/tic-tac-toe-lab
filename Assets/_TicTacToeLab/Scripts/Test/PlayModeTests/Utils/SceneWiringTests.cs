@@ -96,8 +96,7 @@ namespace TicTacToeLab.PlayModeTests
 
         private static UnityEngine.UI.Button StartButton()
         {
-            return Object.FindFirstObjectByType<MainMenuPanel>()
-                         .GetComponentInChildren<UnityEngine.UI.Button>();
+            return Object.FindFirstObjectByType<MainMenuPanel>().StartButton;
         }
 
         private static IEnumerator IE_WaitForGameplay()

@@ -257,19 +257,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 9095007787714712163}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1867508046785442392}
-        m_TargetAssemblyTypeName: TicTacToeLab.Runtime.ConfirmQuitPopup, TicTacToeLab.Runtime
-        m_MethodName: Yes
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &2715564797896794651
 GameObject:
   m_ObjectHideFlags: 0
@@ -729,19 +717,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 540887402929913480}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1867508046785442392}
-        m_TargetAssemblyTypeName: TicTacToeLab.Runtime.ConfirmQuitPopup, TicTacToeLab.Runtime
-        m_MethodName: No
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &8600161862304405076
 GameObject:
   m_ObjectHideFlags: 0
@@ -806,6 +782,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.ConfirmQuitPopup
   _safeAreaRect: {fileID: 7475570350650914767}
+  _yesButton: {fileID: 5086125135330187930}
+  _noButton: {fileID: 6638660060778498059}
 --- !u!1 &8664266075473175334
 GameObject:
   m_ObjectHideFlags: 0
