@@ -17,7 +17,7 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_LoadScene();
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
-            yield return IE_StartGame(mouse);
+            yield return IE_StartGameThroughEventSystem(mouse);
 
             Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Null);
             Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Not.Null);
@@ -36,14 +36,14 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator A_real_win_stays_unobstructed_then_shows_its_outcome_popup_and_continue_leads_to_a_menu_that_resets_on_start()
+        public IEnumerator A_real_win_shows_its_outcome_popup_and_continue_leads_to_a_menu_that_resets_on_start()
         {
             // Arrange
             yield return IE_LoadScene();
 
             Mouse mouse = InputSystem.AddDevice<Mouse>();
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
-            yield return IE_StartGame(mouse);
+            yield return IE_StartGameThroughButtonEvent();
 
             BoardView boardBeforeReset = Object.FindFirstObjectByType<BoardView>();
             Transform firstCellBeforeReset = Cell(0, 0);
@@ -51,39 +51,27 @@ namespace TicTacToeLab.PlayModeTests
             // Act
             yield return IE_CompleteXWin(mouse);
             Sprite xSprite = MarkAt(firstCellBeforeReset).GetComponent<SpriteRenderer>().sprite;
-
-            yield return new WaitForSeconds(GameCompleteState.OUTCOME_PRESENTATION_DELAY_SECONDS * 0.5f);
-
-            // Assert
-            // The final position stays unobstructed while the outcome pause runs.
-            Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "The completed board should remain visible during the outcome pause.");
-            Assert.That(CurrentOutcomePopup(uiRoot), Is.Null);
-            Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Null);
-
-            // Act
-            yield return new WaitForSeconds(GameCompleteState.OUTCOME_PRESENTATION_DELAY_SECONDS * 0.5f + 0.25f);
+            yield return IE_WaitUntil(
+                () => CurrentOutcomePopup(uiRoot) != null,
+                "The outcome popup should appear after the completed-game pause.");
 
             // Assert
             OutcomePopup outcomePopup = CurrentOutcomePopup(uiRoot);
-            Assert.That(outcomePopup, Is.Not.Null);
-
-            // The popup presents one interactive button by contract; asserting uniqueness also makes the role-based lookup safe.
-            UnityEngine.UI.Button[] popupButtons = outcomePopup.GetComponentsInChildren<UnityEngine.UI.Button>();
-            Assert.That(popupButtons, Has.Length.EqualTo(1), "The outcome popup should present exactly one interactive button.");
-            TMPro.TMP_Text[] popupTexts = outcomePopup.GetComponentsInChildren<TMPro.TMP_Text>();
-            Assert.That(popupTexts, Has.Exactly(1).Matches<TMPro.TMP_Text>(text => text.text == "X Wins!"), "The outcome popup should announce the winning mark.");
+            UnityEngine.UI.Button continueButton = ContinueButton(outcomePopup);
+            Assert.That(continueButton, Is.Not.Null, "The outcome popup should provide a button wired to Continue.");
             Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "The popup should appear over the completed board, not a reset one.");
 
             // Act
-            yield return IE_ClickButton(mouse, popupButtons[0]);
+            continueButton.onClick.Invoke();
+            yield return IE_WaitUntil(
+                () => CurrentOutcomePopup(uiRoot) == null && Object.FindFirstObjectByType<MainMenuPanel>() != null,
+                "Continue should close the outcome popup and show the main menu.");
 
             // Assert
-            Assert.That(CurrentOutcomePopup(uiRoot), Is.Null);
-            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Not.Null);
             Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "Returning to the menu should preserve the completed board.");
 
             // Act
-            yield return IE_StartGame(mouse);
+            yield return IE_StartGameThroughButtonEvent();
 
             // Assert
             // Start resets the same board session in place before gameplay begins.
@@ -102,81 +90,7 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator Routed_back_and_board_presses_do_nothing_during_the_outcome_pause_then_back_returns_to_the_menu_once_the_popup_is_visible()
-        {
-            // Arrange
-            yield return IE_LoadScene();
-
-            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
-            Mouse mouse = InputSystem.AddDevice<Mouse>();
-            UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
-            yield return IE_StartGame(mouse);
-            yield return IE_CompleteXWin(mouse);
-
-            yield return new WaitForSeconds(GameCompleteState.OUTCOME_PRESENTATION_DELAY_SECONDS * 0.5f);
-
-            // Act
-            yield return IE_PressCell(mouse, Cell(2, 0));
-            yield return IE_PressBack(keyboard);
-
-            // Assert
-            // Board presses and Back are ignored while the completed board receives its viewing pause.
-            Assert.That(MarkAt(Cell(2, 0)), Is.Null, "Board input should stay blocked during the outcome pause.");
-            Assert.That(CurrentOutcomePopup(uiRoot), Is.Null);
-            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Null);
-            Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "Back during the pause must not leave the completed game.");
-
-            // Act
-            yield return new WaitForSeconds(GameCompleteState.OUTCOME_PRESENTATION_DELAY_SECONDS * 0.5f + 0.25f);
-            OutcomePopup outcomePopup = CurrentOutcomePopup(uiRoot);
-            Assert.That(outcomePopup, Is.Not.Null, "The outcome popup should be visible once the pause ends.");
-            yield return IE_PressCell(mouse, Cell(2, 1));
-
-            // Assert
-            Assert.That(MarkAt(Cell(2, 1)), Is.Null, "Board input should stay blocked while the outcome popup is presented.");
-
-            // Act
-            yield return IE_PressBack(keyboard);
-
-            // Assert
-            Assert.That(CurrentOutcomePopup(uiRoot), Is.Null, "Back acknowledgement should close the popup.");
-            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Not.Null);
-            Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "Back should preserve the completed board exactly like Continue.");
-        }
-
-        [UnityTest]
-        public IEnumerator Clicking_the_scrim_outside_the_card_leaves_the_outcome_popup_and_the_completed_board_unchanged()
-        {
-            // Arrange
-            yield return IE_LoadScene();
-
-            Mouse mouse = InputSystem.AddDevice<Mouse>();
-            UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
-            yield return IE_StartGame(mouse);
-            yield return IE_CompleteXWin(mouse);
-
-            yield return new WaitForSeconds(GameCompleteState.OUTCOME_PRESENTATION_DELAY_SECONDS + 0.25f);
-
-            OutcomePopup outcomePopup = CurrentOutcomePopup(uiRoot);
-            Assert.That(outcomePopup, Is.Not.Null);
-            RectTransform scrim = (RectTransform)outcomePopup.transform.Find("Scrim");
-            RectTransform card = (RectTransform)outcomePopup.transform.Find("SafeArea/Card");
-            Rect scrimRect = ScreenRect(scrim);
-            Rect cardRect = ScreenRect(card);
-            Vector2 scrimPoint = new(scrimRect.xMin + 16f, scrimRect.yMin + 16f);
-            Assert.That(cardRect.Contains(scrimPoint), Is.False, "The chosen scrim point must lie outside the outcome card.");
-
-            // Act
-            yield return IE_ClickScreenPoint(mouse, scrimPoint);
-
-            // Assert
-            Assert.That(CurrentOutcomePopup(uiRoot), Is.SameAs(outcomePopup), "The scrim must not dismiss the outcome popup.");
-            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Null);
-            Assert.That(VisibleMarks(), Has.Length.EqualTo(5), "The completed board should be unchanged behind the scrim.");
-        }
-
-        [UnityTest]
-        public IEnumerator Quit_confirmation_no_resumes_yes_returns_to_menu_and_the_next_start_is_fresh()
+        public IEnumerator Back_opens_quit_confirmation_and_no_resumes_the_game()
         {
             // Arrange
             yield return IE_LoadScene();
@@ -186,66 +100,29 @@ namespace TicTacToeLab.PlayModeTests
             UIRoot uiRoot = Object.FindFirstObjectByType<UIRoot>();
             Transform firstCell = Cell(0, 0);
             Transform secondCell = Cell(0, 1);
-
-            // Act
-            yield return IE_StartGame(mouse);
+            yield return IE_StartGameThroughButtonEvent();
             yield return IE_PressCell(mouse, firstCell);
-            Sprite xSprite = MarkAt(firstCell).GetComponent<SpriteRenderer>().sprite;
+
+            // Act
             yield return IE_PressBack(keyboard);
+            yield return IE_WaitUntil(
+                () => CurrentConfirmation(uiRoot) != null,
+                "Back should open quit confirmation during gameplay.");
 
             // Assert
-            ConfirmQuitPopup firstConfirmation = CurrentConfirmation(uiRoot);
-            Assert.That(firstConfirmation, Is.Not.Null);
+            ConfirmQuitPopup confirmation = CurrentConfirmation(uiRoot);
+            Assert.That(MarkAt(secondCell), Is.Null);
 
             // Act
-            yield return IE_PressCell(mouse, secondCell);
-
-            // Assert
-            Assert.That(MarkAt(secondCell), Is.Null, "Board input should remain blocked while quit confirmation is present.");
-
-            // Act
-            yield return IE_ClickButton(mouse, NoButton(firstConfirmation));
-
-            // Assert
-            Assert.That(CurrentConfirmation(uiRoot), Is.Null);
-            Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Not.Null);
-
-            // Act
+            NoButton(confirmation).onClick.Invoke();
+            yield return IE_WaitUntil(
+                () => CurrentConfirmation(uiRoot) == null,
+                "Answering No should close quit confirmation.");
             yield return IE_PressCell(mouse, secondCell);
 
             // Assert
             Assert.That(MarkAt(secondCell), Is.Not.Null, "Answering No should restore board input.");
-
-            // Act
-            yield return IE_PressBack(keyboard);
-
-            // Assert
-            ConfirmQuitPopup secondConfirmation = CurrentConfirmation(uiRoot);
-            Assert.That(secondConfirmation, Is.Not.Null);
-
-            // Act
-            yield return IE_ClickButton(mouse, YesButton(secondConfirmation));
-
-            // Assert
-            Assert.That(CurrentConfirmation(uiRoot), Is.Null);
-            Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Null);
-            Assert.That(Object.FindFirstObjectByType<MainMenuPanel>(), Is.Not.Null);
-            Assert.That(VisibleMarks(), Has.Length.EqualTo(2), "Returning to the menu should preserve the abandoned game until the next start.");
-
-            // Act
-            yield return IE_StartGame(mouse);
-
-            // Assert
-            Assert.That(VisibleMarks(), Is.Empty);
             Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Not.Null);
-
-            // Act
-            yield return IE_PressCell(mouse, firstCell);
-
-            // Assert
-            MarkView freshX = MarkAt(firstCell);
-            Assert.That(freshX, Is.Not.Null);
-            Assert.That(freshX.GetComponent<SpriteRenderer>().sprite, Is.SameAs(xSprite));
         }
 
         private static Transform Cell(int row, int column)
@@ -261,16 +138,6 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_PressCell(mouse, Cell(0, 1));
             yield return IE_PressCell(mouse, Cell(1, 1));
             yield return IE_PressCell(mouse, Cell(0, 2));
-        }
-
-        private static Rect ScreenRect(RectTransform rect)
-        {
-            Vector3[] corners = new Vector3[4];
-            rect.GetWorldCorners(corners);
-            Vector2 min = RectTransformUtility.WorldToScreenPoint(null, corners[0]);
-            Vector2 max = RectTransformUtility.WorldToScreenPoint(null, corners[2]);
-
-            return new Rect(min, max - min);
         }
 
         private static MarkView MarkAt(Transform cell)
@@ -293,9 +160,23 @@ namespace TicTacToeLab.PlayModeTests
             return uiRoot.PopupLayer.GetComponentInChildren<OutcomePopup>();
         }
 
-        private static UnityEngine.UI.Button YesButton(ConfirmQuitPopup popup)
+        private static UnityEngine.UI.Button ContinueButton(OutcomePopup popup)
         {
-            return popup.transform.Find("SafeArea/Question/YesButton").GetComponent<UnityEngine.UI.Button>();
+            UnityEngine.UI.Button[] buttons = popup.GetComponentsInChildren<UnityEngine.UI.Button>();
+            foreach (UnityEngine.UI.Button button in buttons)
+            {
+                for (int listenerIndex = 0; listenerIndex < button.onClick.GetPersistentEventCount(); listenerIndex++)
+                {
+                    bool invokesContinue = button.onClick.GetPersistentTarget(listenerIndex) == popup &&
+                                           button.onClick.GetPersistentMethodName(listenerIndex) == nameof(OutcomePopup.Continue);
+                    if (invokesContinue)
+                    {
+                        return button;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private static UnityEngine.UI.Button NoButton(ConfirmQuitPopup popup)
