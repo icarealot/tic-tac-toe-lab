@@ -7,14 +7,18 @@ namespace TicTacToeLab.EditModeTests
     public sealed class MainMenuStateTests
     {
         [Test]
-        public void Starting_the_game_resets_the_board_session_before_entering_gameplay()
+        public void Entering_the_menu_preserves_the_board_until_start_resets_it_before_gameplay()
         {
             // Arrange
             List<string> log = new();
             FakeUIService fakeUIService = new();
             MainMenuState sut = new(new RecordingBoardSession(log), new RecordingStateMachine(log), fakeUIService);
 
+            // Act
             sut.Enter();
+
+            // Assert
+            Assert.That(log, Is.Empty, "Entering the menu should preserve the completed board.");
 
             // Act
             fakeUIService.LastMainMenuPanel.StartGame();
@@ -25,20 +29,6 @@ namespace TicTacToeLab.EditModeTests
                 "BoardSession.Reset",
                 "StateMachine.ChangeState<GameplayState>",
             }));
-        }
-
-        [Test]
-        public void Entering_the_menu_leaves_the_board_session_unreset()
-        {
-            // Arrange
-            List<string> log = new();
-            MainMenuState sut = new(new RecordingBoardSession(log), new RecordingStateMachine(log), new FakeUIService());
-
-            // Act
-            sut.Enter();
-
-            // Assert
-            Assert.That(log, Is.Empty);
         }
 
         [Test]

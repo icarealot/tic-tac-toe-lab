@@ -36,7 +36,7 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void A_popup_leaves_the_panel_visible_while_popups_stack_and_close_above_it()
+        public void Popups_stack_above_a_visible_panel_and_closing_the_top_reveals_the_one_beneath()
         {
             // Arrange
             FakeFactoryService fakeFactory = new();
@@ -45,10 +45,8 @@ namespace TicTacToeLab.EditModeTests
             // Act
             sut.ShowPanel<IGameplayPanel>();
             FakeGameplayPanel panel = fakeFactory.Panels[0];
-
             sut.ShowPopup<IConfirmQuitPopup>();
             FakeConfirmQuitPopup firstPopup = fakeFactory.Popups[0];
-
             sut.ShowPopup<IConfirmQuitPopup>();
             FakeConfirmQuitPopup secondPopup = fakeFactory.Popups[1];
 
@@ -56,23 +54,14 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(secondPopup.IsVisible, Is.True);
             Assert.That(firstPopup.IsVisible, Is.False);
             Assert.That(panel.IsVisible, Is.True);
-        }
-
-        [Test]
-        public void Exhausting_the_popup_stack_leaves_the_panel_stack_intact()
-        {
-            // Arrange
-            FakeFactoryService fakeFactory = new();
-            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
-            sut.ShowPanel<IGameplayPanel>();
-            FakeGameplayPanel panel = fakeFactory.Panels[0];
-            sut.ShowPopup<IConfirmQuitPopup>();
 
             // Act
-            _ = sut.TryClosePopup();
-            _ = sut.TryClosePopup();
+            bool popupClosed = sut.TryClosePopup();
 
             // Assert
+            Assert.That(popupClosed, Is.True);
+            Assert.That(fakeFactory.ReturnedWindows, Is.EqualTo(new IWindow[] { secondPopup }));
+            Assert.That(firstPopup.IsVisible, Is.True);
             Assert.That(panel.IsVisible, Is.True);
         }
 

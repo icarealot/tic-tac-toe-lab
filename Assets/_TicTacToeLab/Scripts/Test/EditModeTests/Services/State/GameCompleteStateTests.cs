@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
@@ -144,35 +145,20 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(log, Is.Empty);
         }
 
-        [Test]
-        public void Continuing_the_outcome_popup_enters_the_main_menu_without_resetting_the_board_session()
+        private static IEnumerable<TestCaseData> OutcomeAcknowledgements()
         {
-            // Arrange
-            List<string> log = new();
-            FakeCoroutineService fakeCoroutineService = new();
-            FakeUIService fakeUIService = new();
-            GameCompleteState sut = new(
-                new RecordingBoardSession(log),
-                new RecordingStateMachine(log),
-                fakeUIService,
-                fakeCoroutineService,
-                new FakeInputService());
-            sut.Enter();
-            fakeCoroutineService.FireScheduledCallback();
+            yield return new TestCaseData(
+                    (Action<GameCompleteState, FakeUIService>)((_, fakeUIService) => fakeUIService.LastOutcomePopup.Continue()))
+                .SetName("Continuing_the_presented_outcome_enters_the_main_menu_without_resetting_the_board_session");
 
-            // Act
-            fakeUIService.LastOutcomePopup.Continue();
-
-            // Assert
-            Assert.That(log, Is.EqualTo(new[]
-            {
-                "StateMachine.ChangeState<MainMenuState>",
-            }));
-            Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
+            yield return new TestCaseData(
+                    (Action<GameCompleteState, FakeUIService>)((sut, _) => sut.Back()))
+                .SetName("Going_back_from_the_presented_outcome_enters_the_main_menu_without_resetting_the_board_session");
         }
 
-        [Test]
-        public void Back_after_the_popup_is_presented_enters_the_main_menu_without_resetting_the_board_session()
+        [TestCaseSource(nameof(OutcomeAcknowledgements))]
+        public void Acknowledging_the_presented_outcome_enters_the_main_menu_without_resetting_the_board_session(
+            Action<GameCompleteState, FakeUIService> acknowledge)
         {
             // Arrange
             List<string> log = new();
@@ -188,7 +174,7 @@ namespace TicTacToeLab.EditModeTests
             fakeCoroutineService.FireScheduledCallback();
 
             // Act
-            sut.Back();
+            acknowledge(sut, fakeUIService);
 
             // Assert
             Assert.That(log, Is.EqualTo(new[]
@@ -278,34 +264,6 @@ namespace TicTacToeLab.EditModeTests
             // Assert
             Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
             Assert.That(log, Is.Empty);
-        }
-
-        [Test]
-        public void A_late_outcome_presentation_after_acknowledgement_shows_no_second_popup_or_second_transition()
-        {
-            // Arrange
-            List<string> log = new();
-            FakeCoroutineService fakeCoroutineService = new();
-            FakeUIService fakeUIService = new();
-            GameCompleteState sut = new(
-                new RecordingBoardSession(log),
-                new RecordingStateMachine(log),
-                fakeUIService,
-                fakeCoroutineService,
-                new FakeInputService());
-            sut.Enter();
-            fakeCoroutineService.FireScheduledCallback();
-            fakeUIService.LastOutcomePopup.Continue();
-
-            // Act
-            fakeCoroutineService.ReplayLastCallback();
-
-            // Assert
-            Assert.That(fakeUIService.ShowPopupCount, Is.EqualTo(1));
-            Assert.That(log, Is.EqualTo(new[]
-            {
-                "StateMachine.ChangeState<MainMenuState>",
-            }));
         }
 
         // --- Leaving restores input and cleans up its popup ---

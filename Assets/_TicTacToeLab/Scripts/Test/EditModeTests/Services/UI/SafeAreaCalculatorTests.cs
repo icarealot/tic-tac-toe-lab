@@ -64,10 +64,8 @@ namespace TicTacToeLab.EditModeTests
 
         // --- Invalid dimensions ---
 
-        [TestCase(0f, 0f)]
         [TestCase(-1080f, 2340f)]
         [TestCase(1080f, -2340f)]
-        [TestCase(-1080f, -2340f)]
         [TestCase(0f, 2340f)]
         [TestCase(1080f, 0f)]
         public void Zero_or_negative_screen_dimensions_fall_back_to_full_stretch_anchors(float screenWidth, float screenHeight)

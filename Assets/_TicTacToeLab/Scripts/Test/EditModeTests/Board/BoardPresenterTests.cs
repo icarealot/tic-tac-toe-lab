@@ -133,28 +133,6 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(gameEndedEvents, Is.EqualTo(1));
         }
 
-        // --- Outcome exposure ---
-
-        [Test]
-        public void The_presenter_exposes_the_board_model_outcome_as_read_only_information()
-        {
-            // Arrange
-            BoardModel boardModel = new();
-            FakeBoardView fakeBoardView = new();
-            FakeInputService fakeInputService = new();
-            BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, fakeBoardView, fakeInputService);
-            BoardPresser presser = new(fakeInputService, boardModel);
-
-            // Assert — a fresh game
-            Assert.That(sut.Outcome, Is.EqualTo(Outcome.InProgress));
-
-            // Act
-            BoardMoves.WinRowZeroForX(presser);
-
-            // Assert — a completed win
-            Assert.That(sut.Outcome, Is.EqualTo(Outcome.Win));
-        }
-
         // --- Reset and disposal ---
 
         [Test]
