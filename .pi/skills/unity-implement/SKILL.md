@@ -37,6 +37,5 @@ Look for the project standards in `docs/` when present.
 Report:
 
 - Changed files.
-- Checks and results, including failure diagnoses required by the test protocol.
 - Deferred or unavailable validation.
 - Whether `/unity-tdd` was applied and why.
