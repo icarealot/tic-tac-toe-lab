@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 namespace TicTacToeLab.Runtime
@@ -6,8 +5,6 @@ namespace TicTacToeLab.Runtime
     [RequireComponent(typeof(RectTransform))]
     public class SafeAreaRect : MonoBehaviour
     {
-        private const float POLL_INTERVAL_SECONDS = 1f;
-
         private RectTransform RectTransformComponent
         {
             get
@@ -22,45 +19,31 @@ namespace TicTacToeLab.Runtime
         }
         private RectTransform _rectTransform;
 
-        private CoroutineHandle _pollHandle;
         private Rect _appliedSafeArea;
         private int _appliedScreenWidth;
         private int _appliedScreenHeight;
 
+        // Temporary compatibility scaffolding for current window callers; removed with the window-contract cleanup.
         public void Construct(ICoroutineService coroutineService)
         {
-            Apply();
-            _pollHandle = coroutineService.Run(IE_PollSafeArea());
         }
 
-        private void OnDestroy()
+        private void Awake()
         {
-            _pollHandle?.Dispose();
+            ApplyCurrentSafeArea();
         }
 
-        private IEnumerator IE_PollSafeArea()
+        private void Update()
         {
-            WaitForSeconds wait = new(POLL_INTERVAL_SECONDS);
-
-            while (true)
+            if (Screen.safeArea != _appliedSafeArea
+                || Screen.width != _appliedScreenWidth
+                || Screen.height != _appliedScreenHeight)
             {
-                yield return wait;
-
-                if (HasSafeAreaChanged())
-                {
-                    Apply();
-                }
+                ApplyCurrentSafeArea();
             }
         }
 
-        private bool HasSafeAreaChanged()
-        {
-            return Screen.safeArea != _appliedSafeArea
-                || Screen.width != _appliedScreenWidth
-                || Screen.height != _appliedScreenHeight;
-        }
-
-        private void Apply()
+        private void ApplyCurrentSafeArea()
         {
             _appliedSafeArea = Screen.safeArea;
             _appliedScreenWidth = Screen.width;
