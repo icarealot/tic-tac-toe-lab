@@ -18,14 +18,14 @@ namespace TicTacToeLab.EditModeTests
 
         public T Get<T>(Transform parent) where T : class
         {
-            if (typeof(T) == typeof(IGameplayPanel))
+            if (typeof(IGameplayPanel).IsAssignableFrom(typeof(T)))
             {
                 FakeGameplayPanel panel = new();
                 Panels.Add(panel);
                 return (T)(object)panel;
             }
 
-            if (typeof(T) == typeof(IConfirmQuitPopup))
+            if (typeof(IConfirmQuitPopup).IsAssignableFrom(typeof(T)))
             {
                 FakeConfirmQuitPopup popup = new();
                 Popups.Add(popup);

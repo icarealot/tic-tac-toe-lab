@@ -23,11 +23,6 @@ namespace TicTacToeLab.Runtime
         private int _appliedScreenWidth;
         private int _appliedScreenHeight;
 
-        // Temporary compatibility scaffolding for current window callers; removed with the window-contract cleanup.
-        public void Construct(ICoroutineService coroutineService)
-        {
-        }
-
         private void Awake()
         {
             ApplyCurrentSafeArea();

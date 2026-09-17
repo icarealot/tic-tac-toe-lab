@@ -9,15 +9,13 @@ namespace TicTacToeLab.Runtime
 
         private readonly IFactoryService _factoryService;
         private readonly IUIRoot _uiRoot;
-        private readonly ICoroutineService _coroutineService;
         private readonly Stack<IPanel> _panelStack = new();
         private readonly Stack<IPopup> _popupStack = new();
 
-        public UIService(IFactoryService factoryService, IUIRoot uiRoot, ICoroutineService coroutineService)
+        public UIService(IFactoryService factoryService, IUIRoot uiRoot)
         {
             _factoryService = factoryService;
             _uiRoot = uiRoot;
-            _coroutineService = coroutineService;
         }
 
         public void ShowPanel<TPanel>(Action<TPanel> configure = null) where TPanel : class, IPanel
@@ -63,7 +61,6 @@ namespace TicTacToeLab.Runtime
             }
 
             TShown window = getWindow();
-            window.Construct(_coroutineService);
             window.Hide();
             configure?.Invoke(window);
             window.Show();

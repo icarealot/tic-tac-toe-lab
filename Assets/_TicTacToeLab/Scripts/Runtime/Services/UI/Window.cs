@@ -7,8 +7,6 @@ namespace TicTacToeLab.Runtime
     {
         public bool IsVisible => CanvasGroupComponent.alpha > 0f;
 
-        [SerializeField] private SafeAreaRect _safeAreaRect;
-
         private CanvasGroup CanvasGroupComponent
         {
             get
@@ -22,14 +20,6 @@ namespace TicTacToeLab.Runtime
             }
         }
         private CanvasGroup _canvasGroup;
-
-        public void Construct(ICoroutineService coroutineService)
-        {
-            if (_safeAreaRect != null)
-            {
-                _safeAreaRect.Construct(coroutineService);
-            }
-        }
 
         public void Show()
         {

@@ -18,13 +18,17 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             FakeFactoryService fakeFactory = new();
-            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
+            UIService sut = new(fakeFactory, new StubUIRoot());
 
             sut.ShowPanel<IGameplayPanel>();
             FakeGameplayPanel firstPanel = fakeFactory.Panels[0];
 
             sut.ShowPanel<IGameplayPanel>();
             FakeGameplayPanel secondPanel = fakeFactory.Panels[1];
+
+            // Assert
+            Assert.That(firstPanel.IsVisible, Is.False);
+            Assert.That(secondPanel.IsVisible, Is.True);
 
             // Act
             bool panelClosed = sut.TryClosePanel();
@@ -40,7 +44,7 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             FakeFactoryService fakeFactory = new();
-            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
+            UIService sut = new(fakeFactory, new StubUIRoot());
 
             // Act
             sut.ShowPanel<IGameplayPanel>();
@@ -66,11 +70,25 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
+        public void The_callers_configuration_runs_while_the_window_is_hidden_and_before_it_becomes_visible()
+        {
+            // Arrange
+            FakeFactoryService fakeFactory = new();
+            UIService sut = new(fakeFactory, new StubUIRoot());
+
+            // Act
+            sut.ShowPopup<FakeConfirmQuitPopup>(popup => popup.Events.Add("configured"));
+
+            // Assert
+            Assert.That(fakeFactory.Popups[0].Events, Is.EqualTo(new[] { "hidden", "configured", "shown" }));
+        }
+
+        [Test]
         public void Closing_every_popup_empties_the_popup_stack_and_leaves_the_panel_stack_untouched()
         {
             // Arrange
             FakeFactoryService fakeFactory = new();
-            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
+            UIService sut = new(fakeFactory, new StubUIRoot());
 
             sut.ShowPanel<IGameplayPanel>();
             FakeGameplayPanel panel = fakeFactory.Panels[0];
@@ -90,7 +108,7 @@ namespace TicTacToeLab.EditModeTests
         public void Showing_a_panel_while_a_popup_is_up_throws()
         {
             FakeFactoryService fakeFactory = new();
-            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
+            UIService sut = new(fakeFactory, new StubUIRoot());
 
             sut.ShowPopup<IConfirmQuitPopup>();
 
@@ -101,7 +119,7 @@ namespace TicTacToeLab.EditModeTests
         public void Closing_from_an_empty_stack_reports_that_nothing_was_closed()
         {
             FakeFactoryService fakeFactory = new();
-            UIService sut = new(fakeFactory, new StubUIRoot(), new FakeCoroutineService());
+            UIService sut = new(fakeFactory, new StubUIRoot());
 
             Assert.That(sut.TryClosePanel(), Is.False);
             Assert.That(sut.TryClosePopup(), Is.False);
