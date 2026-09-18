@@ -1,7 +1,6 @@
 ---
 name: unity-code-review
 description: Review changes since a fixed point along independent coding, specification, and testing axes using subagent with sequential passes, severity scores, and axis tags.
-disable-model-invocation: true
 ---
 
 Review changes since a fixed point—a commit, branch, tag, or merge-base—along multiple independent axes:
