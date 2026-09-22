@@ -1,81 +1,74 @@
 ---
 name: unity-code-review
-description: Review changes since a fixed point along independent coding, specification, and testing axes using subagent with sequential passes, severity scores, and axis tags.
+description: Review Unity changes against coding, specification, and testing requirements.
 ---
 
-Review changes since a fixed point—a commit, branch, tag, or merge-base—along multiple independent axes:
+Review changes since a supplied fixed point through independent **Standards**, **Spec**, and **Testing** evaluations. Score, merge, tag, and sort the findings.
 
-- **Standards** — conformance to the discovered coding standard.
-- **Spec** — fidelity to the originating spec.
-- **Testing** — conformance to the discovered testing standard.
+## 1. Capture the change set
 
-The subagent checks each axis in a separate sequential pass against its own source, scores every finding 0–5 by severity, merges duplicates, and emits the final sorted report.
+- Ask for a fixed point when absent, then confirm it with `git rev-parse <fixed-point>`.
+- Capture once: `git diff <fixed-point>`, `git diff --numstat <fixed-point>`, `git status --short`, `git ls-files --others --exclude-standard`, and `git log <fixed-point>..HEAD --oneline`.
+- Treat tracked worktree changes, staged changes, later commits, and untracked files as one change set.
+- Read every reviewable untracked text file completely. For changed binary files, inspect identities plus applicable Unity metadata or repository tooling; do not load binary patch payloads.
+- Stop on an invalid ref or when no tracked or untracked change exists.
 
-## 1. Pin the fixed point
+## 2. Establish sources and evidence
 
-Use the fixed point supplied by the user. If none was supplied, ask for it.
+Classify the supplied scope:
 
-Capture these commands once:
+- **Task** — read the task and referenced spec completely.
+- **Feature** — read every file in the supplied feature directory completely.
+- **Project** — with no task or feature source, review the whole change set and omit the Spec evaluation.
 
-- Diff: `git diff <fixed-point>...HEAD`
-- Commits: `git log <fixed-point>..HEAD --oneline`
+Find project coding and testing standards under `docs/`; omit an evaluation whose source is absent. Inspect every full changed file and, where relevant, its assets, configuration, prefabs, callers, and tests.
 
-Confirm the fixed point resolves with `git rev-parse <fixed-point>` and the diff is non-empty. Stop on a bad ref or empty diff before spawning the subagent.
+Gather this evidence once. Then evaluate every changed hunk and caller-visible behavior independently against each applicable axis below; do not recapture or reread the complete change set between axes.
 
-## 2. Identify the sources
+## 3. Evaluate
 
-Look for these sources in `docs/` when present:
+### Standards
 
-- Project standards
-- Originating spec
+Apply every documented coding rule. For each violation, record the rule and evidence, the risk it hides, and a concrete fix.
 
-If a source is missing, skip that axis's pass.
+### Spec
 
-## 3. Spawn the review subagent
+Report missing, partial, extra, or incorrect behavior. Quote the controlling task or spec requirement and give a concrete fix.
 
-Give the subagent the captured diff command, commit list, any temporary standards exception relevant to an axis, and the complete contents of every discovered source.
+### Testing
 
-The subagent runs three sequential passes, one per axis, each against its own source:
+Apply every testing rule to changed production and test code. For each changed caller-visible behavior:
 
-**Standards pass** — apply every documented coding rule and heuristic to every changed code hunk. Report each hard violation with the exact rule, and label heuristic findings as judgment calls. Quote the relevant hunk, explain what it could hide, and suggest a concrete fix. Skip checks already enforced by tooling.
+1. Name its risk from the diff and spec contract.
+2. Decide whether automation or human judgment can establish it.
+3. Select the cheapest sufficient validation level and smallest fixture.
+4. Verify that the selected check and evidence are recorded.
 
-**Spec pass** — report requirements that are missing or partial, behavior not requested by the spec, and requirements whose implementation appears incorrect. Quote the relevant spec line for every finding and suggest a concrete fix.
+Judge validation evidence rather than spec correctness; report a spec defect only when this evaluation exposes one. Report each retained test that violates a rule and each behavior lacking sufficient validation, with evidence and a concrete fix. For missing automation, name the behavior and sufficient fixture; for human judgment, give the concrete checklist. Accept omitted validation only when its reason is recorded.
 
-**Testing pass** — apply every testing rule to changed production and test code. Report each retained test that violates one and each changed behavior that warrants validation but remains unprotected. Quote the relevant hunk, name the behavior and sufficient fixture, and suggest a concrete fix. Account for every behavior or assertion in each added or modified test retained at `HEAD`: after searching all repository test code—not only the diff—mark it unique or place it in an overlap group containing a changed test. Report groups with redundant coverage as ordinary findings, naming the shared behavior and the exact overlapping test methods, and recommending consolidation or removal.
+Merge an issue seen on multiple axes and add all applicable tags instead of duplicating it.
 
-**Extend, don't repeat.** If a later pass finds an issue already reported in an earlier pass, extend the existing finding with the new axis tag and any new detail. Never create a duplicate entry.
+### Score and tag
 
-**Score every finding 0–5 by severity:**
-
-- **5** — wrong or missing behavior, violates a spec requirement, or breaks an invariant
-- **4** — defect risk the tests don't cover; hard standards violation that can hide bugs
-- **3** — clear standards or testing-standard violation, quality risk
+- **5** — wrong or missing behavior, spec violation, or broken invariant
+- **4** — uncovered defect risk or hard standard violation that can hide bugs
+- **3** — clear standards or testing-standard violation; quality risk
 - **2** — minor convention drift
 - **1** — style nit
-- **0** — not reportable; omit the finding
+- **0** — omit
 
-Tag every finding with the axis that caught it: `[Standards]`, `[Spec]`, `[Testing]`, or combined, e.g. `[Spec + Testing]`.
+Tag findings `[Standards]`, `[Spec]`, `[Testing]`, or a combination.
 
-Emit the final report as a flat list sorted by score descending.
+## 4. Return only findings
 
-## 4. Relay the report
-
-The subagent authors every finding end to end—name, score, tag, evidence, and fix suggestion—then merges duplicates and emits the final report. The main agent fills nothing in and relays it verbatim.
+Sort by score descending and return only this flat list:
 
 ```markdown
 1. **[5] [Spec + Testing] <finding name>**
 
-- `<quoted spec line>` / `<path/to/file>`
-- <What the deviation could hide>.
-- Action: <the subagent's suggested fix>.
+- `<quoted requirement>` / `<path/to/file>`
+- <Risk or hidden deviation>.
+- Action: <concrete fix>.
 ```
 
-## Why multiple axes
-
-A change can pass any axis and fail another:
-
-- Correctly styled code can implement the wrong behavior.
-- Spec-compliant behavior can violate project conventions.
-- Correct behavior and style can still rely on brittle or low-value tests.
-
-Sequential passes keep one lens from masking another: each pass re-reads the diff against its own source. Tags keep every finding traceable to the source that caught it, and the severity score makes cross-axis priority obvious at a glance.
+Return exactly `No findings.` when clean.

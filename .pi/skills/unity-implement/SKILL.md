@@ -1,41 +1,48 @@
 ---
 name: unity-implement
-description: Implement a Unity task end to end.
-disable-model-invocation: true
+description: Implement a Unity task or remediate Unity review findings end to end.
 ---
 
-Implement the task file supplied by the user.
+Implement exactly one supplied work item.
 
-## 1. Boundary
+## 1. Establish the boundary
 
-Satisfy every gate before editing. Stop and ask when a gate fails:
+Accept one mode:
 
-- The user supplied `docs/<feature-slug>/tasks/<NN>-<slug>.md`; read it and its referenced spec completely.
-- `/unity-cli` is available.
-- For UI work, `/ui-ugui` is available for Runtime/Canvas UI or `/ui-imgui` is available for Editor IMGUI.
-- The task needs no external package the project does not already reference, including one requiring an `.asmdef` reference, `Packages/manifest.json` change, or editor-resource import such as TMP Essentials.
+- **Task** — read the supplied `docs/<feature>/tasks/<NN>-<slug>.md` and its referenced spec completely.
+- **Review remediation** — read the supplied feature directory completely and treat every inline finding as an acceptance criterion.
 
-Run `unity status`. If no Editor is open, ask the user to open it.
+Before editing, require:
 
-## 2. Identify the sources
+- `/unity-cli`;
+- `/ui-ugui` for Runtime/Canvas UI or `/ui-imgui` for Editor IMGUI, when applicable;
+- no new external package, `.asmdef` reference, `Packages/manifest.json` change, or editor-resource import such as TMP Essentials.
 
-Look for the project standards in `docs/` when present.
+On a failed gate, return `Status: blocked` with the required user action. Run `unity status`; if no Editor is open, ask the user to open it and return blocked.
 
-## 2. Implement
+Find and apply project standards under `docs/` when present.
 
-- Apply the discovered standards to every code change.
-- Use `/unity-cli` for every non-code or `.asmdef` edit, including scenes, prefabs, ScriptableObjects, `.meta` files, and `ProjectSettings/*`. Never edit Unity YAML directly.
+## 2. Implement and validate
+
+- Apply the discovered standards to every change.
+- Use `/unity-cli` for every non-code or `.asmdef` change, including scenes, prefabs, ScriptableObjects, `.meta` files, and `ProjectSettings/*`; never edit Unity YAML directly.
 - Use `/ui-ugui` for Runtime/Canvas UI and `/ui-imgui` for Editor IMGUI.
-- Apply `/unity-tdd` to automated behavior selected by the task and discovered testing standard.
-- Read and follow [test-protocol.md](test-protocol.md) for every test run in the task.
-- After acceptance checks pass, rerun every EditMode or PlayMode suite named by the validation tier.
-- Leave Player builds and human playtests unrun and report them as deferred validation.
-- Never run `git add`, `git commit`, or `git stash` unless the user explicitly asks for that exact operation.
+- Apply `/unity-tdd` to automated behavior selected by the work item and testing standard.
+- Follow [test-protocol.md](test-protocol.md) for every test run.
+- After acceptance checks pass, rerun each EditMode or PlayMode suite required by the task's validation tier or implicated by review findings.
+- Report Player builds and human playtests as deferred rather than running them.
 
-## 3. Report
+Use repository-root `.scratch/` for all temporary scripts, files, logs, exports, screenshots, and command output. Remove every artifact created for this work item before reporting.
 
-Report:
+Leave Git state intact unless the user explicitly requests that exact operation: do not run `git add`, `git commit`, or `git stash`.
 
-- Changed files.
-- Deferred or unavailable validation.
-- Whether `/unity-tdd` was applied and why.
+## 3. Report compactly
+
+Begin with exactly `Status: complete` only when every acceptance criterion is implemented and all available required validation passes; otherwise begin with `Status: blocked` and name the blocker and required action.
+
+Then list only:
+
+- `Changed:` every changed file path;
+- `Findings:` each finding and disposition, in remediation mode;
+- `Validation:` deferred or unavailable checks;
+- `TDD:` whether `/unity-tdd` was applied and why.

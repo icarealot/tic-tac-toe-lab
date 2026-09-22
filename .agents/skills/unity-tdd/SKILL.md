@@ -1,25 +1,16 @@
 ---
 name: unity-tdd
-description: Test-drive Unity features or fixes when the user requests test-first work, red–green, or integration tests.
+description: Test-drive Unity features, fixes, or integration tests with a red-green loop.
 ---
 
-Run a red → green loop for one behavior slice at a time.
+Test-drive one behavior slice at a time through its public seam.
 
-## Identify the sources
+Use project coding and testing standards under `docs/` when present. Use `CONTEXT.md` domain language and respect applicable ADRs.
 
-Look for these sources when present:
+For each behavior selected by the testing standard:
 
-- Project standards in `docs/`
-- `CONTEXT.md` so names and interfaces use the project's domain language, and respect applicable ADRs.
+1. **Red** — Write one standards-compliant test. Run it; require discovery and failure for the intended behavioral reason.
+2. **Green** — Write only enough standards-compliant production code to pass it. Run the focused test; require discovery and success.
+3. Start the next behavior only after green.
 
-## Loop
-
-Work vertically. Bulk tests written ahead of their implementation describe imagined structure rather than proven behavior.
-
-For each behavior selected under the discovered testing standard:
-
-1. **Red** — Write one test through the selected public seam, following both standards. Run it, confirm it was discovered, and confirm it fails for the intended behavioral reason.
-2. **Green** — Write only enough production code to satisfy that test, following the coding standard. Run the focused test again and confirm it passes.
-3. Continue with the next behavior only after the current slice is green.
-
-Do not anticipate later tests or add speculative production behavior. End the loop after green; handle refactoring as follow-up work informed by `/unity-code-review`.
+Work vertically. Do not bulk-write tests, anticipate later cases, or add speculative behavior. End each loop at green.

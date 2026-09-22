@@ -14,7 +14,7 @@ Turn the current conversation and codebase evidence into a spec. Do not intervie
 
 3. Derive the feature's validation decisions from the discovered standards and the agreed conversation. Record unresolved validation assumptions in the spec rather than opening a feature interview.
 
-4. Write the spec to `docs/<feature-name>/SPEC.md` using this template:
+4. Write the spec to `docs/<feature-name>/spec.md` using this template:
 
 <spec-template>
 
