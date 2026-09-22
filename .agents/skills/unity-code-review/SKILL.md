@@ -37,14 +37,15 @@ Report missing, partial, extra, or incorrect behavior. Quote the controlling tas
 
 ### Testing
 
-Apply every testing rule to changed production and test code. For each changed caller-visible behavior:
+Apply every testing rule to changed production and test code. Review only behavior that automation can establish; human-judgment validation is outside the review boundary. Omit missing, deferred, incomplete, or unsigned human checks from findings, and never request human checklists or sign-off as remediation.
+
+For each changed caller-visible behavior within the automated boundary:
 
 1. Name its risk from the diff and spec contract.
-2. Decide whether automation or human judgment can establish it.
-3. Select the cheapest sufficient validation level and smallest fixture.
-4. Verify that the selected check and evidence are recorded.
+2. Select the cheapest sufficient automated validation level and smallest fixture.
+3. Verify that the selected check and evidence are recorded.
 
-Judge validation evidence rather than spec correctness; report a spec defect only when this evaluation exposes one. Report each retained test that violates a rule and each behavior lacking sufficient validation, with evidence and a concrete fix. For missing automation, name the behavior and sufficient fixture; for human judgment, give the concrete checklist. Accept omitted validation only when its reason is recorded.
+Judge automated validation evidence rather than spec correctness; report a spec defect only when this evaluation exposes one. Report each retained test that violates a rule and each behavior lacking sufficient automated validation, with evidence and a concrete fix. For missing automation, name the behavior and sufficient fixture. Accept omitted automated validation only when its reason is recorded.
 
 Merge an issue seen on multiple axes and add all applicable tags instead of duplicating it.
 

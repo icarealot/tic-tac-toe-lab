@@ -45,7 +45,7 @@ Otherwise call one fresh `reviewer` subagent with:
 
 A response of `No findings.` is clean. Treat a failed or incomplete review as a blocker.
 
-## 5. Remediate once
+## 5. Remediate
 
 When the first review has findings, pass them unchanged to one fresh `worker` subagent:
 
@@ -58,7 +58,7 @@ Review findings:
 
 Continue only when the response begins `Status: complete`; otherwise report the blocker, findings, and validation status. Record remediation changes and finding dispositions.
 
-After successful remediation, run one fresh full review with the original fixed point and feature directory. Report its result without another remediation cycle.
+After successful remediation, report its result.
 
 ## 6. Report
 
@@ -67,8 +67,7 @@ Return a compact report with:
 - each task's `complete` or `blocked` status;
 - implementation changed files;
 - deferred or unavailable validation, including `HUMAN-PENDING` items;
-- first-review result and findings;
-- remediation changed files and finding dispositions, when applicable;
-- final-review result and remaining findings, when applicable.
+- review result and findings;
+- remediation changed files and finding dispositions, when applicable.
 
 Do not run `git add`, `git commit`, or `git stash`.
