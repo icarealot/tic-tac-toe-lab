@@ -27,6 +27,7 @@ Order class members as follows:
 
 ## Test code
 
+- Name a local primary subject `sut` and a fixture-held subject `_sut`. Tests without one honest subject are exempt.
 - Use `Assert.That` and name tests in plain English as observable behavior, with underscores separating words.
 - Arrange state in each test and keep Arrange, Act, and Assert distinct. Use fixture setup or teardown only for centralized lifecycle ownership and reliable cleanup.
 - Parameterize scenarios or extract helpers only to remove meaningful duplication, not for formatting uniformity.
