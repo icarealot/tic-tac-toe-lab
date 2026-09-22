@@ -12,17 +12,16 @@ Orchestrate one `docs/<feature>/` directory. Use fresh subagents to discover com
 2. Read the complete spec and every task.
 3. Capture `git rev-parse HEAD` as the fixed point. A dirty worktree is valid; scouting uses the current repository state, and review covers every change since the fixed point.
 
-## 2. Discover completed tasks
+## 2. Discover remaining tasks
 
-Call one fresh `scout` subagent with the feature directory, fixed point, and these instructions:
+Call one fresh `scout` subagent with the feature directory and ask it to read the spec and every task, inspect the current repository, and classify each task in numeric order:
 
-- Read the complete spec and every task, then inspect the current implementation, tests, assets, configuration, validation records, and relevant Git history.
-- Judge every acceptance criterion and required validation from repository evidence. Names, checkboxes, commits, test source, and human claims do not prove completion or a successful validation run.
-- Use `HUMAN-PENDING` only for work that inherently requires human action or judgment. Missing evidence for an automatable check is `UNPROVEN`.
-- Mark a task `COMPLETE` only when every criterion is evidenced or `HUMAN-PENDING`, every validation is proven or `HUMAN-PENDING`, every blocker is complete, and no implementation or automatable validation remains. Mark every other task `RUN`.
-- Begin with `Status: complete` or `Status: blocked`. On success, list every task once in numeric order with its `COMPLETE` or `RUN` decision, concise acceptance and validation evidence, any `HUMAN-PENDING` items, and blocker status.
+- `COMPLETE` — the requested behavior appears implemented.
+- `RUN` — implementation is missing, incomplete, or uncertain.
 
-Continue only when scouting returns `Status: complete`, covers every task, and supports every `COMPLETE` decision. Otherwise report the scouting blocker; do not default to running all tasks.
+The scout begins with `Status: complete` and briefly explains each decision, or `Status: blocked` with the blocker. It does not perform detailed validation; workers validate the tasks they run.
+
+Continue only when the scout returns `Status: complete` and covers every task. Otherwise report the scouting blocker.
 
 ## 3. Implement
 
