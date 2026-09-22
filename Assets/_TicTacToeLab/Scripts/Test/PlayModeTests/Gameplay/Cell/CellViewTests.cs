@@ -10,52 +10,93 @@ namespace TicTacToeLab.PlayModeTests
     public sealed class CellViewTests
     {
         private GameObject _root;
-        private TestComponentFactory _factory;
+        private GameObject _markTemplate;
         private CellView _sut;
 
         [SetUp]
         public void CreateIsolatedCell()
         {
             _root = new GameObject("CellViewTests");
-            _factory = new TestComponentFactory();
+            _markTemplate = new GameObject("MarkTemplate");
+            MarkView markPrefab = _markTemplate.AddComponent<MarkView>();
+
             _sut = _root.AddComponent<CellView>();
-            _sut.Construct(_factory, new CellPlacement(0, 0, Vector3.zero));
+            TestSerializedReference.AssignPrefab(_sut, "_markViewPrefab", markPrefab);
+            _sut.Construct(new CellPlacement(new CellCoordinate(0, 0), Vector3.zero));
         }
 
-        [TearDown]
-        public void DestroyIsolatedCell()
+        [UnityTearDown]
+        public IEnumerator DestroyIsolatedCell()
         {
             if (_root != null)
             {
                 Object.Destroy(_root);
             }
+
+            if (_markTemplate != null)
+            {
+                Object.Destroy(_markTemplate);
+            }
+
+            yield return PlayModeWait.IE_WaitUntilOrFail(
+                () => _root == null && _markTemplate == null,
+                "The cell fixture should be destroyed after the test.");
         }
 
-        [UnityTest]
-        public IEnumerator Clearing_a_marked_cell_returns_and_removes_exactly_the_mark_it_owns()
+        [Test]
+        public void Showing_a_mark_creates_one_mark_parented_under_the_cell()
+        {
+            // Act
+            _sut.ShowMark(Mark.X);
+
+            // Assert
+            MarkView[] marks = _sut.GetComponentsInChildren<MarkView>();
+            Assert.That(marks, Has.Length.EqualTo(1), "The cell should own exactly one mark.");
+            Assert.That(marks[0].transform.parent, Is.EqualTo(_sut.transform), "The cell should parent the mark it owns.");
+        }
+
+        [Test]
+        public void Showing_a_second_mark_keeps_at_most_one_mark_under_the_cell()
         {
             // Arrange
             _sut.ShowMark(Mark.X);
-            MarkView ownedMark = _sut.GetComponentInChildren<MarkView>();
-            Assert.That(ownedMark, Is.Not.Null, "ShowMark should leave the cell owning a mark.");
+
+            // Act
+            _sut.ShowMark(Mark.O);
+
+            // Assert
+            Assert.That(_sut.GetComponentsInChildren<MarkView>(), Has.Length.EqualTo(1), "The cell should own at most one mark.");
+        }
+
+        [UnityTest]
+        public IEnumerator Clearing_a_marked_cell_destroys_only_its_owned_mark()
+        {
+            // Arrange
+            _sut.ShowMark(Mark.X);
 
             // Act
             _sut.ClearMark();
 
             // Assert
-            Assert.That(_factory.Returned, Has.Count.EqualTo(1));
-            Assert.That(_factory.Returned[0], Is.SameAs(ownedMark));
-
-            yield return null;
-
-            Assert.That(_sut.GetComponentInChildren<MarkView>(), Is.Null);
+            yield return PlayModeWait.IE_WaitUntilOrFail(
+                () => _sut.GetComponentInChildren<MarkView>() == null,
+                "Clearing a marked cell should destroy its mark.");
+            Assert.That(_sut != null, Is.True, "Clearing a mark should preserve the cell itself.");
         }
 
         [Test]
-        public void Clearing_a_cell_that_never_showed_a_mark_is_harmless()
+        public void Clearing_an_unmarked_cell_repeatedly_is_harmless()
         {
-            Assert.That(() => _sut.ClearMark(), Throws.Nothing);
-            Assert.That(_factory.Returned, Is.Empty);
+            // Act
+            TestDelegate clearUnmarkedCell = () =>
+            {
+                _sut.ClearMark();
+                _sut.ClearMark();
+            };
+
+            // Assert
+            Assert.That(clearUnmarkedCell, Throws.Nothing);
+            Assert.That(_sut.GetComponentInChildren<MarkView>(), Is.Null, "Clearing an unmarked cell should leave no mark.");
         }
     }
 }

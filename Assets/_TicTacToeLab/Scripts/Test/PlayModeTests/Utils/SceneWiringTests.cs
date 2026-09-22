@@ -14,8 +14,6 @@ namespace TicTacToeLab.PlayModeTests
     {
         protected const string SCENE_PATH = "Assets/_TicTacToeLab/Scenes/Main.unity";
 
-        private const float ASYNC_OBSERVATION_TIMEOUT_SECONDS = 3f;
-
         protected IEnumerator IE_LoadScene()
         {
             yield return EditorSceneManager.LoadSceneInPlayMode(
@@ -83,25 +81,14 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_WaitForGameplay();
         }
 
-        protected static IEnumerator IE_WaitUntil(System.Func<bool> condition, string failureMessage)
-        {
-            float deadline = Time.realtimeSinceStartup + ASYNC_OBSERVATION_TIMEOUT_SECONDS;
-            while (!condition() && Time.realtimeSinceStartup < deadline)
-            {
-                yield return null;
-            }
-
-            Assert.That(condition(), Is.True, failureMessage);
-        }
-
         private static UnityEngine.UI.Button StartButton()
         {
-            return Object.FindFirstObjectByType<MainMenuPanel>().StartButton;
+            return TestSerializedReference.ReadButton(Object.FindFirstObjectByType<MainMenuPanel>(), "_startButton");
         }
 
         private static IEnumerator IE_WaitForGameplay()
         {
-            yield return IE_WaitUntil(
+            yield return PlayModeWait.IE_WaitUntilOrFail(
                 () => Object.FindFirstObjectByType<MainMenuPanel>() == null && Object.FindFirstObjectByType<GameplayPanel>() != null,
                 "Start should close the main menu and show gameplay.");
         }

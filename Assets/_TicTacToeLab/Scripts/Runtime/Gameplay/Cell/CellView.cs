@@ -3,21 +3,27 @@ using UnityEngine;
 namespace TicTacToeLab.Runtime
 {
     [RequireComponent(typeof(SpriteRenderer))]
-    public class CellView : MonoBehaviour, ICellView
+    public class CellView : MonoBehaviour
     {
-        private IFactoryService _factoryService;
-        private IMarkView _markView;
+        [SerializeField] private MarkView _markViewPrefab;
 
-        public void Construct(IFactoryService factoryService, CellPlacement placement)
+        private MarkView _markView;
+
+        public void Construct(CellPlacement placement)
         {
-            _factoryService = factoryService;
             transform.localPosition = placement.LocalPoint;
-            name = $"Cell ({placement.Row}, {placement.Column})";
+            CellCoordinate coordinate = placement.Coordinate;
+            name = $"Cell ({coordinate.Row}, {coordinate.Column})";
         }
 
         public void ShowMark(Mark mark)
         {
-            _markView = _factoryService.Get<IMarkView>(transform);
+            if (_markView != null)
+            {
+                return;
+            }
+
+            _markView = Instantiate(_markViewPrefab, transform);
             _markView.Show(mark);
         }
 
@@ -28,7 +34,7 @@ namespace TicTacToeLab.Runtime
                 return;
             }
 
-            _factoryService.Return(_markView);
+            Destroy(_markView.gameObject);
             _markView = null;
         }
     }

@@ -317,7 +317,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1149846532790253434}
-  - component: {fileID: 770731649529002587}
   - component: {fileID: 3178248131174421384}
   m_Layer: 0
   m_Name: GameplayPanel
@@ -346,18 +345,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!225 &770731649529002587
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4407983383640906668}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!114 &3178248131174421384
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -370,7 +357,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e3890c3fb641124cac4ca92cb7bd5a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.GameplayPanel
-  _safeAreaRect: {fileID: 1039090634464656362}
   _backButton: {fileID: 806408431020827984}
   _turnText: {fileID: 5555539559444288933}
 --- !u!1 &8903818481764627849

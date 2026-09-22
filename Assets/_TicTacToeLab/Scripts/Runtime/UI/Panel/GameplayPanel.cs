@@ -5,27 +5,25 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.Runtime
 {
-    public class GameplayPanel : Panel, IGameplayPanel
+    public class GameplayPanel : MonoBehaviour
     {
-        public Button BackButton => _backButton;
-
         [SerializeField] private Button _backButton;
         [SerializeField] private TMP_Text _turnText;
 
         private Action _onBack;
-        private IBoardSession _boardSession;
+        private BoardPresenter _boardPresenter;
 
         private void Awake()
         {
             _backButton.onClick.AddListener(OnBackClicked);
         }
 
-        public void Setup(IBoardSession boardSession, Action onBack)
+        public void Setup(BoardPresenter boardPresenter, Action onBack)
         {
             _onBack = onBack;
-            _boardSession = boardSession;
-            _boardSession.TurnChanged += OnTurnChanged;
-            OnTurnChanged(_boardSession.Turn);
+            _boardPresenter = boardPresenter;
+            _boardPresenter.TurnChanged += OnTurnChanged;
+            OnTurnChanged(_boardPresenter.Turn);
         }
 
         private void OnDestroy()
@@ -35,9 +33,15 @@ namespace TicTacToeLab.Runtime
                 _backButton.onClick.RemoveListener(OnBackClicked);
             }
 
-            if (_boardSession != null)
+            DetachTurnSource();
+        }
+
+        private void DetachTurnSource()
+        {
+            if (_boardPresenter != null)
             {
-                _boardSession.TurnChanged -= OnTurnChanged;
+                _boardPresenter.TurnChanged -= OnTurnChanged;
+                _boardPresenter = null;
             }
         }
 

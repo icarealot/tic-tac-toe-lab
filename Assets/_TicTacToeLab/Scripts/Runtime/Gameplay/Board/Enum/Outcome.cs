@@ -3,7 +3,8 @@ namespace TicTacToeLab.Runtime
     public enum Outcome
     {
         InProgress,
-        Win,
+        XWin,
+        OWin,
         Draw
     }
 }

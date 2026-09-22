@@ -5,18 +5,21 @@ namespace TicTacToeLab.Runtime
 {
     public class BoardView : MonoBehaviour, IBoardView
     {
-        private ICellView[,] _cellViews;
+        [SerializeField] private CellView _cellViewPrefab;
 
-        public void Construct(IFactoryService factoryService, int dimension, IReadOnlyList<CellPlacement> placements)
+        private CellView[,] _cellViews;
+
+        public void Construct(int dimension, IReadOnlyList<CellPlacement> placements)
         {
-            _cellViews = new ICellView[dimension, dimension];
+            _cellViews = new CellView[dimension, dimension];
 
             foreach (CellPlacement placement in placements)
             {
-                ICellView cellView = factoryService.Get<ICellView>(transform);
-                cellView.Construct(factoryService, placement);
+                CellView cellView = Instantiate(_cellViewPrefab, transform);
+                cellView.Construct(placement);
 
-                _cellViews[placement.Row, placement.Column] = cellView;
+                CellCoordinate coordinate = placement.Coordinate;
+                _cellViews[coordinate.Row, coordinate.Column] = cellView;
             }
         }
 
@@ -25,14 +28,14 @@ namespace TicTacToeLab.Runtime
             return transform.InverseTransformPoint(worldPoint);
         }
 
-        public void ShowMark(int row, int column, Mark mark)
+        public void ShowMark(CellCoordinate coordinate, Mark mark)
         {
-            _cellViews[row, column].ShowMark(mark);
+            _cellViews[coordinate.Row, coordinate.Column].ShowMark(mark);
         }
 
         public void Clear()
         {
-            foreach (ICellView cellView in _cellViews)
+            foreach (CellView cellView in _cellViews)
             {
                 cellView.ClearMark();
             }

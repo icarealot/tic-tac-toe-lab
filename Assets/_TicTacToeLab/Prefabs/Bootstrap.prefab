@@ -44,4 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b761761a6ec05e409cda2f5de6795db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.Bootstrap
-  _factoryServicePrefab: {fileID: -4147878434617031859, guid: 17395176f7aedbd44b7d0db7d801d1d4, type: 3}
+  _mainCamera: {fileID: 0}
+  _boardView: {fileID: 0}
+  _applicationUI: {fileID: 0}
+  _inputService: {fileID: 0}
+  _delayScheduler: {fileID: 0}

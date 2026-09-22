@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 
@@ -8,28 +9,28 @@ namespace TicTacToeLab.EditModeTests
     {
         public sealed class BoardScenario
         {
-            public readonly (int Row, int Column)[] Placements;
-            public readonly Mark? Winner;
+            public readonly CellCoordinate[] Placements;
+            public readonly Outcome ExpectedOutcome;
 
-            public BoardScenario((int Row, int Column)[] placements, Mark? winner = null)
+            public BoardScenario(CellCoordinate[] placements, Outcome expectedOutcome = Outcome.InProgress)
             {
                 Placements = placements;
-                Winner = winner;
+                ExpectedOutcome = expectedOutcome;
             }
         }
 
-        private static readonly BoardScenario _xWinsRowZero = new(new (int Row, int Column)[] { (0, 0), (1, 0), (0, 1), (1, 1), (0, 2) }, Mark.X);
-        private static readonly BoardScenario _xWinsRowOne = new(new (int Row, int Column)[] { (1, 0), (0, 0), (1, 1), (0, 1), (1, 2) }, Mark.X);
-        private static readonly BoardScenario _xWinsRowTwo = new(new (int Row, int Column)[] { (2, 0), (0, 0), (2, 1), (0, 1), (2, 2) }, Mark.X);
-        private static readonly BoardScenario _xWinsColumnZero = new(new (int Row, int Column)[] { (0, 0), (0, 1), (1, 0), (1, 1), (2, 0) }, Mark.X);
-        private static readonly BoardScenario _xWinsColumnOne = new(new (int Row, int Column)[] { (0, 1), (0, 0), (1, 1), (1, 0), (2, 1) }, Mark.X);
-        private static readonly BoardScenario _xWinsColumnTwo = new(new (int Row, int Column)[] { (0, 2), (0, 0), (1, 2), (1, 0), (2, 2) }, Mark.X);
-        private static readonly BoardScenario _xWinsTheMainDiagonal = new(new (int Row, int Column)[] { (0, 0), (0, 1), (1, 1), (0, 2), (2, 2) }, Mark.X);
-        private static readonly BoardScenario _xWinsTheAntiDiagonal = new(new (int Row, int Column)[] { (0, 2), (0, 0), (1, 1), (0, 1), (2, 0) }, Mark.X);
-        private static readonly BoardScenario _oWinsRowTwo = new(new (int Row, int Column)[] { (0, 0), (2, 0), (0, 1), (2, 1), (1, 0), (2, 2) }, Mark.O);
-        private static readonly BoardScenario _leavesRowZeroIncomplete = new(new (int Row, int Column)[] { (0, 0), (1, 0), (0, 1) });
-        private static readonly BoardScenario _leavesRowZeroMixed = new(new (int Row, int Column)[] { (0, 0), (0, 1), (1, 0), (1, 1), (2, 1), (0, 2) });
-        private static readonly BoardScenario _fillsToDraw = new(new (int Row, int Column)[] { (0, 0), (0, 1), (0, 2), (1, 1), (1, 0), (1, 2), (2, 1), (2, 0), (2, 2) });
+        private static readonly BoardScenario _xWinsRowZero = new(new CellCoordinate[] { new(0, 0), new(1, 0), new(0, 1), new(1, 1), new(0, 2) }, Outcome.XWin);
+        private static readonly BoardScenario _xWinsRowOne = new(new CellCoordinate[] { new(1, 0), new(0, 0), new(1, 1), new(0, 1), new(1, 2) }, Outcome.XWin);
+        private static readonly BoardScenario _xWinsRowTwo = new(new CellCoordinate[] { new(2, 0), new(0, 0), new(2, 1), new(0, 1), new(2, 2) }, Outcome.XWin);
+        private static readonly BoardScenario _xWinsColumnZero = new(new CellCoordinate[] { new(0, 0), new(0, 1), new(1, 0), new(1, 1), new(2, 0) }, Outcome.XWin);
+        private static readonly BoardScenario _xWinsColumnOne = new(new CellCoordinate[] { new(0, 1), new(0, 0), new(1, 1), new(1, 0), new(2, 1) }, Outcome.XWin);
+        private static readonly BoardScenario _xWinsColumnTwo = new(new CellCoordinate[] { new(0, 2), new(0, 0), new(1, 2), new(1, 0), new(2, 2) }, Outcome.XWin);
+        private static readonly BoardScenario _xWinsTheMainDiagonal = new(new CellCoordinate[] { new(0, 0), new(0, 1), new(1, 1), new(0, 2), new(2, 2) }, Outcome.XWin);
+        private static readonly BoardScenario _xWinsTheAntiDiagonal = new(new CellCoordinate[] { new(0, 2), new(0, 0), new(1, 1), new(0, 1), new(2, 0) }, Outcome.XWin);
+        private static readonly BoardScenario _oWinsRowTwo = new(new CellCoordinate[] { new(0, 0), new(2, 0), new(0, 1), new(2, 1), new(1, 0), new(2, 2) }, Outcome.OWin);
+        private static readonly BoardScenario _leavesRowZeroIncomplete = new(new CellCoordinate[] { new(0, 0), new(1, 0), new(0, 1) });
+        private static readonly BoardScenario _leavesRowZeroMixed = new(new CellCoordinate[] { new(0, 0), new(0, 1), new(1, 0), new(1, 1), new(2, 1), new(0, 2) });
+        private static readonly BoardScenario _fillsToDraw = new(new CellCoordinate[] { new(0, 0), new(0, 1), new(0, 2), new(1, 1), new(1, 0), new(1, 2), new(2, 1), new(2, 0), new(2, 2) }, Outcome.Draw);
 
         private static IEnumerable<BoardScenario> WinningLines()
         {
@@ -44,10 +45,23 @@ namespace TicTacToeLab.EditModeTests
             yield return _oWinsRowTwo;
         }
 
-        private static IEnumerable<BoardScenario> WinsByEachMark()
+        private static IEnumerable<BoardScenario> TerminalGames()
         {
             yield return _xWinsRowZero;
             yield return _oWinsRowTwo;
+            yield return _fillsToDraw;
+        }
+
+        private static IEnumerable<TestCaseData> TerminalRejections()
+        {
+            yield return new TestCaseData(_xWinsRowZero, new CellCoordinate(2, 2))
+                .SetName("A_placement_after_an_X_win_is_rejected_without_changing_the_board");
+
+            yield return new TestCaseData(_oWinsRowTwo, new CellCoordinate(0, 2))
+                .SetName("A_placement_after_an_O_win_is_rejected_without_changing_the_board");
+
+            yield return new TestCaseData(_fillsToDraw, new CellCoordinate(0, 0))
+                .SetName("A_placement_after_a_draw_is_rejected_without_changing_the_board");
         }
 
         private static IEnumerable<BoardScenario> NonWinningPatterns()
@@ -64,10 +78,22 @@ namespace TicTacToeLab.EditModeTests
             yield return _fillsToDraw;
         }
 
+        // --- Fresh board ---
+
+        [Test]
+        public void A_fresh_board_is_empty_with_X_to_play_and_the_outcome_in_progress()
+        {
+            BoardModel sut = new();
+
+            Assert.That(sut.Turn, Is.EqualTo(Mark.X));
+            Assert.That(sut.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(BoardState.CaptureMarks(sut).Cast<Mark?>(), Is.All.Null);
+        }
+
         // --- Marks ---
 
         [Test]
-        public void A_placement_records_the_current_turns_mark_only_in_the_addressed_cell()
+        public void An_accepted_placement_returns_true_and_records_the_current_turns_mark_only_in_the_addressed_cell()
         {
             // Arrange
             Mark?[,] expectedMarks =
@@ -79,15 +105,17 @@ namespace TicTacToeLab.EditModeTests
             BoardModel sut = new();
 
             // Act
-            sut.PlaceMark(1, 1); // X
-            sut.PlaceMark(0, 2); // O
+            bool firstAccepted = sut.TryPlaceMark(new CellCoordinate(1, 1)); // X
+            bool secondAccepted = sut.TryPlaceMark(new CellCoordinate(0, 2)); // O
 
             // Assert
+            Assert.That(firstAccepted, Is.True, "The placement (1, 1) should be accepted.");
+            Assert.That(secondAccepted, Is.True, "The placement (0, 2) should be accepted.");
             for (int row = 0; row < 3; row++)
             {
                 for (int column = 0; column < 3; column++)
                 {
-                    Mark? actualMark = sut.GetMark(row, column);
+                    Mark? actualMark = sut.GetMark(new CellCoordinate(row, column));
                     Mark? expectedMark = expectedMarks[row, column];
                     string message = $"Cell ({row}, {column}) should hold {expectedMarks[row, column]?.ToString() ?? "nothing"}.";
                     Assert.That(actualMark, Is.EqualTo(expectedMark), message);
@@ -95,53 +123,111 @@ namespace TicTacToeLab.EditModeTests
             }
         }
 
+        // --- Rejected placements ---
+
+        [TestCase(3, 0)]
+        [TestCase(-1, 0)]
+        [TestCase(0, 3)]
+        [TestCase(0, -1)]
+        public void An_out_of_range_coordinate_is_rejected_without_changing_the_board(int row, int column)
+        {
+            // Arrange
+            BoardModel sut = new();
+            Assert.That(sut.TryPlaceMark(new CellCoordinate(1, 1)), Is.True, "The setup mark (1, 1) should be accepted.");
+            Mark turnBefore = sut.Turn;
+            Outcome outcomeBefore = sut.Outcome;
+            Mark?[,] marksBefore = BoardState.CaptureMarks(sut);
+
+            // Act
+            bool accepted = sut.TryPlaceMark(new CellCoordinate(row, column));
+
+            // Assert
+            Assert.That(accepted, Is.False);
+            Assert.That(sut.Turn, Is.EqualTo(turnBefore));
+            Assert.That(sut.Outcome, Is.EqualTo(outcomeBefore));
+            Assert.That(BoardState.CaptureMarks(sut), Is.EqualTo(marksBefore), "No cell should change when the coordinate is outside the board.");
+        }
+
+        [Test]
+        public void A_placement_on_a_marked_cell_is_rejected_without_changing_the_board()
+        {
+            // Arrange
+            BoardModel sut = new();
+            Assert.That(sut.TryPlaceMark(new CellCoordinate(0, 0)), Is.True, "The setup mark (0, 0) should be accepted.");
+            Mark turnBefore = sut.Turn;
+            Outcome outcomeBefore = sut.Outcome;
+            Mark?[,] marksBefore = BoardState.CaptureMarks(sut);
+
+            // Act
+            bool accepted = sut.TryPlaceMark(new CellCoordinate(0, 0));
+
+            // Assert
+            Assert.That(accepted, Is.False);
+            Assert.That(sut.Turn, Is.EqualTo(turnBefore));
+            Assert.That(sut.Outcome, Is.EqualTo(outcomeBefore));
+            Assert.That(BoardState.CaptureMarks(sut), Is.EqualTo(marksBefore), "A marked cell should keep its mark and the game should not advance.");
+        }
+
+        [TestCaseSource(nameof(TerminalRejections))]
+        public void A_placement_after_a_terminal_outcome_is_rejected_without_changing_the_board(BoardScenario game, CellCoordinate coordinate)
+        {
+            // Arrange
+            BoardModel sut = new();
+            PlayAll(sut, game.Placements);
+            Mark turnBefore = sut.Turn;
+            Outcome outcomeBefore = sut.Outcome;
+            Mark?[,] marksBefore = BoardState.CaptureMarks(sut);
+
+            // Act
+            bool accepted = sut.TryPlaceMark(coordinate);
+
+            // Assert
+            Assert.That(accepted, Is.False);
+            Assert.That(sut.Turn, Is.EqualTo(turnBefore));
+            Assert.That(sut.Outcome, Is.EqualTo(outcomeBefore));
+            Assert.That(BoardState.CaptureMarks(sut), Is.EqualTo(marksBefore), "A completed game should accept no more marks.");
+        }
+
         // --- Turns ---
 
         [TestCase(1, Mark.O)]
         [TestCase(2, Mark.X)]
-        public void The_turn_advances_to_the_other_mark_after_each_placed_mark_while_the_game_is_in_progress(int placedMarks, Mark expectedTurn)
+        public void The_turn_advances_to_the_other_mark_after_each_accepted_placement_while_the_game_is_in_progress(int placedMarks, Mark expectedTurn)
         {
             BoardModel sut = new();
 
             for (int index = 0; index < placedMarks; index++)
             {
-                sut.PlaceMark(0, index);
+                CellCoordinate coordinate = new(0, index);
+                bool accepted = sut.TryPlaceMark(coordinate);
+                Assert.That(accepted, Is.True, $"The scenario should accept the placement ({coordinate.Row}, {coordinate.Column}).");
             }
 
             Assert.That(sut.Turn, Is.EqualTo(expectedTurn));
             Assert.That(sut.Outcome, Is.EqualTo(Outcome.InProgress));
         }
 
-        [TestCaseSource(nameof(WinsByEachMark))]
-        public void The_winning_placement_does_not_advance_the_turn_so_the_turn_names_the_winner(BoardScenario game)
+        [TestCaseSource(nameof(TerminalGames))]
+        public void A_terminal_placement_leaves_the_turn_on_the_mark_that_just_played(BoardScenario game)
         {
             BoardModel sut = new();
 
             PlayAll(sut, game.Placements);
 
-            Assert.That(sut.Turn, Is.EqualTo(game.Winner));
-        }
-
-        [Test]
-        public void The_final_drawing_placement_does_not_advance_the_turn()
-        {
-            BoardModel sut = new();
-
-            PlayAll(sut, _fillsToDraw.Placements);
-
-            Assert.That(sut.Turn, Is.EqualTo(Mark.X)); // X placed the final mark.
+            Mark justPlayed = game.Placements.Length % 2 == 1 ? Mark.X : Mark.O;
+            Assert.That(sut.Turn, Is.EqualTo(justPlayed));
         }
 
         // --- Outcomes ---
 
         [TestCaseSource(nameof(WinningLines))]
-        public void Completing_a_line_wins_the_game(BoardScenario game)
+        public void Completing_a_line_reports_the_win_of_the_mark_that_completed_it(BoardScenario game)
         {
             BoardModel sut = new();
 
             PlayAll(sut, game.Placements);
 
-            Assert.That(sut.Outcome, Is.EqualTo(Outcome.Win));
+            Assert.That(sut.Outcome, Is.EqualTo(game.ExpectedOutcome));
         }
 
         [TestCaseSource(nameof(NonWinningPatterns))]
@@ -167,12 +253,12 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void A_win_on_the_last_empty_cell_is_a_win_not_a_draw()
         {
-            (int Row, int Column)[] winOnTheLastEmptyCell = { (0, 0), (2, 0), (0, 1), (1, 1), (1, 0), (1, 2), (2, 1), (2, 2), (0, 2) };
+            CellCoordinate[] winOnTheLastEmptyCell = { new(0, 0), new(2, 0), new(0, 1), new(1, 1), new(1, 0), new(1, 2), new(2, 1), new(2, 2), new(0, 2) };
             BoardModel sut = new();
 
             PlayAll(sut, winOnTheLastEmptyCell);
 
-            Assert.That(sut.Outcome, Is.EqualTo(Outcome.Win));
+            Assert.That(sut.Outcome, Is.EqualTo(Outcome.XWin));
         }
 
         // --- Reset ---
@@ -196,19 +282,20 @@ namespace TicTacToeLab.EditModeTests
             {
                 for (int column = 0; column < 3; column++)
                 {
-                    Mark? actualMark = sut.GetMark(row, column);
-                    Mark? expectedMark = freshBoard.GetMark(row, column);
+                    Mark? actualMark = sut.GetMark(new CellCoordinate(row, column));
+                    Mark? expectedMark = freshBoard.GetMark(new CellCoordinate(row, column));
                     string message = $"Cell ({row}, {column}) should match a fresh board.";
                     Assert.That(actualMark, Is.EqualTo(expectedMark), message);
                 }
             }
         }
 
-        private static void PlayAll(BoardModel boardModel, (int Row, int Column)[] placements)
+        private static void PlayAll(BoardModel boardModel, CellCoordinate[] placements)
         {
-            foreach ((int row, int column) in placements)
+            foreach (CellCoordinate coordinate in placements)
             {
-                boardModel.PlaceMark(row, column);
+                bool accepted = boardModel.TryPlaceMark(coordinate);
+                Assert.That(accepted, Is.True, $"The scenario should accept the placement ({coordinate.Row}, {coordinate.Column}).");
             }
         }
     }

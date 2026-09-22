@@ -408,7 +408,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6427381337086417004}
-  - component: {fileID: 1945200997279399766}
   - component: {fileID: 8594677800741898960}
   m_Layer: 0
   m_Name: MainMenuPanel
@@ -438,18 +437,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!225 &1945200997279399766
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4804283495418773254}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!114 &8594677800741898960
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -462,7 +449,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34752d35af83390439d55cececa2d9ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.MainMenuPanel
-  _safeAreaRect: {fileID: 8732087392333390395}
   _startButton: {fileID: 240719815863700468}
 --- !u!1 &7280169203113401455
 GameObject:

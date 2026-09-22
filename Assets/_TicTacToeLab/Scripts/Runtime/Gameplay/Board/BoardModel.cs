@@ -1,16 +1,11 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
     public class BoardModel
     {
         private const int DIMENSION = 3;
-        private const float CELL_SIZE = 1f;
-        private const float CELL_SPACING = 0.2f;
-        private const float CELL_STEP = CELL_SIZE + CELL_SPACING;
-        private const float CENTER_OFFSET = (DIMENSION - 1) * CELL_STEP * 0.5f;
 
         public int Dimension => DIMENSION;
         public Mark Turn { get; private set; } = Mark.X;
@@ -18,44 +13,14 @@ namespace TicTacToeLab.Runtime
 
         private readonly Mark?[,] _marks = new Mark?[DIMENSION, DIMENSION];
 
-        public IReadOnlyList<CellPlacement> GetCellPlacements()
+        public bool IsEmpty(CellCoordinate coordinate)
         {
-            List<CellPlacement> placements = new(DIMENSION * DIMENSION);
-
-            for (int row = 0; row < DIMENSION; row++)
-            {
-                for (int column = 0; column < DIMENSION; column++)
-                {
-                    placements.Add(new CellPlacement(row, column, GetCellLocalPoint(row, column)));
-                }
-            }
-
-            return placements;
+            return _marks[coordinate.Row, coordinate.Column] == null;
         }
 
-        public Vector3 GetCellLocalPoint(int row, int column)
+        public Mark? GetMark(CellCoordinate coordinate)
         {
-            return new Vector3(
-                column * CELL_STEP - CENTER_OFFSET,
-                CENTER_OFFSET - row * CELL_STEP,
-                0f);
-        }
-
-        public bool TryResolveCell(Vector3 localPoint, out int row, out int column)
-        {
-            row = 0;
-            column = 0;
-            return TryResolveAxis(localPoint.x, out column) && TryResolveAxis(-localPoint.y, out row);
-        }
-
-        public bool IsEmpty(int row, int column)
-        {
-            return _marks[row, column] == null;
-        }
-
-        public Mark? GetMark(int row, int column)
-        {
-            return _marks[row, column];
+            return _marks[coordinate.Row, coordinate.Column];
         }
 
         public void Reset()
@@ -65,13 +30,18 @@ namespace TicTacToeLab.Runtime
             Outcome = Outcome.InProgress;
         }
 
-        public void PlaceMark(int row, int column)
+        public bool TryPlaceMark(CellCoordinate coordinate)
         {
-            _marks[row, column] = Turn;
-
-            if (HasWonLine())
+            if (Outcome != Outcome.InProgress || !coordinate.IsWithin(DIMENSION) || !IsEmpty(coordinate))
             {
-                Outcome = Outcome.Win;
+                return false;
+            }
+
+            _marks[coordinate.Row, coordinate.Column] = Turn;
+
+            if (HasWonLine(Turn))
+            {
+                Outcome = Turn == Mark.X ? Outcome.XWin : Outcome.OWin;
             }
             else if (IsFull())
             {
@@ -82,6 +52,8 @@ namespace TicTacToeLab.Runtime
             {
                 Turn = Turn == Mark.X ? Mark.O : Mark.X;
             }
+
+            return true;
         }
 
         private bool IsFull()
@@ -90,7 +62,7 @@ namespace TicTacToeLab.Runtime
             {
                 for (int column = 0; column < DIMENSION; column++)
                 {
-                    if (IsEmpty(row, column))
+                    if (IsEmpty(new CellCoordinate(row, column)))
                     {
                         return false;
                     }
@@ -100,37 +72,24 @@ namespace TicTacToeLab.Runtime
             return true;
         }
 
-        private bool HasWonLine()
+        private bool HasWonLine(Mark mark)
         {
             for (int index = 0; index < DIMENSION; index++)
             {
-                if (IsLineWon(RowCells(index)) || IsLineWon(ColumnCells(index)))
+                if (IsLineComplete(RowCells(index), mark) || IsLineComplete(ColumnCells(index), mark))
                 {
                     return true;
                 }
             }
 
-            return IsLineWon(MainDiagonalCells()) || IsLineWon(AntiDiagonalCells());
+            return IsLineComplete(MainDiagonalCells(), mark) || IsLineComplete(AntiDiagonalCells(), mark);
         }
 
-        private bool IsLineWon(IEnumerable<Mark?> line)
+        private static bool IsLineComplete(IEnumerable<Mark?> line, Mark mark)
         {
-            Mark? firstMark = null;
-            bool hasFirstMark = false;
-
-            foreach (Mark? mark in line)
+            foreach (Mark? cellMark in line)
             {
-                if (mark == null)
-                {
-                    return false;
-                }
-
-                if (!hasFirstMark)
-                {
-                    firstMark = mark;
-                    hasFirstMark = true;
-                }
-                else if (mark != firstMark)
+                if (cellMark != mark)
                 {
                     return false;
                 }
@@ -169,19 +128,6 @@ namespace TicTacToeLab.Runtime
             {
                 yield return _marks[index, DIMENSION - 1 - index];
             }
-        }
-
-        private bool TryResolveAxis(float value, out int axisValue)
-        {
-            axisValue = Mathf.RoundToInt((value + CENTER_OFFSET) / CELL_STEP);
-
-            if (axisValue < 0 || axisValue >= DIMENSION)
-            {
-                return false;
-            }
-
-            float cellCenter = axisValue * CELL_STEP - CENTER_OFFSET;
-            return Mathf.Abs(value - cellCenter) <= CELL_SIZE * 0.5f;
         }
     }
 }

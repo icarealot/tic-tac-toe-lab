@@ -4,57 +4,41 @@ namespace TicTacToeLab.Runtime
 {
     public class Bootstrap : MonoBehaviour
     {
-        [SerializeField] private FactoryService _factoryServicePrefab;
+        [SerializeField] private Camera _camera;
+        [SerializeField] private BoardView _boardView;
+        [SerializeField] private ApplicationUI _applicationUI;
+        [SerializeField] private InputService _inputService;
+        [SerializeField] private DelayScheduler _delayScheduler;
 
-        private InputService _inputService;
-        private BoardSession _boardSession;
-        private AppStateMachine _stateMachine;
+        private BoardPresenter _boardPresenter;
+        private ApplicationFlow _applicationFlow;
 
         public void Awake()
         {
             Application.targetFrameRate = 60;
 
-#if UNITY_EDITOR || ENABLE_LOGGING
-            ILogService logService = new LogService();
-#else
-            ILogService logService = new NullLogService();
-#endif
-
-            FactoryService factoryService = Instantiate(_factoryServicePrefab);
-
-            IMainCamera mainCamera = factoryService.Get<IMainCamera>();
-            ICameraService cameraService = new CameraService(mainCamera.Camera);
-            ICoroutineService coroutineService = factoryService.Get<ICoroutineService>();
-
-            InputSystem_Actions inputActions = new();
-            _inputService = new InputService(inputActions);
-
             BoardModel boardModel = new();
-            IBoardView boardView = factoryService.Get<IBoardView>();
-            boardView.Construct(factoryService, boardModel.Dimension, boardModel.GetCellPlacements());
-            BoardPresenter boardPresenter = new(boardModel, boardView, _inputService, cameraService, logService);
-            _boardSession = new BoardSession(boardPresenter);
+            BoardLayout boardLayout = new(boardModel.Dimension);
+            ICameraService cameraService = new CameraService(_camera);
 
-            IUIRoot uiRoot = factoryService.Get<IUIRoot>();
-            IUIService uiService = new UIService(factoryService, uiRoot);
-
-            _stateMachine = new AppStateMachine(_inputService);
-            MainMenuState mainMenuState = new(_boardSession, _stateMachine, uiService);
-            GameplayState gameplayState = new(_boardSession, _stateMachine, uiService, _inputService);
-            GameCompleteState gameCompleteState = new(_boardSession, _stateMachine, uiService, coroutineService, _inputService);
-            _stateMachine.Add(mainMenuState);
-            _stateMachine.Add(gameplayState);
-            _stateMachine.Add(gameCompleteState);
-            _stateMachine.ChangeState<MainMenuState>();
-
-            logService.Log("Setup is done!");
+            _boardView.Construct(boardModel.Dimension, boardLayout.GetCellPlacements());
+            _boardPresenter = new BoardPresenter(boardModel, boardLayout, _boardView, _inputService, cameraService);
+            _applicationFlow = new ApplicationFlow(_boardPresenter, _applicationUI, _delayScheduler, _inputService);
+            _applicationFlow.Start();
         }
 
         public void OnDestroy()
         {
-            _stateMachine?.Dispose();
-            _boardSession?.Dispose();
-            _inputService?.Dispose();
+            _applicationFlow?.Dispose();
+            _applicationFlow = null;
+
+            _boardPresenter?.Dispose();
+            _boardPresenter = null;
+
+            if (_inputService != null)
+            {
+                _inputService.Dispose();
+            }
         }
     }
 }

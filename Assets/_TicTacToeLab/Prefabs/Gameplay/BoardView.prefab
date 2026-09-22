@@ -44,3 +44,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17c96bb9eda88274aac814b88bdae2c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.BoardView
+  _cellViewPrefab: {fileID: 6795083013748984243, guid: 47bd47c969b060047a112e618e20cb36, type: 3}

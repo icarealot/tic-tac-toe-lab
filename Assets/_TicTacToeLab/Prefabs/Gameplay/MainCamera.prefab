@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 8084358331175708961}
   - component: {fileID: 9208668326796207744}
   - component: {fileID: 4762179828088499088}
-  - component: {fileID: 5469407779022523933}
   m_Layer: 0
   m_Name: MainCamera
   m_TagString: MainCamera
@@ -138,15 +137,3 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!114 &5469407779022523933
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3294026118107988829}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fa4ceadfa4125ce469646165bc192af3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.MainCamera

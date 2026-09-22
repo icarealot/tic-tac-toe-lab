@@ -4,7 +4,7 @@ using UnityEngine;
 namespace TicTacToeLab.Runtime
 {
     [RequireComponent(typeof(SpriteRenderer))]
-    public class MarkView : MonoBehaviour, IMarkView
+    public class MarkView : MonoBehaviour
     {
         private SpriteRenderer SpriteRendererComponent
         {

@@ -12,23 +12,23 @@ namespace TicTacToeLab.Runtime
         public Outcome Outcome => _boardModel.Outcome;
 
         private readonly BoardModel _boardModel;
+        private readonly BoardLayout _boardLayout;
         private readonly IBoardView _boardView;
         private readonly IInputService _inputService;
         private readonly ICameraService _cameraService;
-        private readonly ILogService _logService;
 
         public BoardPresenter(
             BoardModel boardModel,
+            BoardLayout boardLayout,
             IBoardView boardView,
             IInputService inputService,
-            ICameraService cameraService,
-            ILogService logService)
+            ICameraService cameraService)
         {
             _boardModel = boardModel;
+            _boardLayout = boardLayout;
             _boardView = boardView;
             _inputService = inputService;
             _cameraService = cameraService;
-            _logService = logService;
 
             _inputService.Pressed += OnPressed;
         }
@@ -46,38 +46,22 @@ namespace TicTacToeLab.Runtime
 
         private void OnPressed(Vector2 screenPoint)
         {
-            if (_boardModel.Outcome != Outcome.InProgress)
-            {
-                _logService.Log("Rejected press: the game is over");
-                return;
-            }
-
             Vector3 worldPoint = _cameraService.ScreenToWorldPoint(screenPoint);
             Vector3 localPoint = _boardView.ToLocalPoint(worldPoint);
 
-            if (!_boardModel.TryResolveCell(localPoint, out int row, out int column))
+            if (!_boardLayout.TryResolvePoint(localPoint, out CellCoordinate coordinate))
             {
                 return;
             }
 
-            if (!_boardModel.IsEmpty(row, column))
+            Mark mark = _boardModel.Turn;
+            if (!_boardModel.TryPlaceMark(coordinate))
             {
-                _logService.Log($"Rejected press on occupied cell ({row}, {column})");
                 return;
             }
 
-            _boardView.ShowMark(row, column, _boardModel.Turn);
-            _boardModel.PlaceMark(row, column);
+            _boardView.ShowMark(coordinate, mark);
             TurnChanged?.Invoke(_boardModel.Turn);
-
-            if (_boardModel.Outcome == Outcome.Win)
-            {
-                _logService.Log($"{_boardModel.Turn} wins");
-            }
-            else if (_boardModel.Outcome == Outcome.Draw)
-            {
-                _logService.Log("Draw");
-            }
 
             if (_boardModel.Outcome != Outcome.InProgress)
             {

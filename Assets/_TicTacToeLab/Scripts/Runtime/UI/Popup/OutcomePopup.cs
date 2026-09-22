@@ -5,12 +5,10 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.Runtime
 {
-    public class OutcomePopup : Popup, IOutcomePopup
+    public class OutcomePopup : MonoBehaviour
     {
         private const string WIN_TITLE_FORMAT = "{0} Wins!";
         private const string DRAW_TITLE = "Draw!";
-
-        public Button ContinueButton => _continueButton;
 
         [SerializeField] private Button _continueButton;
         [SerializeField] private TMP_Text _titleText;
@@ -22,9 +20,9 @@ namespace TicTacToeLab.Runtime
             _continueButton.onClick.AddListener(OnContinueClicked);
         }
 
-        public void Setup(Outcome outcome, Mark turn, Action onContinue)
+        public void Setup(Outcome outcome, Action onContinue)
         {
-            _titleText.SetText(TitleFor(outcome, turn));
+            _titleText.SetText(TitleFor(outcome));
             _onContinue = onContinue;
         }
 
@@ -41,11 +39,12 @@ namespace TicTacToeLab.Runtime
             _onContinue?.Invoke();
         }
 
-        private static string TitleFor(Outcome outcome, Mark turn)
+        private static string TitleFor(Outcome outcome)
         {
             return outcome switch
             {
-                Outcome.Win => string.Format(WIN_TITLE_FORMAT, turn),
+                Outcome.XWin => string.Format(WIN_TITLE_FORMAT, Mark.X),
+                Outcome.OWin => string.Format(WIN_TITLE_FORMAT, Mark.O),
                 Outcome.Draw => DRAW_TITLE,
                 _ => throw new ArgumentOutOfRangeException(nameof(outcome), outcome, "The outcome popup can only present a terminal outcome.")
             };

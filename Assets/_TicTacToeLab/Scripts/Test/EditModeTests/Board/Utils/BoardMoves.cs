@@ -6,17 +6,17 @@ namespace TicTacToeLab.EditModeTests
     public sealed class BoardPresser
     {
         private readonly FakeInputService _inputService;
-        private readonly BoardModel _boardModel;
+        private readonly BoardLayout _boardLayout;
 
-        public BoardPresser(FakeInputService inputService, BoardModel boardModel)
+        public BoardPresser(FakeInputService inputService, BoardLayout boardLayout)
         {
             _inputService = inputService;
-            _boardModel = boardModel;
+            _boardLayout = boardLayout;
         }
 
-        public void Press(int row, int column)
+        public void Press(CellCoordinate coordinate)
         {
-            Vector3 cellCenter = _boardModel.GetCellLocalPoint(row, column);
+            Vector3 cellCenter = _boardLayout.GetCellLocalPoint(coordinate);
             _inputService.RaisePress(cellCenter);
         }
     }
@@ -25,27 +25,27 @@ namespace TicTacToeLab.EditModeTests
     {
         public static void WinRowZeroForX(BoardPresser presser)
         {
-            (int Row, int Column)[] _xWinsRowZero = { (0, 0), (1, 0), (0, 1), (1, 1), (0, 2) };
+            CellCoordinate[] _xWinsRowZero = { new(0, 0), new(1, 0), new(0, 1), new(1, 1), new(0, 2) };
             PressAll(presser, _xWinsRowZero);
         }
 
         public static void WinRowZeroForO(BoardPresser presser)
         {
-            (int Row, int Column)[] _oWinsRowZero = { (1, 0), (0, 0), (1, 1), (0, 1), (2, 2), (0, 2) };
+            CellCoordinate[] _oWinsRowZero = { new(1, 0), new(0, 0), new(1, 1), new(0, 1), new(2, 2), new(0, 2) };
             PressAll(presser, _oWinsRowZero);
         }
 
         public static void FillForDraw(BoardPresser presser)
         {
-            (int Row, int Column)[] _drawFillOrder = { (0, 0), (0, 1), (0, 2), (1, 1), (1, 0), (1, 2), (2, 1), (2, 0), (2, 2) };
+            CellCoordinate[] _drawFillOrder = { new(0, 0), new(0, 1), new(0, 2), new(1, 1), new(1, 0), new(1, 2), new(2, 1), new(2, 0), new(2, 2) };
             PressAll(presser, _drawFillOrder);
         }
 
-        private static void PressAll(BoardPresser presser, (int Row, int Column)[] moves)
+        private static void PressAll(BoardPresser presser, CellCoordinate[] moves)
         {
-            foreach ((int row, int column) in moves)
+            foreach (CellCoordinate coordinate in moves)
             {
-                presser.Press(row, column);
+                presser.Press(coordinate);
             }
         }
     }
