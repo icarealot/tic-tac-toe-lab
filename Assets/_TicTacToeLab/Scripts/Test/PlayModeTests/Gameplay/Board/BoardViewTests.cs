@@ -139,17 +139,19 @@ namespace TicTacToeLab.PlayModeTests
         private CellView CellAt(CellCoordinate coordinate)
         {
             Vector3 localPoint = _boardLayout.GetCellLocalPoint(coordinate);
+            CellView foundCell = null;
 
             foreach (CellView cell in _sut.GetComponentsInChildren<CellView>())
             {
                 if (cell.transform.localPosition == localPoint)
                 {
-                    return cell;
+                    foundCell = cell;
+                    break;
                 }
             }
 
-            Assert.Fail($"The board view should create a cell at coordinate ({coordinate.Row}, {coordinate.Column}).");
-            return null;
+            Assert.That(foundCell, Is.Not.Null, $"The board view should create a cell at coordinate ({coordinate.Row}, {coordinate.Column}).");
+            return foundCell;
         }
     }
 }

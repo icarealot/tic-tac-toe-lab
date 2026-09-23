@@ -8,10 +8,10 @@ namespace TicTacToeLab.EditModeTests
         [Test]
         public void A_cell_coordinate_reports_row_before_column_as_written()
         {
-            CellCoordinate coordinate = new(2, 1);
+            CellCoordinate sut = new(2, 1);
 
-            Assert.That(coordinate.Row, Is.EqualTo(2));
-            Assert.That(coordinate.Column, Is.EqualTo(1));
+            Assert.That(sut.Row, Is.EqualTo(2));
+            Assert.That(sut.Column, Is.EqualTo(1));
         }
 
         [Test]
@@ -31,9 +31,9 @@ namespace TicTacToeLab.EditModeTests
         [TestCase(1, 2)]
         public void A_cell_coordinate_inside_the_board_dimension_is_within_it(int row, int column)
         {
-            CellCoordinate coordinate = new(row, column);
+            CellCoordinate sut = new(row, column);
 
-            Assert.That(coordinate.IsWithin(3), Is.True);
+            Assert.That(sut.IsWithin(3), Is.True);
         }
 
         [TestCase(-1, 0)]
@@ -43,18 +43,18 @@ namespace TicTacToeLab.EditModeTests
         [TestCase(3, 3)]
         public void A_cell_coordinate_outside_the_board_dimension_is_not_within_it(int row, int column)
         {
-            CellCoordinate coordinate = new(row, column);
+            CellCoordinate sut = new(row, column);
 
-            Assert.That(coordinate.IsWithin(3), Is.False);
+            Assert.That(sut.IsWithin(3), Is.False);
         }
 
         [Test]
         public void An_out_of_range_cell_coordinate_keeps_its_values_so_callers_must_check_within_before_use()
         {
-            CellCoordinate coordinate = new(3, -1);
+            CellCoordinate sut = new(3, -1);
 
-            Assert.That(coordinate.Row, Is.EqualTo(3));
-            Assert.That(coordinate.Column, Is.EqualTo(-1));
+            Assert.That(sut.Row, Is.EqualTo(3));
+            Assert.That(sut.Column, Is.EqualTo(-1));
         }
 
         [TestCase(2, 1, 1, 2)]
