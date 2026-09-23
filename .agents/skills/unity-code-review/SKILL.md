@@ -62,7 +62,8 @@ Sort findings by score descending and report only this flat list in chat:
 ```markdown
 1. **[5] [Spec + Testing] <finding name>**
 
-- `<quoted requirement>` / `<path/to/file>`
+- `<quoted requirement>`
+- `<path/to/file>`
 - <Risk or hidden deviation>.
 - Action: <concrete fix>.
 ```
