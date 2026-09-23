@@ -1,29 +1,24 @@
 ---
 name: unity-code-review
-description: Review Unity changes against coding, specification, and testing requirements.
+description: Spawn a subagent to review staged Unity changes against coding, specification, and testing requirements.
+disable-model-invocation: true
 ---
 
-Review changes since a supplied fixed point through independent **Standards**, **Spec**, and **Testing** evaluations. Score, merge, tag, and sort the findings.
+Spawn a subagent to review the current Git index against applicable coding, specification, and testing requirements. The staged diff is the review boundary; use other files only as evidence.
 
-## 1. Capture the change set
+## 1. Establish the review set
 
-- Ask for a fixed point when absent, then confirm it with `git rev-parse <fixed-point>`.
-- Capture once: `git diff <fixed-point>`, `git diff --numstat <fixed-point>`, `git status --short`, `git ls-files --others --exclude-standard`, and `git log <fixed-point>..HEAD --oneline`.
-- Treat tracked worktree changes, staged changes, later commits, and untracked files as one change set.
-- Read every reviewable untracked text file completely. For changed binary files, inspect identities plus applicable Unity metadata or repository tooling; do not load binary patch payloads.
-- Stop on an invalid ref or when no tracked or untracked change exists.
+- Inspect `git status --short` and `git diff --cached`, including staged additions, modifications, deletions, and renames.
+- If there are no staged changes, report exactly `No staged changes to review.` and stop.
+- Read every staged reviewable text file completely. For binaries, inspect their identities and applicable Unity metadata or repository tooling; never load binary payloads.
+- Do not treat a supplied task, feature directory, file list, project scope, or unstaged/untracked change as a review target. Read related assets, configuration, prefabs, callers, and tests only to understand staged behavior.
 
 ## 2. Establish sources and evidence
 
-Classify the supplied scope:
-
-- **Task** — read the task and referenced spec completely.
-- **Feature** — read every file in the supplied feature directory completely.
-- **Project** — with no task or feature source, review the whole change set and omit the Spec evaluation.
-
-Find project coding and testing standards under `docs/`; omit an evaluation whose source is absent. Inspect every full changed file and, where relevant, its assets, configuration, prefabs, callers, and tests.
-
-Gather this evidence once. Then evaluate every changed hunk and caller-visible behavior independently against each applicable axis below; do not recapture or reread the complete change set between axes.
+- Find and read completely the single relevant task, specification, context, and decision sources. Each review covers one task.
+- If no task/specification source exists, omit the Spec evaluation.
+- Find project coding and testing standards under `docs/`; omit the corresponding evaluation when its source is absent.
+- Gather evidence once. Evaluate every relevant implementation detail and caller-visible behavior independently against each applicable axis without rereading the complete staged review set between axes.
 
 ## 3. Evaluate
 
@@ -33,26 +28,26 @@ Apply every documented coding rule. For each violation, record the rule and evid
 
 ### Spec
 
-Report missing, partial, extra, or incorrect behavior. Quote the controlling task or spec requirement and give a concrete fix.
+Report missing, partial, extra, or incorrect behavior. Quote the controlling task or specification requirement and give a concrete fix.
 
 ### Testing
 
-Apply every testing rule to changed production and test code. Review only behavior that automation can establish; human-judgment validation is outside the review boundary. Omit missing, deferred, incomplete, or unsigned human checks from findings, and never request human checklists or sign-off as remediation.
+Apply every testing rule to production and test code in the staged review set. Review only behavior that automation can establish. Omit human-judgment checks, including missing, deferred, incomplete, or unsigned human checks; never request human checklists or sign-off.
 
-For each changed caller-visible behavior within the automated boundary:
+For each caller-visible behavior within the automated boundary:
 
-1. Name its risk from the diff and spec contract.
+1. Name its risk from the implementation and spec contract.
 2. Select the cheapest sufficient automated validation level and smallest fixture.
-3. Verify that the selected check and evidence are recorded.
+3. Verify that the selected check and its evidence are recorded.
 
-Judge automated validation evidence rather than spec correctness; report a spec defect only when this evaluation exposes one. Report each retained test that violates a rule and each behavior lacking sufficient automated validation, with evidence and a concrete fix. For missing automation, name the behavior and sufficient fixture. Accept omitted automated validation only when its reason is recorded.
+Judge automated validation evidence rather than spec correctness; report a spec defect only when this evaluation exposes one. Report each retained test that violates a rule and each behavior lacking sufficient automated validation, with evidence and a concrete fix. For missing automation, name the behavior and sufficient fixture. Accept omitted automation only when its reason is recorded.
 
-Merge an issue seen on multiple axes and add all applicable tags instead of duplicating it.
+Merge issues found on multiple axes and apply all relevant tags instead of duplicating them.
 
 ### Score and tag
 
 - **5** — wrong or missing behavior, spec violation, or broken invariant
-- **4** — uncovered defect risk or hard standard violation that can hide bugs
+- **4** — uncovered defect risk or hard standards violation that can hide bugs
 - **3** — clear standards or testing-standard violation; quality risk
 - **2** — minor convention drift
 - **1** — style nit
@@ -60,9 +55,9 @@ Merge an issue seen on multiple axes and add all applicable tags instead of dupl
 
 Tag findings `[Standards]`, `[Spec]`, `[Testing]`, or a combination.
 
-## 4. Return only findings
+## 4. Report findings
 
-Sort by score descending and return only this flat list:
+Sort findings by score descending and report only this flat list in chat:
 
 ```markdown
 1. **[5] [Spec + Testing] <finding name>**
@@ -72,4 +67,4 @@ Sort by score descending and return only this flat list:
 - Action: <concrete fix>.
 ```
 
-Return exactly `No findings.` when clean.
+Report exactly `No findings.` when the staged changes are clean.

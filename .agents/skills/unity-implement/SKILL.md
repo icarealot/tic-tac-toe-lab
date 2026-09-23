@@ -1,16 +1,13 @@
 ---
 name: unity-implement
-description: Implement a Unity task or remediate Unity review findings end to end.
+description: Implement a Unity task end to end.
 ---
 
 Implement exactly one supplied work item.
 
 ## 1. Establish the boundary
 
-Accept one mode:
-
-- **Task** — read the supplied `docs/<feature>/tasks/<NN>-<slug>.md` and its referenced spec completely.
-- **Review remediation** — read the supplied feature directory completely and treat every inline finding as an acceptance criterion.
+Read the supplied `docs/<feature>/tasks/<NN>-<slug>.md` and its referenced spec completely.
 
 Before editing, require:
 
@@ -29,7 +26,7 @@ Find and apply project standards under `docs/` when present.
 - Use `/ui-ugui` for Runtime/Canvas UI and `/ui-imgui` for Editor IMGUI.
 - Apply `/unity-tdd` to automated behavior selected by the work item and testing standard.
 - Follow [test-protocol.md](test-protocol.md) for every test run.
-- After acceptance checks pass, rerun each EditMode or PlayMode suite required by the task's validation tier or implicated by review findings.
+- After acceptance checks pass, rerun each EditMode or PlayMode suite required by the task's validation tier.
 - Report Player builds and human playtests as deferred rather than running them.
 
 Use repository-root `.scratch/` for all temporary scripts, files, logs, exports, screenshots, and command output. Remove every artifact created for this work item before reporting.
@@ -43,6 +40,5 @@ Begin with exactly `Status: complete` only when every acceptance criterion is im
 Then list only:
 
 - `Changed:` every changed file path;
-- `Findings:` each finding and disposition, in remediation mode;
 - `Validation:` deferred or unavailable checks;
 - `TDD:` whether `/unity-tdd` was applied and why.
