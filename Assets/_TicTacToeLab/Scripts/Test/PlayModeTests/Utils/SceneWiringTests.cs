@@ -21,10 +21,12 @@ namespace TicTacToeLab.PlayModeTests
             yield return null;
         }
 
-        protected IEnumerator IE_PressCell(Mouse mouse, Transform cellTransform)
+        protected IEnumerator IE_PressCell(Mouse mouse, CellCoordinate coordinate)
         {
-            Vector3 screenPoint = Camera.main.WorldToScreenPoint(cellTransform.position);
+            Transform cell = CellAt(coordinate);
+            MarkView markBeforePress = cell.GetComponentInChildren<MarkView>();
 
+            Vector3 screenPoint = Camera.main.WorldToScreenPoint(cell.position);
             Set(mouse.position, new Vector2(screenPoint.x, screenPoint.y));
             InputSystem.Update();
             Press(mouse.leftButton);
@@ -32,7 +34,22 @@ namespace TicTacToeLab.PlayModeTests
             Release(mouse.leftButton);
             InputSystem.Update();
 
-            yield return null;
+            yield return PlayModeWait.IE_WaitUntilOrFail(
+                () => ShowsNewMark(cell, markBeforePress),
+                $"The board press at cell ({coordinate.Row}, {coordinate.Column}) should show its mark in that cell.");
+        }
+
+        protected static Transform CellAt(CellCoordinate coordinate)
+        {
+            GameObject cell = GameObject.Find($"Cell ({coordinate.Row}, {coordinate.Column})");
+            Assert.That(cell, Is.Not.Null, $"The production board should provide a cell at coordinate ({coordinate.Row}, {coordinate.Column}).");
+            return cell.transform;
+        }
+
+        private static bool ShowsNewMark(Transform cell, MarkView markBeforePress)
+        {
+            MarkView mark = cell.GetComponentInChildren<MarkView>();
+            return mark != null && mark != markBeforePress;
         }
 
         protected IEnumerator IE_ClickButton(Mouse mouse, UnityEngine.UI.Button button)

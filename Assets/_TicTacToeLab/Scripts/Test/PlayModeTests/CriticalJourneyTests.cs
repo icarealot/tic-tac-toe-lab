@@ -21,7 +21,7 @@ namespace TicTacToeLab.PlayModeTests
             yield return IE_StartGameThroughEventSystem(mouse);
 
             BoardView boardBeforeReset = Object.FindFirstObjectByType<BoardView>();
-            Transform firstCellBeforeReset = Cell(new CellCoordinate(0, 0));
+            Transform firstCellBeforeReset = CellAt(new CellCoordinate(0, 0));
             Assert.That(MarkAt(firstCellBeforeReset), Is.Null, "A newly started game should show an empty board.");
 
             // Act
@@ -53,12 +53,12 @@ namespace TicTacToeLab.PlayModeTests
             // Assert
             // Start resets the same board session in place before gameplay begins.
             Assert.That(Object.FindFirstObjectByType<BoardView>(), Is.SameAs(boardBeforeReset));
-            Assert.That(Cell(new CellCoordinate(0, 0)), Is.SameAs(firstCellBeforeReset));
+            Assert.That(CellAt(new CellCoordinate(0, 0)), Is.SameAs(firstCellBeforeReset));
             Assert.That(VisibleMarks(), Is.Empty);
             Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Not.Null);
 
             // Act
-            yield return IE_PressCell(mouse, firstCellBeforeReset);
+            yield return IE_PressCell(mouse, new CellCoordinate(0, 0));
 
             // Assert
             MarkView freshX = MarkAt(firstCellBeforeReset);
@@ -86,19 +86,14 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(Object.FindFirstObjectByType<GameplayPanel>(), Is.Not.Null, "Gameplay should remain present beneath the confirmation.");
         }
 
-        private static Transform Cell(CellCoordinate coordinate)
-        {
-            return GameObject.Find($"Cell ({coordinate.Row}, {coordinate.Column})").transform;
-        }
-
         private IEnumerator IE_CompleteXWin(Mouse mouse)
         {
             // X wins row 0; O uses row 1 between X's turns.
-            yield return IE_PressCell(mouse, Cell(new CellCoordinate(0, 0)));
-            yield return IE_PressCell(mouse, Cell(new CellCoordinate(1, 0)));
-            yield return IE_PressCell(mouse, Cell(new CellCoordinate(0, 1)));
-            yield return IE_PressCell(mouse, Cell(new CellCoordinate(1, 1)));
-            yield return IE_PressCell(mouse, Cell(new CellCoordinate(0, 2)));
+            yield return IE_PressCell(mouse, new CellCoordinate(0, 0));
+            yield return IE_PressCell(mouse, new CellCoordinate(1, 0));
+            yield return IE_PressCell(mouse, new CellCoordinate(0, 1));
+            yield return IE_PressCell(mouse, new CellCoordinate(1, 1));
+            yield return IE_PressCell(mouse, new CellCoordinate(0, 2));
         }
 
         private static MarkView MarkAt(Transform cell)
