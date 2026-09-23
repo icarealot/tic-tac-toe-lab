@@ -70,7 +70,7 @@ namespace TicTacToeLab.EditModeTests
                 .SetName("A_press_resolving_to_no_cell_leaves_the_game_unchanged");
 
             yield return new TestCaseData(new RejectedPress(
-                    BoardMoves.WinRowZeroForX,
+                    BoardPresses.WinRowZeroForX,
                     new Vector2(1.2f, -1.2f))) // The center of the still-empty cell (2, 2).
                 .SetName("A_press_after_the_game_is_completed_leaves_the_game_unchanged");
         }
@@ -137,7 +137,7 @@ namespace TicTacToeLab.EditModeTests
         private static IEnumerable<TestCaseData> CompletedGames()
         {
             yield return new TestCaseData(new CompletedGame(
-                    BoardMoves.WinRowZeroForX,
+                    BoardPresses.WinRowZeroForX,
                     new CellCoordinate(0, 2),
                     Mark.X,
                     Outcome.XWin,
@@ -145,7 +145,7 @@ namespace TicTacToeLab.EditModeTests
                 .SetName("A_winning_placement_shows_its_mark_keeps_the_turn_and_raises_only_the_game_ended_event");
 
             yield return new TestCaseData(new CompletedGame(
-                    BoardMoves.FillForDraw,
+                    BoardPresses.FillForDraw,
                     new CellCoordinate(2, 2),
                     Mark.X,
                     Outcome.Draw,
@@ -199,7 +199,7 @@ namespace TicTacToeLab.EditModeTests
             BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, boardLayout, fakeBoardView, fakeInputService);
             BoardPresser presser = new(fakeInputService, boardLayout);
 
-            BoardMoves.WinRowZeroForX(presser);
+            BoardPresses.WinRowZeroForX(presser);
 
             // Act
             sut.Reset();

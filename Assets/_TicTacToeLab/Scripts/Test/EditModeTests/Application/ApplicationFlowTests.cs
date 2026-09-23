@@ -83,11 +83,11 @@ namespace TicTacToeLab.EditModeTests
         public void Starting_a_game_resets_the_existing_board_before_showing_gameplay_and_enables_board_presses()
         {
             // Arrange
-            _boardModel.TryPlaceMark(new CellCoordinate(0, 0));
-            _boardModel.TryPlaceMark(new CellCoordinate(1, 0));
-            _boardModel.TryPlaceMark(new CellCoordinate(0, 1));
-            _boardModel.TryPlaceMark(new CellCoordinate(1, 1));
-            _boardModel.TryPlaceMark(new CellCoordinate(0, 2));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 0));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 0));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 1));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 1));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 2));
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.XWin));
 
             // Act
@@ -181,7 +181,7 @@ namespace TicTacToeLab.EditModeTests
             StartGameplay();
 
             // Act
-            BoardMoves.WinRowZeroForX(_presser);
+            BoardPresses.WinRowZeroForX(_presser);
 
             // Assert
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.XWin));
@@ -197,7 +197,7 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             StartGameplay();
-            BoardMoves.WinRowZeroForX(_presser);
+            BoardPresses.WinRowZeroForX(_presser);
 
             // Act
             _inputService.RaiseBack();
@@ -219,13 +219,13 @@ namespace TicTacToeLab.EditModeTests
 
         private static IEnumerable<TestCaseData> CompletedGames()
         {
-            yield return new TestCaseData((Action<BoardPresser>)BoardMoves.WinRowZeroForX, Outcome.XWin)
+            yield return new TestCaseData((Action<BoardPresser>)BoardPresses.WinRowZeroForX, Outcome.XWin)
                 .SetName("The_delayed_outcome_presents_an_X_win_over_the_unchanged_completed_board");
 
-            yield return new TestCaseData((Action<BoardPresser>)BoardMoves.WinRowZeroForO, Outcome.OWin)
+            yield return new TestCaseData((Action<BoardPresser>)BoardPresses.WinRowZeroForO, Outcome.OWin)
                 .SetName("The_delayed_outcome_presents_an_O_win_over_the_unchanged_completed_board");
 
-            yield return new TestCaseData((Action<BoardPresser>)BoardMoves.FillForDraw, Outcome.Draw)
+            yield return new TestCaseData((Action<BoardPresser>)BoardPresses.FillForDraw, Outcome.Draw)
                 .SetName("The_delayed_outcome_presents_a_draw_over_the_unchanged_completed_board");
         }
 
@@ -266,7 +266,7 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             StartGameplay();
-            BoardMoves.WinRowZeroForX(_presser);
+            BoardPresses.WinRowZeroForX(_presser);
             Mark?[,] completedMarks = BoardState.CaptureMarks(_boardModel);
             _delayScheduler.FirePending();
 
@@ -286,7 +286,7 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             StartGameplay();
-            BoardMoves.WinRowZeroForX(_presser);
+            BoardPresses.WinRowZeroForX(_presser);
             _delayScheduler.FirePending();
 
             // Act
@@ -302,7 +302,7 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             StartGameplay();
-            BoardMoves.WinRowZeroForX(_presser);
+            BoardPresses.WinRowZeroForX(_presser);
             _delayScheduler.FirePending();
             int mainMenuPresentationsBefore = _applicationUI.MainMenuPresentationCount;
 
@@ -321,7 +321,7 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             StartGameplay();
-            BoardMoves.WinRowZeroForX(_presser);
+            BoardPresses.WinRowZeroForX(_presser);
             _delayScheduler.FirePending();
             _applicationUI.ClickContinue();
 
@@ -463,7 +463,7 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             StartGameplay();
-            BoardMoves.WinRowZeroForX(_presser);
+            BoardPresses.WinRowZeroForX(_presser);
             Assert.That(_delayScheduler.HasPendingWork, Is.True);
 
             // Act
@@ -491,7 +491,7 @@ namespace TicTacToeLab.EditModeTests
 
             // Act
             _sut.Dispose();
-            BoardMoves.WinRowZeroForX(_presser);
+            BoardPresses.WinRowZeroForX(_presser);
 
             // Assert
             Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(0));

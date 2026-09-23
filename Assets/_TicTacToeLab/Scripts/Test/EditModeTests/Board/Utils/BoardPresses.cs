@@ -21,29 +21,29 @@ namespace TicTacToeLab.EditModeTests
         }
     }
 
-    public static class BoardMoves
+    public static class BoardPresses
     {
         public static void WinRowZeroForX(BoardPresser presser)
         {
-            CellCoordinate[] _xWinsRowZero = { new(0, 0), new(1, 0), new(0, 1), new(1, 1), new(0, 2) };
-            PressAll(presser, _xWinsRowZero);
+            CellCoordinate[] xWinRowZeroPlacements = { new(0, 0), new(1, 0), new(0, 1), new(1, 1), new(0, 2) };
+            PressAll(presser, xWinRowZeroPlacements);
         }
 
         public static void WinRowZeroForO(BoardPresser presser)
         {
-            CellCoordinate[] _oWinsRowZero = { new(1, 0), new(0, 0), new(1, 1), new(0, 1), new(2, 2), new(0, 2) };
-            PressAll(presser, _oWinsRowZero);
+            CellCoordinate[] oWinRowZeroPlacements = { new(1, 0), new(0, 0), new(1, 1), new(0, 1), new(2, 2), new(0, 2) };
+            PressAll(presser, oWinRowZeroPlacements);
         }
 
         public static void FillForDraw(BoardPresser presser)
         {
-            CellCoordinate[] _drawFillOrder = { new(0, 0), new(0, 1), new(0, 2), new(1, 1), new(1, 0), new(1, 2), new(2, 1), new(2, 0), new(2, 2) };
-            PressAll(presser, _drawFillOrder);
+            CellCoordinate[] drawFillPlacements = { new(0, 0), new(0, 1), new(0, 2), new(1, 1), new(1, 0), new(1, 2), new(2, 1), new(2, 0), new(2, 2) };
+            PressAll(presser, drawFillPlacements);
         }
 
-        private static void PressAll(BoardPresser presser, CellCoordinate[] moves)
+        private static void PressAll(BoardPresser presser, CellCoordinate[] placements)
         {
-            foreach (CellCoordinate coordinate in moves)
+            foreach (CellCoordinate coordinate in placements)
             {
                 presser.Press(coordinate);
             }
