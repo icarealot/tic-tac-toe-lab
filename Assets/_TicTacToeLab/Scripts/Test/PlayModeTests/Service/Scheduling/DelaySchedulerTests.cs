@@ -20,10 +20,18 @@ namespace TicTacToeLab.PlayModeTests
             _sut = new GameObject("DelaySchedulerTests").AddComponent<DelayScheduler>();
         }
 
-        [TearDown]
-        public void DestroyIsolatedScheduler()
+        [UnityTearDown]
+        public IEnumerator DestroyIsolatedScheduler()
         {
+            if (_sut == null)
+            {
+                yield break;
+            }
+
             UnityEngine.Object.Destroy(_sut.gameObject);
+            yield return PlayModeWait.IE_WaitUntilOrFail(
+                () => _sut == null,
+                "The scheduler fixture should be destroyed after the test.");
         }
 
         [UnityTest]

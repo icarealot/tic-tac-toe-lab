@@ -1,9 +1,11 @@
 #if UNITY_EDITOR
+using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
@@ -11,6 +13,7 @@ namespace TicTacToeLab.PlayModeTests
     {
         private const string OUTCOME_POPUP_PREFAB_PATH = "Assets/_TicTacToeLab/Prefabs/UI/Popup/OutcomePopup.prefab";
 
+        private GameObject _instance;
         private OutcomePopup _sut;
         private TMP_Text _titleText;
 
@@ -20,20 +23,26 @@ namespace TicTacToeLab.PlayModeTests
             GameObject outcomePopupPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(OUTCOME_POPUP_PREFAB_PATH);
             Assert.That(outcomePopupPrefab, Is.Not.Null, "The production outcome popup prefab must exist at its shipped path.");
 
-            _sut = UnityEngine.Object.Instantiate(outcomePopupPrefab).GetComponent<OutcomePopup>();
+            _instance = Object.Instantiate(outcomePopupPrefab);
+            _sut = _instance.GetComponent<OutcomePopup>();
             Assert.That(_sut, Is.Not.Null, "The outcome popup prefab must carry the OutcomePopup component.");
 
             _titleText = _sut.GetComponentInChildren<TMP_Text>();
             Assert.That(_titleText, Is.Not.Null, "The outcome popup prefab must carry its title text.");
         }
 
-        [TearDown]
-        public void DestroyOutcomePopupInstance()
+        [UnityTearDown]
+        public IEnumerator DestroyOutcomePopupInstance()
         {
-            if (_sut != null)
+            if (_instance == null)
             {
-                UnityEngine.Object.Destroy(_sut.gameObject);
+                yield break;
             }
+
+            Object.Destroy(_instance);
+            yield return PlayModeWait.IE_WaitUntilOrFail(
+                () => _instance == null,
+                "The outcome popup fixture should be destroyed after the test.");
         }
 
         [TestCase(Outcome.XWin, "X Wins!")]
