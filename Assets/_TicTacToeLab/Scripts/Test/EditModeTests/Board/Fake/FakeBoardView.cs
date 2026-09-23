@@ -11,10 +11,6 @@ namespace TicTacToeLab.EditModeTests
 
         private readonly List<(CellCoordinate Coordinate, Mark Mark)> _shownMarks = new();
 
-        public void Construct(int dimension, IReadOnlyList<CellPlacement> placements)
-        {
-        }
-
         public Vector3 ToLocalPoint(Vector3 worldPoint)
         {
             // A non-identity conversion proves the presenter applies the board-view boundary.

@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using TicTacToeLab.Runtime;
 using UnityEngine;
 
@@ -59,10 +58,6 @@ namespace TicTacToeLab.PlayModeTests
 
         private sealed class StubBoardView : IBoardView
         {
-            public void Construct(int dimension, IReadOnlyList<CellPlacement> placements)
-            {
-            }
-
             public Vector3 ToLocalPoint(Vector3 worldPoint)
             {
                 return worldPoint;
