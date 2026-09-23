@@ -21,8 +21,13 @@ namespace TicTacToeLab.EditModeTests
             BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, boardLayout, fakeBoardView, fakeInputService);
 
             List<Mark> turnEvents = new();
+            List<int> shownMarkCountsWhenTurnChanged = new();
             int gameEndedEvents = 0;
-            sut.TurnChanged += turn => turnEvents.Add(turn);
+            sut.TurnChanged += turn =>
+            {
+                turnEvents.Add(turn);
+                shownMarkCountsWhenTurnChanged.Add(fakeBoardView.ShownMarks.Count);
+            };
             sut.GameEnded += () => gameEndedEvents++;
 
             // Act
@@ -33,7 +38,8 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(fakeBoardView.ShownMarks, Is.EqualTo(new[] { (new CellCoordinate(0, 2), Mark.X), (new CellCoordinate(1, 0), Mark.O) }));
             Assert.That(boardModel.GetMark(new CellCoordinate(0, 2)), Is.EqualTo(Mark.X));
             Assert.That(boardModel.GetMark(new CellCoordinate(1, 0)), Is.EqualTo(Mark.O));
-            Assert.That(turnEvents, Is.EqualTo(new[] { Mark.O, Mark.X }));
+            Assert.That(turnEvents, Is.EqualTo(new[] { Mark.O, Mark.X }), "Each accepted nonterminal placement should announce exactly one turn change to the other mark.");
+            Assert.That(shownMarkCountsWhenTurnChanged, Is.EqualTo(new[] { 1, 2 }), "The placed mark should be shown before the turn change is announced.");
             Assert.That(gameEndedEvents, Is.EqualTo(0));
         }
 
@@ -105,17 +111,50 @@ namespace TicTacToeLab.EditModeTests
 
         // --- Game-ended events ---
 
+        public sealed class CompletedGame
+        {
+            public readonly Action<BoardPresser> Play;
+            public readonly CellCoordinate TerminalCoordinate;
+            public readonly Mark TerminalMark;
+            public readonly Outcome Outcome;
+            public readonly Mark[] ExpectedTurnChanges;
+
+            public CompletedGame(
+                Action<BoardPresser> play,
+                CellCoordinate terminalCoordinate,
+                Mark terminalMark,
+                Outcome outcome,
+                Mark[] expectedTurnChanges)
+            {
+                Play = play;
+                TerminalCoordinate = terminalCoordinate;
+                TerminalMark = terminalMark;
+                Outcome = outcome;
+                ExpectedTurnChanges = expectedTurnChanges;
+            }
+        }
+
         private static IEnumerable<TestCaseData> CompletedGames()
         {
-            yield return new TestCaseData((Action<BoardPresser>)BoardMoves.WinRowZeroForX)
-                .SetName("Completing_a_line_raises_the_game_ended_event_exactly_once");
+            yield return new TestCaseData(new CompletedGame(
+                    BoardMoves.WinRowZeroForX,
+                    new CellCoordinate(0, 2),
+                    Mark.X,
+                    Outcome.XWin,
+                    new[] { Mark.O, Mark.X, Mark.O, Mark.X }))
+                .SetName("A_winning_placement_shows_its_mark_keeps_the_turn_and_raises_only_the_game_ended_event");
 
-            yield return new TestCaseData((Action<BoardPresser>)BoardMoves.FillForDraw)
-                .SetName("Filling_the_board_without_a_line_raises_the_game_ended_event_exactly_once");
+            yield return new TestCaseData(new CompletedGame(
+                    BoardMoves.FillForDraw,
+                    new CellCoordinate(2, 2),
+                    Mark.X,
+                    Outcome.Draw,
+                    new[] { Mark.O, Mark.X, Mark.O, Mark.X, Mark.O, Mark.X, Mark.O, Mark.X }))
+                .SetName("A_drawing_placement_shows_its_mark_keeps_the_turn_and_raises_only_the_game_ended_event");
         }
 
         [TestCaseSource(nameof(CompletedGames))]
-        public void Completing_the_game_raises_the_game_ended_event_exactly_once(Action<BoardPresser> completeGame)
+        public void A_terminal_placement_shows_its_mark_keeps_the_turn_and_raises_only_the_game_ended_event(CompletedGame completedGame)
         {
             // Arrange
             BoardModel boardModel = new();
@@ -125,14 +164,26 @@ namespace TicTacToeLab.EditModeTests
             BoardPresenter sut = BoardPresenterBuilder.Build(boardModel, boardLayout, fakeBoardView, fakeInputService);
             BoardPresser presser = new(fakeInputService, boardLayout);
 
+            List<Mark> turnEvents = new();
             int gameEndedEvents = 0;
-            sut.GameEnded += () => gameEndedEvents++;
+            int shownMarkCountWhenGameEnded = 0;
+            sut.TurnChanged += turn => turnEvents.Add(turn);
+            sut.GameEnded += () =>
+            {
+                gameEndedEvents++;
+                shownMarkCountWhenGameEnded = fakeBoardView.ShownMarks.Count;
+            };
 
             // Act
-            completeGame(presser);
+            completedGame.Play(presser);
 
             // Assert
+            Assert.That(sut.Outcome, Is.EqualTo(completedGame.Outcome));
+            Assert.That(sut.Turn, Is.EqualTo(completedGame.TerminalMark), "The turn should remain on the mark just placed.");
+            Assert.That(turnEvents, Is.EqualTo(completedGame.ExpectedTurnChanges), "The terminal placement should not announce a turn change.");
+            Assert.That(fakeBoardView.ShownMarks[^1], Is.EqualTo((completedGame.TerminalCoordinate, completedGame.TerminalMark)), "The terminal placement should be shown.");
             Assert.That(gameEndedEvents, Is.EqualTo(1));
+            Assert.That(shownMarkCountWhenGameEnded, Is.EqualTo(fakeBoardView.ShownMarks.Count), "The terminal placement should be shown before the game-ended notification.");
         }
 
         // --- Reset and disposal ---

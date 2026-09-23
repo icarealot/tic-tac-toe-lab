@@ -61,12 +61,14 @@ namespace TicTacToeLab.Runtime
             }
 
             _boardView.ShowMark(coordinate, mark);
-            TurnChanged?.Invoke(_boardModel.Turn);
 
-            if (_boardModel.Outcome != Outcome.InProgress)
+            if (_boardModel.Outcome == Outcome.InProgress)
             {
-                GameEnded?.Invoke();
+                TurnChanged?.Invoke(_boardModel.Turn);
+                return;
             }
+
+            GameEnded?.Invoke();
         }
     }
 }
