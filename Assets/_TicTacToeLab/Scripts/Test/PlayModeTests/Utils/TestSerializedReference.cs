@@ -17,6 +17,11 @@ namespace TicTacToeLab.PlayModeTests
             _ = serializedOwner.ApplyModifiedPropertiesWithoutUndo();
         }
 
+        public static void ClearReference(Component owner, string fieldName)
+        {
+            AssignPrefab(owner, fieldName, null);
+        }
+
         public static UnityEngine.UI.Button ReadButton(Component owner, string fieldName)
         {
             SerializedObject serializedOwner = new(owner);
