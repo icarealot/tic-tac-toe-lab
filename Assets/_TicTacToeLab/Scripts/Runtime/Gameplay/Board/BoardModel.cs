@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace TicTacToeLab.Runtime
 {
@@ -58,76 +57,74 @@ namespace TicTacToeLab.Runtime
 
         private bool IsFull()
         {
-            for (int row = 0; row < DIMENSION; row++)
+            bool isFull = true;
+
+            foreach (Mark? mark in _marks)
             {
-                for (int column = 0; column < DIMENSION; column++)
-                {
-                    if (IsEmpty(new CellCoordinate(row, column)))
-                    {
-                        return false;
-                    }
-                }
+                isFull = isFull && mark != null;
             }
 
-            return true;
+            return isFull;
         }
 
         private bool HasWonLine(Mark mark)
         {
+            bool hasWonLine = false;
+
             for (int index = 0; index < DIMENSION; index++)
             {
-                if (IsLineComplete(RowCells(index), mark) || IsLineComplete(ColumnCells(index), mark))
-                {
-                    return true;
-                }
+                hasWonLine = hasWonLine || IsRowComplete(index, mark) || IsColumnComplete(index, mark);
             }
 
-            return IsLineComplete(MainDiagonalCells(), mark) || IsLineComplete(AntiDiagonalCells(), mark);
+            return hasWonLine || IsMainDiagonalComplete(mark) || IsAntiDiagonalComplete(mark);
         }
 
-        private static bool IsLineComplete(IEnumerable<Mark?> line, Mark mark)
+        private bool IsRowComplete(int row, Mark mark)
         {
-            foreach (Mark? cellMark in line)
-            {
-                if (cellMark != mark)
-                {
-                    return false;
-                }
-            }
+            bool isComplete = true;
 
-            return true;
-        }
-
-        private IEnumerable<Mark?> RowCells(int row)
-        {
             for (int column = 0; column < DIMENSION; column++)
             {
-                yield return _marks[row, column];
+                isComplete = isComplete && _marks[row, column] == mark;
             }
+
+            return isComplete;
         }
 
-        private IEnumerable<Mark?> ColumnCells(int column)
+        private bool IsColumnComplete(int column, Mark mark)
         {
+            bool isComplete = true;
+
             for (int row = 0; row < DIMENSION; row++)
             {
-                yield return _marks[row, column];
+                isComplete = isComplete && _marks[row, column] == mark;
             }
+
+            return isComplete;
         }
 
-        private IEnumerable<Mark?> MainDiagonalCells()
+        private bool IsMainDiagonalComplete(Mark mark)
         {
+            bool isComplete = true;
+
             for (int index = 0; index < DIMENSION; index++)
             {
-                yield return _marks[index, index];
+                isComplete = isComplete && _marks[index, index] == mark;
             }
+
+            return isComplete;
         }
 
-        private IEnumerable<Mark?> AntiDiagonalCells()
+        private bool IsAntiDiagonalComplete(Mark mark)
         {
+            bool isComplete = true;
+
             for (int index = 0; index < DIMENSION; index++)
             {
-                yield return _marks[index, DIMENSION - 1 - index];
+                isComplete = isComplete && _marks[index, DIMENSION - 1 - index] == mark;
             }
+
+            return isComplete;
         }
     }
 }
