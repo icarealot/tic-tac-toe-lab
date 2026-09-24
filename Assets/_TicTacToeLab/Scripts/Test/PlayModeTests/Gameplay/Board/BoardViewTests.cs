@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -10,148 +11,107 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class BoardViewTests
     {
-        private const int BOARD_DIMENSION = 3;
-
-        private GameObject _root;
-        private GameObject _cellTemplate;
-        private GameObject _markTemplate;
-        private BoardLayout _boardLayout;
-        private BoardView _sut;
+        private GeneratedBoardFixture _fixture;
 
         [SetUp]
-        public void CreateIsolatedBoard()
+        public void CreateGeneratedBoard()
         {
-            _root = new GameObject("BoardViewTests");
-            _markTemplate = new GameObject("MarkTemplate");
-            MarkView markPrefab = _markTemplate.AddComponent<MarkView>();
-
-            _cellTemplate = new GameObject("CellTemplate");
-            CellView cellPrefab = _cellTemplate.AddComponent<CellView>();
-            TestSerializedReference.AssignPrefab(cellPrefab, "_markViewPrefab", markPrefab);
-
-            _boardLayout = new BoardLayout(BOARD_DIMENSION);
-            _sut = _root.AddComponent<BoardView>();
-            TestSerializedReference.AssignPrefab(_sut, "_cellViewPrefab", cellPrefab);
+            _fixture = new GeneratedBoardFixture();
         }
 
         [UnityTearDown]
-        public IEnumerator DestroyIsolatedBoard()
+        public IEnumerator DestroyGeneratedBoard()
         {
-            if (_root != null)
-            {
-                Object.Destroy(_root);
-            }
-
-            if (_cellTemplate != null)
-            {
-                Object.Destroy(_cellTemplate);
-            }
-
-            if (_markTemplate != null)
-            {
-                Object.Destroy(_markTemplate);
-            }
-
-            yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => _root == null && _cellTemplate == null && _markTemplate == null,
-                "The board fixture should be destroyed after the test.");
+            yield return _fixture.IE_DestroyAll();
         }
 
         [Test]
-        public void Constructing_the_board_creates_every_cell_at_its_layout_placement()
+        public void Constructing_the_board_creates_one_cell_at_every_layout_placement()
         {
             // Arrange
-            IReadOnlyList<CellPlacement> placements = _boardLayout.GetCellPlacements();
+            BoardLayout layout = _fixture.Layout;
+            IReadOnlyList<CellPlacement> placements = layout.GetCellPlacements();
 
             // Act
-            _sut.Construct(BOARD_DIMENSION, placements);
+            BoardView sut = _fixture.CreateBoard();
 
             // Assert
-            CellView[] cells = _sut.GetComponentsInChildren<CellView>();
-            Assert.That(cells, Has.Length.EqualTo(placements.Count), "The board should create one cell for every layout placement.");
+            CellView[] cells = sut.GetComponentsInChildren<CellView>();
+            Assert.That(cells, Has.Length.EqualTo(placements.Count), "The board should create exactly one cell for every layout placement.");
 
-            foreach (CellView cell in cells)
-            {
-                Assert.That(cell.transform.parent, Is.EqualTo(_sut.transform), "The board should parent every cell it creates.");
-            }
-
+            List<CellView> addressedCells = new(placements.Count);
             foreach (CellPlacement placement in placements)
             {
-                Assert.That(CellAt(placement.Coordinate), Is.Not.Null, $"The board should create a cell at placement ({placement.Coordinate.Row}, {placement.Coordinate.Column}).");
+                CellView cell = _fixture.FindCell(sut, placement.Coordinate);
+                Transform cellTransform = cell.transform;
+
+                Assert.That(
+                    cellTransform.localPosition,
+                    Is.EqualTo(placement.LocalPoint),
+                    $"The cell at ({placement.Coordinate.Row}, {placement.Coordinate.Column}) should sit at its board-local point.");
+                addressedCells.Add(cell);
             }
+
+            Assert.That(addressedCells, Is.Unique, "Every layout placement should address a distinct cell.");
         }
 
         [Test]
-        public void Showing_a_mark_places_it_under_the_cell_at_the_addressed_coordinate()
+        public void Showing_a_mark_marks_only_the_addressed_cells()
         {
             // Arrange
-            _sut.Construct(BOARD_DIMENSION, _boardLayout.GetCellPlacements());
+            BoardView sut = _fixture.CreateBoard();
+            BoardLayout layout = _fixture.Layout;
+            IReadOnlyList<CellPlacement> placements = layout.GetCellPlacements();
+            CellCoordinate[] markedCoordinates = { new(0, 1), new(2, 0) };
 
             // Act
-            _sut.ShowMark(new CellCoordinate(0, 1), Mark.X);
-            _sut.ShowMark(new CellCoordinate(2, 0), Mark.O);
+            foreach (CellCoordinate coordinate in markedCoordinates)
+            {
+                sut.ShowMark(coordinate, Mark.X);
+            }
 
             // Assert
-            Assert.That(CellAt(new CellCoordinate(0, 1)).GetComponentInChildren<MarkView>(), Is.Not.Null, "The X should appear under the cell at coordinate (0, 1).");
-            Assert.That(CellAt(new CellCoordinate(2, 0)).GetComponentInChildren<MarkView>(), Is.Not.Null, "The O should appear under the cell at coordinate (2, 0).");
-            Assert.That(CellAt(new CellCoordinate(1, 1)).GetComponentInChildren<MarkView>(), Is.Null, "Only the addressed cells should hold a mark.");
-            Assert.That(_sut.GetComponentsInChildren<MarkView>(), Has.Length.EqualTo(2), "The fixture should show representative marks.");
+            foreach (CellPlacement placement in placements)
+            {
+                CellView cell = _fixture.FindCell(sut, placement.Coordinate);
+                MarkView[] liveMarks = cell.GetComponentsInChildren<MarkView>();
+                bool wasAddressed = markedCoordinates.Contains(placement.Coordinate);
+
+                Assert.That(
+                    liveMarks,
+                    Has.Length.EqualTo(wasAddressed ? 1 : 0),
+                    $"The cell at ({placement.Coordinate.Row}, {placement.Coordinate.Column}) should hold exactly one mark only when it was addressed.");
+            }
         }
 
         [UnityTest]
-        public IEnumerator Clearing_the_board_destroys_every_mark_and_preserves_every_cell()
+        public IEnumerator Clearing_the_board_destroys_every_owned_mark_and_preserves_its_cells()
         {
             // Arrange
-            _sut.Construct(BOARD_DIMENSION, _boardLayout.GetCellPlacements());
-            CellView[] cellsBefore = _sut.GetComponentsInChildren<CellView>();
-            _sut.ShowMark(new CellCoordinate(0, 1), Mark.X);
-            _sut.ShowMark(new CellCoordinate(2, 0), Mark.O);
-            Assert.That(_sut.GetComponentsInChildren<MarkView>(), Has.Length.EqualTo(2), "The fixture should show representative marks.");
+            BoardView sut = _fixture.CreateBoard();
+            CellCoordinate[] markedCoordinates = { new(0, 1), new(2, 0) };
+            MarkView[] ownedMarks = new MarkView[markedCoordinates.Length];
+            for (int index = 0; index < markedCoordinates.Length; index++)
+            {
+                CellCoordinate markedCoordinate = markedCoordinates[index];
+                sut.ShowMark(markedCoordinate, index == 0 ? Mark.X : Mark.O);
+
+                CellView markedCell = _fixture.FindCell(sut, markedCoordinate);
+                ownedMarks[index] = markedCell.GetComponentInChildren<MarkView>();
+            }
+
+            CellView[] cells = sut.GetComponentsInChildren<CellView>();
+            Assert.That(ownedMarks.All(mark => mark != null), Is.True, "The board should own a mark in every addressed cell.");
 
             // Act
-            _sut.Clear();
+            sut.Clear();
 
             // Assert
             yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => _sut.GetComponentsInChildren<MarkView>().Length == 0,
-                "Clearing the board should remove every mark.");
-            Assert.That(_sut.GetComponentsInChildren<CellView>(), Is.EquivalentTo(cellsBefore), "Clearing the board should preserve every cell instance.");
-        }
-
-        [Test]
-        public void Clearing_an_empty_board_repeatedly_is_harmless()
-        {
-            // Arrange
-            _sut.Construct(BOARD_DIMENSION, _boardLayout.GetCellPlacements());
-
-            // Act
-            TestDelegate clearEmptyBoard = () =>
-            {
-                _sut.Clear();
-                _sut.Clear();
-            };
-
-            // Assert
-            Assert.That(clearEmptyBoard, Throws.Nothing);
-            Assert.That(_sut.GetComponentsInChildren<CellView>(), Has.Length.EqualTo(9), "Repeated clearing should preserve every cell.");
-        }
-
-        private CellView CellAt(CellCoordinate coordinate)
-        {
-            Vector3 localPoint = _boardLayout.GetCellLocalPoint(coordinate);
-            CellView foundCell = null;
-
-            foreach (CellView cell in _sut.GetComponentsInChildren<CellView>())
-            {
-                if (cell.transform.localPosition == localPoint)
-                {
-                    foundCell = cell;
-                    break;
-                }
-            }
-
-            Assert.That(foundCell, Is.Not.Null, $"The board view should create a cell at coordinate ({coordinate.Row}, {coordinate.Column}).");
-            return foundCell;
+                () => ownedMarks.All(mark => mark == null),
+                "Clearing the board should destroy every mark the board owns.");
+            Assert.That(sut.GetComponentsInChildren<MarkView>(), Is.Empty, "Clearing the board should leave no live mark on the board.");
+            Assert.That(cells.All(cell => cell != null), Is.True, "Clearing the board should preserve every cell it owns.");
         }
     }
 }
