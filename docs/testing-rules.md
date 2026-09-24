@@ -1,15 +1,16 @@
 # Testing Rules
 
-Choose the cheapest sufficient validation and smallest fixture for each behavior.
+Build the smallest sufficient validation portfolio: use the cheapest sufficient level and smallest fixture for each distinct caller-visible behavior or risk.
 
 1. Name the caller-visible contract and the risk that warrants validation.
 2. Decide whether automation can prove it or human judgment is required.
-3. Select the smallest validation level that can prove it. A feature may use several levels when each covers a distinct risk.
-4. Record the selected checks and the reason for any deliberate omission.
+3. Select the smallest validation level that can prove it. Use several levels only when each covers a distinct risk.
+4. Retain a test only while it supplies durable evidence not already established at a cheaper owning seam.
+5. Communicate the selected checks and the reason for any deliberate omission. For human validation, explicit user confirmation in the current task is sufficient evidence; do not require a repository checklist or permanent validation artifact unless the user requests one.
 
-When requesting missing coverage, name the unprotected behavior and its cheapest sufficient fixture rather than appealing to test count, coverage, or bug history.
+Test quantity and production-to-test line ratios are not goals. When requesting missing coverage, name the unprotected behavior and its cheapest sufficient fixture rather than appealing to test count, coverage, or bug history.
 
-Automate named game rules, calculations, meaningful branches, state changes, lifecycle behavior, infrastructure or external-service contracts, and critical player journeys. Prioritize deterministic business logic and failure-sensitive infrastructure or external contracts. Do not retain tests for trivial construction, logic-free pass-through wrappers, or glue with no meaningful branching, coordination, state, or lifecycle behavior.
+Automate named game rules, calculations, meaningful branches, state changes, lifecycle behavior, infrastructure or external-service contracts, and critical player journeys through non-production seams. Prioritize deterministic business logic and failure-sensitive infrastructure or external contracts. Remove temporary probes, superseded cases, duplicate evidence, and tests for trivial construction, logic-free pass-through wrappers, or glue with no meaningful branching, coordination, state, or lifecycle behavior.
 
 ## Validation levels
 
@@ -17,22 +18,22 @@ Automate named game rules, calculations, meaningful branches, state changes, lif
 
 Use for deterministic behavior that needs no `GameObject`, scene, prefab, asset, frame, coroutine timing, or Unity lifecycle. Unity value types are fine. Test exact delays through an injected or fake scheduling boundary.
 
-### 2. Unity and production validation
+### 2. Isolated Unity validation
 
 - **Isolated PlayMode:** Use for focused component, lifecycle, physics, or other engine behavior. Create only the required `GameObject`s and clean them up.
-- **Production prefab:** Use when functional serialized configuration or runtime wiring is part of the behavior. Identify the fixture by stable domain role and name the configuration or wiring risk. Do not use production-prefab validation to assert presentation-only values; validate those manually.
-- **Production scene:** Use only when bootstrap, input routing, or cross-object shipped-scene wiring is the behavior. Identify the scene by stable domain role and name the distinct risk; keep journeys short by proving branches at deterministic seams. Do not load a scene merely to locate a component.
 
 ### 3. Platform and human validation
 
 - **Player Build:** Use for platform-sensitive behavior that cannot be established in the Editor.
-- **Human Playtest:** Use for presentation, feel, audio, controls, camera behavior, usability, level design, and other qualities requiring human judgment. Record concrete manual checks.
+- **Human Playtest:** Use for production prefab and scene wiring, presentation, feel, audio, controls, camera behavior, usability, level design, and other qualities assigned to human validation. Identify each production fixture by stable domain role and state the exact interaction and observable outcome to the user. The validation is complete when the user explicitly confirms that outcome is acceptable; no repository checklist is required.
+
+An implementation may create an automated production-prefab or production-scene check when it materially helps establish wiring behavior. Treat it as a disposable implementation aid: remove its code before completion and leave the final production-asset check to a user-confirmed Human Playtest.
 
 ## UI validation boundary
 
-Automate UI behavior such as navigation and state transitions, window-stack and visibility rules, button callbacks and input routing, meaningful interaction branches, bootstrap wiring, and deterministic layout calculations such as safe-area arithmetic.
+Automate UI behavior such as navigation and state transitions, window-stack and visibility rules, button callbacks and input routing, meaningful interaction branches, bootstrap behavior through non-production seams, and deterministic layout calculations such as safe-area arithmetic.
 
-Validate presentation manually, including colors, typography, spacing, alignment, visual hierarchy, aspect-ratio behavior, animation appearance, cadence, smoothness and feel, decorative text or images, and exact `RectTransform` or serialized styling values. Do not assert prefab styling, hierarchy, anchors, font sizes, colors, or presentation-only animation frames. Do not use real-time waits to prove visual animation timing. When behavior and presentation are combined, automate behavior through the cheapest nonvisual public seam and record presentation requirements as a manual checklist.
+Validate presentation manually, including colors, typography, spacing, alignment, visual hierarchy, aspect-ratio behavior, animation appearance, cadence, smoothness and feel, decorative text or images, and exact `RectTransform` or serialized styling values. Do not assert prefab styling, hierarchy, anchors, font sizes, colors, or presentation-only animation frames. Do not use real-time waits to prove visual animation timing. When behavior and presentation are combined, automate behavior through the cheapest nonvisual public seam and state the presentation requirements to the user for confirmation.
 
 ## Observe behavior
 
@@ -41,7 +42,7 @@ Validate presentation manually, including colors, typography, spacing, alignment
 - Derive expected values from an independent rule, worked example, or known-good literal rather than copying the production calculation.
 - Do not assert private sequencing, internal collaborator calls, or private methods unless they are part of an agreed public contract. Assert ordering only when ordering is behavior; use one lifecycle round trip when it establishes an invariant and parameterize equivalent cases.
 - Use the behavior's result as evidence. Mutable copies, styling, hierarchy, unrelated control counts, and other side channels do not prove behavior.
-- For uGUI behavior without pointer or raycast wiring, invoke the instantiated production button's `onClick` event after `Awake()` has run. Use full pointer-to-`EventSystem` input only for that distinct integration risk.
+- For uGUI behavior without pointer or raycast wiring, invoke the isolated fixture's button `onClick` event after `Awake()` has run. Use full pointer-to-`EventSystem` input only for that distinct integration risk.
 
 ## Handle system boundaries
 

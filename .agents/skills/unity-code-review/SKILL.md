@@ -17,14 +17,16 @@ Spawn a subagent to review the current Git index against applicable coding, spec
 
 - Find and read completely the single relevant task, specification, context, and decision sources. Each review covers one task.
 - If no task/specification source exists, omit the Spec evaluation.
-- Find project coding and testing standards under `docs/`; omit the corresponding evaluation when its source is absent.
+- Find project standards under `docs/`; omit the corresponding evaluation when its source is absent.
 - Gather evidence once. Evaluate every relevant implementation detail and caller-visible behavior independently against each applicable axis without rereading the complete staged review set between axes.
 
 ## 3. Evaluate
 
 ### Standards
 
-Apply every documented coding rule. For each violation, record the rule and evidence, the risk it hides, and a concrete fix.
+Apply every documented coding rule. Limit smallest-sufficient-change findings to staged additions and old paths made obsolete by the staged change; omit unrelated legacy cleanup.
+
+For each violation, record the rule and evidence, the risk it hides, and a concrete fix.
 
 ### Spec
 
@@ -40,16 +42,16 @@ For each caller-visible behavior within the automated boundary:
 2. Select the cheapest sufficient automated validation level and smallest fixture.
 3. Verify that the selected check and its evidence are recorded.
 
-Judge automated validation evidence rather than spec correctness; report a spec defect only when this evaluation exposes one. Report each retained test that violates a rule and each behavior lacking sufficient automated validation, with evidence and a concrete fix. For missing automation, name the behavior and sufficient fixture. Accept omitted automation only when its reason is recorded.
+Judge automated validation evidence rather than spec correctness; report a spec defect only when this evaluation exposes one. Report each retained test that violates a rule and each behavior lacking sufficient automated validation, with evidence and a concrete fix. For missing automation within the testing standard's automated boundary, name the behavior and sufficient fixture. Accept omitted automation only when its reason is recorded.
 
 Merge issues found on multiple axes and apply all relevant tags instead of duplicating them.
 
 ### Score and tag
 
 - **5** — wrong or missing behavior, spec violation, or broken invariant
-- **4** — uncovered defect risk or hard standards violation that can hide bugs
-- **3** — clear standards or testing-standard violation; quality risk
-- **2** — minor convention drift
+- **4** — uncovered defect risk or hard standards violation, including complexity that can hide bugs
+- **3** — clear standards or testing-standard violation, including unjustified maintenance surface
+- **2** — minor convention drift or removable indirection
 - **1** — style nit
 - **0** — omit
 

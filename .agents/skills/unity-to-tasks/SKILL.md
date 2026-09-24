@@ -14,9 +14,9 @@ Use the context already in the conversation. If the user supplies a spec path, r
 
 ### 2. Explore the codebase when needed
 
-- Explore the repository, project standards in `docs/` if needed.
+- Explore the repository, project standards in `docs/`.
 - Use the project's domain glossary vocabulary, apply the project standards and respect applicable ADRs.
-- Look for opportunities to prefactor: make the change easy, then make the easy change.
+- Plan prefactoring only when the current work would otherwise create duplication, unsafe coupling, or an oversized change, and the prefactoring lowers the final system's complexity.
 
 ### 3. Draft vertical slices
 
@@ -25,12 +25,12 @@ Each tracer-bullet slice:
 - Cuts a narrow but complete path through every applicable layer rather than implementing one horizontal layer.
 - Is independently demoable or verifiable.
 - Fits within one fresh context window.
-- Follows any prerequisite prefactoring.
+- Follows any necessary prerequisite prefactoring.
 - Derives its validation from the discovered testing standard.
 
-Give every task its blocking edges. A task with no blockers can start immediately.
+Merge tightly coupled slices when separating them would require disposable production scaffolding, duplicate fixtures, or abstractions with no lasting value. Minimize total implementation complexity rather than task count.
 
-When a production fixture is selected, identify it by stable domain role and state the distinct configuration or wiring risk. Keep implementation paths out of tasks.
+Give every task its blocking edges. A task with no blockers can start immediately. Keep implementation paths out of tasks.
 
 **Wide refactors are the exception to vertical slicing.** A wide refactor is one mechanical change—such as renaming a shared symbol—whose blast radius fans across the codebase so no narrow slice can land green. Sequence it as expand–contract:
 

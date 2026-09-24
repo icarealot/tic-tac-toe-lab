@@ -1,5 +1,11 @@
 # Coding Standards
 
+## Smallest sufficient change
+
+Preserve required behavior, clarity, and domain integrity with the least maintenance surface. Prefer, in order: delete obsolete behavior, reuse an existing capability, change configuration, simplify the design, then add code. Every addition must serve a current requirement, invariant, or concrete risk; remove task-created scaffolding, duplication, and dead paths before completion.
+
+Optimize for understandable code rather than raw line count. Additional structure earns its place when it models a current domain concept, protects an invariant, localizes change, or makes behavior clearer.
+
 ## Production code
 
 ### Naming
@@ -35,10 +41,9 @@ Order class members as follows:
 
 ## Design rules
 
-- **Model concepts once.** Remove duplicated logic, group values that travel together, and introduce domain types when primitives obscure a meaningful concept.
-- **Keep behavior with its owner.** Put behavior near the data it uses, keep one member-access step per line, hide long navigation chains, and remove layers that merely delegate.
-- **Localize change.** Centralize recurring type-based branches, keep code that changes together, and split modules that change for unrelated reasons.
-- **Earn abstractions.** Keep only abstractions required by current behavior. Use composition when a subtype cannot honor most inherited behavior or when a class has many instance variables.
-- Keep methods and classes small and focused. Keep each method to one level of indentation. Use guard clauses or polymorphism when they make control flow clearer.
-- Wrap primitives and strings when they represent meaningful domain concepts, but do not wrap every Unity value type mechanically. Give collections with rules a domain owner.
+- Remove duplicated logic, group values that travel together, and introduce domain types when primitives obscure a meaningful concept.
+- Put behavior near the data it uses, keep one member-access step per line, hide long navigation chains, and remove layers that merely delegate.
+- Centralize recurring type-based branches, keep code that changes together, and split modules that change for unrelated reasons.
+- Every abstraction must solve a present, named problem; keep only those required by current behavior. Use composition when a subtype cannot honor most inherited behavior or when a class has many instance variables.
+- Use guard clauses or polymorphism when they make control flow clearer.
 - Use behavior rather than mutable getters and setters. Use private serialized fields for Inspector configuration and expose read-only properties or purposeful methods when callers need access.
