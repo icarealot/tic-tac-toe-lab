@@ -3,49 +3,35 @@ using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using TMPro;
-using UnityEditor;
-using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace TicTacToeLab.PlayModeTests
 {
     public sealed class GameplayPanelTests
     {
-        private const string GAMEPLAY_PANEL_PREFAB_PATH = "Assets/_TicTacToeLab/Prefabs/UI/Panel/GameplayPanel.prefab";
-
-        private GameObject _instance;
+        private GeneratedApplicationUIFixture _fixture;
         private GameplayPanel _sut;
+        private Button _backButton;
+        private TMP_Text _turnText;
         private BoardPresenterHarness _boardPresenterHarness;
 
         [SetUp]
-        public void CreateProductionGameplayPanel()
+        public void CreateGeneratedGameplayPanel()
         {
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GAMEPLAY_PANEL_PREFAB_PATH);
-            Assert.That(prefab, Is.Not.Null, "The production gameplay panel prefab must exist at its shipped path.");
-
-            _instance = Object.Instantiate(prefab);
-            _sut = _instance.GetComponent<GameplayPanel>();
-            Assert.That(_sut, Is.Not.Null, "The production gameplay panel prefab must carry its component.");
-
+            _fixture = new GeneratedApplicationUIFixture();
+            (_sut, _backButton, _turnText) = _fixture.CreateGameplayPanel();
             _boardPresenterHarness = new BoardPresenterHarness();
         }
 
         [UnityTearDown]
-        public IEnumerator DestroyGameplayPanel()
+        public IEnumerator DestroyGeneratedGameplayPanel()
         {
-            if (_instance == null)
-            {
-                yield break;
-            }
-
-            Object.Destroy(_instance);
-            yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => _instance == null,
-                "The gameplay panel fixture should be destroyed after the test.");
+            yield return _fixture.IE_DestroyAll();
         }
 
         [Test]
-        public void Gameplay_shows_the_presenters_current_turn_when_it_is_shown()
+        public void Gameplay_shows_the_presenters_current_turn_when_it_is_set_up()
         {
             // Arrange
             // X owns the first turn; this places a mark so the presenter's current turn is not the default one.
@@ -55,7 +41,7 @@ namespace TicTacToeLab.PlayModeTests
             _sut.Setup(_boardPresenterHarness.Presenter, () => { });
 
             // Assert
-            Assert.That(TurnText(), Is.EqualTo("O's turn"), "Gameplay should show the presenter's current turn.");
+            Assert.That(_turnText.text, Is.EqualTo("O's turn"), "Gameplay should show the presenter's current turn.");
         }
 
         [Test]
@@ -68,12 +54,21 @@ namespace TicTacToeLab.PlayModeTests
             _boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
 
             // Assert
-            Assert.That(TurnText(), Is.EqualTo("O's turn"), "Gameplay should follow the presenter's turn changes.");
+            Assert.That(_turnText.text, Is.EqualTo("O's turn"), "Gameplay should follow the presenter's turn changes.");
         }
 
-        private string TurnText()
+        [Test]
+        public void Gameplay_back_routes_exactly_once_to_the_supplied_action()
         {
-            return _sut.GetComponentInChildren<TMP_Text>(includeInactive: true).text;
+            // Arrange
+            int backCount = 0;
+            _sut.Setup(_boardPresenterHarness.Presenter, () => backCount++);
+
+            // Act
+            _backButton.onClick.Invoke();
+
+            // Assert
+            Assert.That(backCount, Is.EqualTo(1), "The Back button should route to the supplied back action exactly once.");
         }
     }
 }

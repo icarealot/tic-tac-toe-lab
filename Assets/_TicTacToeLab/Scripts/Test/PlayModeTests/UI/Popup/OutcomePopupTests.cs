@@ -3,46 +3,29 @@ using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using TMPro;
-using UnityEditor;
-using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace TicTacToeLab.PlayModeTests
 {
     public sealed class OutcomePopupTests
     {
-        private const string OUTCOME_POPUP_PREFAB_PATH = "Assets/_TicTacToeLab/Prefabs/UI/Popup/OutcomePopup.prefab";
-
-        private GameObject _instance;
+        private GeneratedApplicationUIFixture _fixture;
         private OutcomePopup _sut;
+        private Button _continueButton;
         private TMP_Text _titleText;
 
         [SetUp]
-        public void InstantiateProductionOutcomePopup()
+        public void CreateGeneratedOutcomePopup()
         {
-            GameObject outcomePopupPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(OUTCOME_POPUP_PREFAB_PATH);
-            Assert.That(outcomePopupPrefab, Is.Not.Null, "The production outcome popup prefab must exist at its shipped path.");
-
-            _instance = Object.Instantiate(outcomePopupPrefab);
-            _sut = _instance.GetComponent<OutcomePopup>();
-            Assert.That(_sut, Is.Not.Null, "The outcome popup prefab must carry the OutcomePopup component.");
-
-            _titleText = _sut.GetComponentInChildren<TMP_Text>();
-            Assert.That(_titleText, Is.Not.Null, "The outcome popup prefab must carry its title text.");
+            _fixture = new GeneratedApplicationUIFixture();
+            (_sut, _continueButton, _titleText) = _fixture.CreateOutcomePopup();
         }
 
         [UnityTearDown]
-        public IEnumerator DestroyOutcomePopupInstance()
+        public IEnumerator DestroyGeneratedOutcomePopup()
         {
-            if (_instance == null)
-            {
-                yield break;
-            }
-
-            Object.Destroy(_instance);
-            yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => _instance == null,
-                "The outcome popup fixture should be destroyed after the test.");
+            yield return _fixture.IE_DestroyAll();
         }
 
         [TestCase(Outcome.XWin, "X Wins!")]
@@ -50,9 +33,25 @@ namespace TicTacToeLab.PlayModeTests
         [TestCase(Outcome.Draw, "Draw!")]
         public void The_popup_reports_the_terminal_outcome_as_its_title(Outcome outcome, string expectedTitle)
         {
+            // Act
             _sut.Setup(outcome, () => { });
 
-            Assert.That(_titleText.text, Is.EqualTo(expectedTitle));
+            // Assert
+            Assert.That(_titleText.text, Is.EqualTo(expectedTitle), "The popup should report the outcome it was shown.");
+        }
+
+        [Test]
+        public void Continuing_routes_exactly_once_to_the_supplied_action()
+        {
+            // Arrange
+            int continueCount = 0;
+            _sut.Setup(Outcome.XWin, () => continueCount++);
+
+            // Act
+            _continueButton.onClick.Invoke();
+
+            // Assert
+            Assert.That(continueCount, Is.EqualTo(1), "The Continue button should route to the supplied continue action exactly once.");
         }
     }
 }
