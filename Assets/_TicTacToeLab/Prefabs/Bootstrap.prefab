@@ -47,5 +47,4 @@ MonoBehaviour:
   _cameraPrefab: {fileID: 8084358331175708961, guid: f50388c368d7e95499c880712a2dc99a, type: 3}
   _boardViewPrefab: {fileID: 7764209929606935850, guid: 49d9e3d690428db40901b4e0519beecb, type: 3}
   _applicationUIPrefab: {fileID: 6785018831052929371, guid: 5f7a782a927308a4fbecebd13fe3ec00, type: 3}
-  _inputServicePrefab: {fileID: 7522889149744086980, guid: e67883683417ecd438465301b10270dd, type: 3}
   _delaySchedulerPrefab: {fileID: 434579308536541517, guid: 3cd6015e263a0fa4993000f7daef6130, type: 3}

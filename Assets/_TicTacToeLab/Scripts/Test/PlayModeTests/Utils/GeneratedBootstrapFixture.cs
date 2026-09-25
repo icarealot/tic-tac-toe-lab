@@ -22,7 +22,6 @@ namespace TicTacToeLab.PlayModeTests
         private readonly BoardView _boardViewTemplate;
         private readonly ApplicationUI _applicationUITemplate;
         private readonly Camera _cameraTemplate;
-        private readonly InputService _inputServiceTemplate;
         private readonly DelayScheduler _delaySchedulerTemplate;
 
         public GeneratedBootstrapFixture()
@@ -37,7 +36,6 @@ namespace TicTacToeLab.PlayModeTests
             _boardViewTemplate = board.BoardTemplate;
             _applicationUITemplate = ApplicationUI.CreateApplicationUI();
             _cameraTemplate = CreateRoot("Generated camera template").AddComponent<Camera>();
-            _inputServiceTemplate = CreateRoot("Generated input service template").AddComponent<InputService>();
             _delaySchedulerTemplate = CreateRoot("Generated delay scheduler template").AddComponent<DelayScheduler>();
         }
 
@@ -53,7 +51,6 @@ namespace TicTacToeLab.PlayModeTests
             TestSerializedReference.AssignPrefab(bootstrap, "_cameraPrefab", _cameraTemplate);
             TestSerializedReference.AssignPrefab(bootstrap, "_boardViewPrefab", _boardViewTemplate);
             TestSerializedReference.AssignPrefab(bootstrap, "_applicationUIPrefab", _applicationUITemplate);
-            TestSerializedReference.AssignPrefab(bootstrap, "_inputServicePrefab", _inputServiceTemplate);
             TestSerializedReference.AssignPrefab(bootstrap, "_delaySchedulerPrefab", _delaySchedulerTemplate);
         }
 
@@ -70,7 +67,6 @@ namespace TicTacToeLab.PlayModeTests
             return AdaptersInFixtureScene<Camera>().Cast<Component>()
                 .Concat(AdaptersInFixtureScene<BoardView>())
                 .Concat(AdaptersInFixtureScene<ApplicationUI>())
-                .Concat(AdaptersInFixtureScene<InputService>())
                 .Concat(AdaptersInFixtureScene<DelayScheduler>())
                 .ToArray();
         }
@@ -103,7 +99,6 @@ namespace TicTacToeLab.PlayModeTests
             return adapter == _cameraTemplate
                 || adapter == _boardViewTemplate
                 || adapter == _applicationUITemplate
-                || adapter == _inputServiceTemplate
                 || adapter == _delaySchedulerTemplate;
         }
 

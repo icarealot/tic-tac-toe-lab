@@ -7,7 +7,6 @@ namespace TicTacToeLab.Runtime
         [SerializeField] private Camera _cameraPrefab;
         [SerializeField] private BoardView _boardViewPrefab;
         [SerializeField] private ApplicationUI _applicationUIPrefab;
-        [SerializeField] private InputService _inputServicePrefab;
         [SerializeField] private DelayScheduler _delaySchedulerPrefab;
 
         private Camera _camera;
@@ -30,8 +29,8 @@ namespace TicTacToeLab.Runtime
             _camera = InstantiateRoot(_cameraPrefab);
             _boardView = InstantiateRoot(_boardViewPrefab);
             _applicationUI = InstantiateRoot(_applicationUIPrefab);
-            _inputService = InstantiateRoot(_inputServicePrefab);
             _delayScheduler = InstantiateRoot(_delaySchedulerPrefab);
+            _inputService = new InputService();
 
             BoardModel boardModel = new();
             BoardLayout boardLayout = new(boardModel.Dimension);
@@ -54,13 +53,11 @@ namespace TicTacToeLab.Runtime
             bool hasCameraPrefab = IsPrefabAssigned(_cameraPrefab, "MainCamera");
             bool hasBoardViewPrefab = IsPrefabAssigned(_boardViewPrefab, "BoardView");
             bool hasApplicationUIPrefab = IsPrefabAssigned(_applicationUIPrefab, "ApplicationUI");
-            bool hasInputServicePrefab = IsPrefabAssigned(_inputServicePrefab, "InputService");
             bool hasDelaySchedulerPrefab = IsPrefabAssigned(_delaySchedulerPrefab, "DelayScheduler");
 
             return hasCameraPrefab
                 && hasBoardViewPrefab
                 && hasApplicationUIPrefab
-                && hasInputServicePrefab
                 && hasDelaySchedulerPrefab;
         }
 
@@ -99,6 +96,7 @@ namespace TicTacToeLab.Runtime
             if (_inputService != null)
             {
                 _inputService.Dispose();
+                _inputService = null;
             }
         }
 
@@ -107,13 +105,11 @@ namespace TicTacToeLab.Runtime
             DestroyOwnedRoot(_camera);
             DestroyOwnedRoot(_boardView);
             DestroyOwnedRoot(_applicationUI);
-            DestroyOwnedRoot(_inputService);
             DestroyOwnedRoot(_delayScheduler);
 
             _camera = null;
             _boardView = null;
             _applicationUI = null;
-            _inputService = null;
             _delayScheduler = null;
         }
 

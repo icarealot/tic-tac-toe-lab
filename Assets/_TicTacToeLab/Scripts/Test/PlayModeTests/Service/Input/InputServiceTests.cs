@@ -11,7 +11,6 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class InputServiceTests : InputTestFixture
     {
-        private GameObject _serviceObject;
         private InputService _sut;
         private InputActionAsset _serviceActions;
 
@@ -19,20 +18,30 @@ namespace TicTacToeLab.PlayModeTests
         {
             base.Setup();
             InputActionAsset[] assetsBeforeService = Resources.FindObjectsOfTypeAll<InputActionAsset>();
-            _serviceObject = new GameObject("InputServiceTests");
-            _sut = _serviceObject.AddComponent<InputService>();
+            _sut = new InputService();
             _serviceActions = Resources.FindObjectsOfTypeAll<InputActionAsset>()
                 .Single(asset => !assetsBeforeService.Contains(asset));
         }
 
         public override void TearDown()
         {
-            if (_serviceObject != null)
-            {
-                Object.DestroyImmediate(_serviceObject);
-            }
-
+            _sut.Dispose();
             base.TearDown();
+        }
+
+        [Test]
+        public void A_newly_constructed_service_does_not_publish_pointer_presses()
+        {
+            // Arrange
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            int pressCount = 0;
+            _sut.Pressed += _ => pressCount++;
+
+            // Act
+            PressPointer(mouse, new Vector2(50f, 50f));
+
+            // Assert
+            Assert.That(pressCount, Is.EqualTo(0), "A newly constructed service should not publish presses until player press is enabled.");
         }
 
         [Test]
@@ -126,18 +135,6 @@ namespace TicTacToeLab.PlayModeTests
                 () => _serviceActions == null,
                 "Disposal should destroy the Input System action asset the service created.");
             Assert.That(disposeRepeatedly, Throws.Nothing, "Disposing the service repeatedly should be harmless.");
-        }
-
-        [UnityTest]
-        public IEnumerator Destroying_the_service_releases_its_input_actions()
-        {
-            // Act
-            Object.Destroy(_serviceObject);
-
-            // Assert
-            yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => _serviceActions == null,
-                "Destroying the service should release the Input System action asset it created.");
         }
 
         [Test]

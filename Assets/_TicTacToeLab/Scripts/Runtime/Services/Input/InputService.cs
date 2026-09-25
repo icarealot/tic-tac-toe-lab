@@ -4,25 +4,20 @@ using UnityEngine.InputSystem;
 
 namespace TicTacToeLab.Runtime
 {
-    public class InputService : MonoBehaviour, IInputService, IDisposable
+    public sealed class InputService : IInputService, IDisposable
     {
         public event Action<Vector2> Pressed;
         public event Action BackPressed;
 
         private InputSystem_Actions _actions;
 
-        private void Awake()
+        public InputService()
         {
             _actions = new InputSystem_Actions();
             _actions.Player.Press.performed += OnPressPerformed;
             _actions.Player.Back.performed += OnBackPerformed;
             _actions.Player.Enable();
             _actions.Player.Press.Disable();
-        }
-
-        private void OnDestroy()
-        {
-            Dispose();
         }
 
         public void Dispose()
