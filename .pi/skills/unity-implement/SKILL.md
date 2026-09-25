@@ -27,8 +27,8 @@ Find and apply project standards under `docs/` when present. Trace the existing 
 - Apply `/unity-tdd` to automated behavior selected by the work item and testing standard.
 - Follow [test-protocol.md](test-protocol.md) for every test run.
 - After acceptance checks pass, apply the smallest-sufficient-change standard to the task's diff.
-- After simplification and disposable-check removal, rerun each EditMode or PlayMode suite required by the task's validation tier.
-- Report Player builds and human playtests as deferred rather than running them.
+- After simplification and disposable-check removal, rerun each EditMode or PlayMode suite required by the task's selected test levels.
+- Report human playtesting, including any required Player Build, as deferred rather than running it.
 
 Use repository-root `.scratch/` for all temporary scripts, files, logs, exports, screenshots, and command output. Remove every artifact created for this work item before reporting.
 

@@ -39,10 +39,10 @@ Apply every testing rule to production and test code in the staged review set. R
 For each caller-visible behavior within the automated boundary:
 
 1. Name its risk from the implementation and spec contract.
-2. Select the cheapest sufficient automated validation level and smallest fixture.
-3. Verify that the selected check and its evidence are recorded.
+2. Select the cheapest sufficient test level—unit, integration, or E2E—and smallest fixture.
+3. Verify that the tests provide sufficient evidence.
 
-Judge automated validation evidence rather than spec correctness; report a spec defect only when this evaluation exposes one. Report each retained test that violates a rule and each behavior lacking sufficient automated validation, with evidence and a concrete fix. For missing automation within the testing standard's automated boundary, name the behavior and sufficient fixture. Accept omitted automation only when its reason is recorded.
+Judge automated validation evidence rather than spec correctness; report a spec defect only when this evaluation exposes one. Report each retained test that violates a rule and each behavior lacking sufficient automated validation, with evidence and a concrete fix. For missing automation within the testing standard's automated boundary, name the behavior and sufficient fixture.
 
 Merge issues found on multiple axes and apply all relevant tags instead of duplicating them.
 

@@ -47,7 +47,7 @@ Present the proposed breakdown as a numbered list. For every task show:
 - **Title**: a short descriptive name.
 - **Blocked by**: only tasks that genuinely gate it.
 - **What it delivers**: independently verifiable end-to-end behavior.
-- **Validation tier**: the feature-specific validation decision and rationale derived from the standards.
+- **Validation**: the feature-specific test level or human-playtesting decision and rationale derived from the standards.
 
 Ask whether the granularity and blocking edges are right and whether any tasks should be merged or split. Iterate until approved.
 
@@ -73,7 +73,7 @@ Describe the independently verifiable end-to-end behavior from the user's perspe
 
 Reference each blocking task, or write "None (can start immediately)."
 
-## Validation tier
+## Validation
 
 Record the feature-specific checks and rationale derived from the project standards.
 

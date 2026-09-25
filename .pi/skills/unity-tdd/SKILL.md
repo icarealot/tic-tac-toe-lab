@@ -1,6 +1,6 @@
 ---
 name: unity-tdd
-description: Test-drive Unity features, fixes, or integration tests with a red-green loop.
+description: Test-drive Unity features, fixes, or automated tests with a red-green loop.
 ---
 
 Test-drive one behavior slice at a time through its public seam.
@@ -15,4 +15,4 @@ For each behavior selected for retained automation by the testing standard:
 
 Work vertically. Do not bulk-write tests, anticipate later cases, or add speculative behavior. End each loop at green.
 
-After the slice is green, apply the testing standard's retention rule and rerun the affected retained tests.
+After the slice is green, apply the testing standard's owning-seam and duplicate-evidence rules, then rerun the affected retained tests.

@@ -1,49 +1,43 @@
 # Coding Standards
 
-## Smallest sufficient change
-
-Preserve required behavior, clarity, and domain integrity with the least maintenance surface. Prefer, in order: delete obsolete behavior, reuse an existing capability, change configuration, simplify the design, then add code. Every addition must serve a current requirement, invariant, or concrete risk; remove task-created scaffolding, duplication, and dead paths before completion.
-
-Optimize for understandable code rather than raw line count. Additional structure earns its place when it models a current domain concept, protects an invariant, localizes change, or makes behavior clearer.
+Make the smallest sufficient change. Preserve required behavior, clarity, and domain integrity with the least maintenance surface.
 
 ## Production code
 
 ### Naming
 
-- Constants use `SNAKE_UPPER_CASE`.
-- Private fields use `_camelCase`.
-- Production methods returning `IEnumerator` use an `IE_` prefix.
+- Use `SNAKE_UPPER_CASE` for constants.
+- Use `_camelCase` for private fields.
+- Prefix production methods returning `IEnumerator` with `IE_`.
 - Use `string.Empty` instead of `""`.
-- Names should reveal what a function, variable, or type does or holds. Do not abbreviate names. Flag mysterious names during review and rename them; if no honest name emerges, clarify the design.
-
-### Member order
-
-Order class members as follows:
-
-1. Events
-2. Properties
-3. Fields
-4. Methods
+- Use complete names that reveal what a type, member, or value does or holds. If no honest name emerges, clarify the design.
 
 ### Unity
 
 - Never use null propagation or coalescing (`?.`, `??`, or `??=`) on Unity objects such as `MonoBehaviour`, `ScriptableObject`, and `Component`.
-- Serialize button fields and wire `onClick` with `AddListener` in `Awake()` and `RemoveListener` in `OnDestroy()`. Keep prefab `On Click ()` lists empty.
-- Use TextMesh Pro's `SetText(...)` method instead of assigning through the `text` property.
+- Serialize button fields. Add `onClick` listeners in `Awake()`, remove them in `OnDestroy()`, and keep prefab `On Click ()` lists empty.
+- Use TextMesh Pro's `SetText(...)` instead of assigning through `text`.
 
 ## Test code
 
 - Name a local primary subject `sut` and a fixture-held subject `_sut`. Tests without one honest subject are exempt.
-- Use `Assert.That` and name tests in plain English as observable behavior, with underscores separating words.
-- Arrange state in each test and keep Arrange, Act, and Assert distinct. Use fixture setup or teardown only for centralized lifecycle ownership and reliable cleanup.
-- Parameterize scenarios or extract helpers only to remove meaningful duplication, not for formatting uniformity.
-- Verify behavior through the narrowest public seam where a caller observes the result. If none exists, add a purposeful method or read-only observation that represents a real caller-visible contract. Do not add mutable getters or implementation-only APIs solely to expose test state.
+- Use `Assert.That` and name tests as observable behavior with underscores between words.
+- Arrange state in each test and keep Arrange, Act, and Assert distinct.
+- Use fixture setup and teardown only for shared lifecycle ownership and reliable cleanup.
+- Parameterize cases or extract helpers only to remove meaningful duplication.
 
-## Design rules
+## Do
 
-- Remove duplicated logic, group values that travel together, and introduce domain types when primitives obscure a meaningful concept.
-- Put behavior near the data it uses, keep one member-access step per line, hide long navigation chains, and remove layers that merely delegate.
-- Centralize recurring type-based branches, keep code that changes together, and split modules that change for unrelated reasons.
-- Every abstraction must solve a present, named problem; keep only those required by current behavior. Use composition when a subtype cannot honor most inherited behavior or when a class has many instance variables.
-- Use guard clauses or polymorphism when they make control flow clearer.
-- Use behavior rather than mutable getters and setters. Use private serialized fields for Inspector configuration and expose read-only properties or purposeful methods when callers need access.
+- Prefer, in order: delete obsolete behavior, reuse an existing capability, change configuration, simplify the design, then add code.
+- Require every addition and abstraction to serve a current requirement, invariant, or concrete risk.
+- Optimize for understandable code rather than raw line count.
+- Declare every concrete class `sealed` unless it is intentionally designed for inheritance.
+- Keep behavior near the data it uses and expose purposeful methods or read-only observations.
+- Introduce domain types or composition when they clarify real concepts and responsibilities.
+
+## Don’t
+
+- Don’t add speculative abstractions or task-created scaffolding.
+- Don’t leave duplicated logic, dead paths, long navigation chains, or layers that only delegate.
+- Don’t expose mutable state when a purposeful behavior or read-only observation is sufficient.
+- Don’t use inheritance when a subtype cannot honor most inherited behavior.
