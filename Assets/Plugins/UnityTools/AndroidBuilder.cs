@@ -45,12 +45,12 @@ namespace Icarealot.UnityTools
             [CliArg("outputPath", "Output file, absolute or relative to the project root. A .aab extension builds an App Bundle; anything else builds an APK.", Required = true)] string outputPath,
             [CliArg("version", "Value for PlayerSettings.bundleVersion, e.g. 0.1.0.", Required = true)] string version,
             [CliArg("buildNumber", "Value for PlayerSettings.Android.bundleVersionCode.", Required = true)] int buildNumber,
-            [CliArg("defines", "Semicolon-separated Scripting Define Symbols for Android. Empty clears them.")] string defines = "",
+            [CliArg("defines", "Semicolon-separated Scripting Define Symbols for Android. Empty clears them.")] string defines = null,
             [CliArg("development", "Build a development player (profiler, script debugging, on-device console).")] bool development = false,
-            [CliArg("keystorePath", "Custom keystore file. Empty falls back to Unity's debug keystore.")] string keystorePath = "",
-            [CliArg("keystorePassword", "Keystore password. Required when keystorePath is given.")] string keystorePassword = "",
-            [CliArg("keyAlias", "Key alias inside the keystore. Required when keystorePath is given.")] string keyAlias = "",
-            [CliArg("keyAliasPassword", "Key alias password. Defaults to the keystore password.")] string keyAliasPassword = "")
+            [CliArg("keystorePath", "Custom keystore file. Empty falls back to Unity's debug keystore.")] string keystorePath = null,
+            [CliArg("keystorePassword", "Keystore password. Required when keystorePath is given.")] string keystorePassword = null,
+            [CliArg("keyAlias", "Key alias inside the keystore. Required when keystorePath is given.")] string keyAlias = null,
+            [CliArg("keyAliasPassword", "Key alias password. Defaults to the keystore password.")] string keyAliasPassword = null)
         {
             AndroidBuildRequest request = new()
             {
