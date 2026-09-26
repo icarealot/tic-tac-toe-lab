@@ -12,7 +12,8 @@ Tic Tac Toe Lab exists to explore Unity testing and an architecture friendlier t
 
 - Deterministic rules, application flow, and exact delays should run in fast EditMode tests through an injected or fake scheduling boundary.
 - Unity lifecycle, input, and other non-presentation engine behavior need focused PlayMode validation in isolated fixtures.
-- Production prefab and scene wiring, presentation, and camera behavior need human validation rather than permanent automation.
+- Distinct production-prefab serialized wiring risks and one critical player journey need sparse permanent PlayMode automation.
+- Presentation, camera feel, and other qualities requiring human judgment need human validation rather than permanent automation.
 - Dependencies must be visible rather than resolved through global state.
 - The production scene should remain a minimal entry point rather than a second composition definition.
 - Ownership and teardown of long-lived runtime objects should be explicit.
@@ -40,7 +41,7 @@ Bootstrap creates only the long-lived root adapters. Runtime Unity objects below
 
 The project keeps one runtime assembly and its existing namespace and feature-oriented folders. Potentially reusable code remains cohesive inside the project until another project provides a concrete extraction requirement.
 
-Tests use the cheapest sufficient fixture: deterministic rules and application flow in plain EditMode, and focused component, lifecycle, input, and uGUI behavior in isolated PlayMode fixtures built from generated objects. Permanent automation stops at non-production seams; production prefab and scene wiring, including the authored-scene invariant and Bootstrap's ownership of separately rooted adapters in the shipped scene, is assigned to a user-confirmed Human Playtest. Tests may substitute system boundaries but do not require production interfaces solely to fake owned code.
+Tests use the cheapest sufficient fixture: deterministic rules and application flow in plain EditMode, and focused component, lifecycle, input, and uGUI behavior in isolated PlayMode fixtures built from generated objects. Generated fixtures remain the preferred seam for detailed component and lifecycle behavior. Sparse production-asset automation adds only what generated fixtures cannot prove: focused PlayMode checks for distinct serialized wiring risks in production prefabs, and one sparse PlayMode journey through the authored `Main` scene covering the critical player route from the main menu through an X win and back to the main menu. These checks observe caller-visible behavior with bounded timeouts rather than asserting private fields, exact hierarchy, serialized values, or authored presentation. The journey exercises the authored-scene invariant and Bootstrap's ownership of separately rooted adapters in the shipped scene. Tests may substitute system boundaries but do not require production interfaces solely to fake owned code. Styling, animation appearance, cadence, camera feel, safe-area appearance, and other presentation judgments remain assigned to human playtesting.
 
 ### Positive Consequences
 
@@ -49,6 +50,7 @@ Tests use the cheapest sufficient fixture: deterministic rules and application f
 - The production scene remains a replaceable, minimal entry point with no adapter-specific wiring.
 - Unity-specific tests focus on actual engine and lifecycle risks in isolated fixtures.
 - Automation does not freeze authored prefab structure, so the production scene and prefabs can change without rewriting tests.
+- A broken shipped-prefab wiring reference or a broken critical journey is caught by sparse permanent automation instead of only by a human playtest.
 - Fewer interfaces, forwarding layers, registries, and generic mechanisms obscure the game.
 - A future extraction will be based on evidence from a real consumer.
 
@@ -58,7 +60,7 @@ Tests use the cheapest sufficient fixture: deterministic rules and application f
 - Some boundaries still require interfaces and hand-written fakes.
 - Concrete prefab references require Bootstrap prefab updates when assets move.
 - Runtime inspection shows several Bootstrap-owned scene roots even though the authored scene has only one.
-- Production prefab and scene wiring has no permanent automated regression guard; a broken shipped composition is caught only by a human playtest.
+- Sparse production-asset checks add maintenance when authored prefab wiring or the critical journey changes; the rest of production composition and presentation still relies on human playtesting.
 - Code cannot be consumed as a ready-made package until a real extraction is performed.
 - Adding genuinely more complex navigation later may justify introducing a stronger flow abstraction.
 
