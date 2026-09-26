@@ -4,26 +4,10 @@ namespace TicTacToeLab.Runtime
 {
     public sealed class ApplicationFlow : IDisposable
     {
-        private const float OUTCOME_PRESENTATION_DELAY_SECONDS = 1f;
+        private readonly ApplicationStateFactory _stateFactory;
 
-        private enum Phase
-        {
-            MainMenu,
-            Gameplay,
-            OutcomePending,
-            OutcomePresented,
-            Disposed
-        }
-
-        private readonly BoardPresenter _boardPresenter;
-        private readonly IApplicationUI _applicationUI;
-        private readonly IDelayScheduler _delayScheduler;
-        private readonly IInputService _inputService;
-
-        private Phase _phase = Phase.MainMenu;
-        private QuitConfirmation _activeQuitConfirmation;
-        private IDisposable _pendingOutcomePresentation;
-        private Outcome _capturedOutcome;
+        private IApplicationState _currentState;
+        private bool _isDisposed;
 
         public ApplicationFlow(
             BoardPresenter boardPresenter,
@@ -31,190 +15,53 @@ namespace TicTacToeLab.Runtime
             IDelayScheduler delayScheduler,
             IInputService inputService)
         {
-            _boardPresenter = boardPresenter;
-            _applicationUI = applicationUI;
-            _delayScheduler = delayScheduler;
-            _inputService = inputService;
-
-            _boardPresenter.GameEnded += OnGameEnded;
-            _inputService.BackPressed += OnBackPressed;
+            _stateFactory = new ApplicationStateFactory(this, boardPresenter, applicationUI, delayScheduler, inputService);
         }
 
         public void Start()
         {
-            if (_phase == Phase.Disposed)
+            if (_isDisposed)
             {
                 return;
             }
 
-            EnterMainMenu();
+            TransitionFrom(null, _stateFactory.CreateMainMenuState());
         }
 
         public void Dispose()
         {
-            if (_phase == Phase.Disposed)
+            if (_isDisposed)
             {
                 return;
             }
 
-            _phase = Phase.Disposed;
-            _activeQuitConfirmation = null;
-            CancelPendingOutcomePresentation();
-            _boardPresenter.GameEnded -= OnGameEnded;
-            _inputService.BackPressed -= OnBackPressed;
-        }
+            _isDisposed = true;
+            IApplicationState currentState = _currentState;
+            _currentState = null;
 
-        private void OnBackPressed()
-        {
-            switch (_phase)
+            if (currentState != null)
             {
-                case Phase.Gameplay:
-                    HandleGameplayBack();
-                    break;
-                case Phase.OutcomePresented:
-                    AcknowledgeOutcome();
-                    break;
+                currentState.Exit();
             }
         }
 
-        private void OnGameEnded()
+        internal void TransitionFrom(IApplicationState sourceState, IApplicationState destinationState)
         {
-            if (_phase != Phase.Gameplay)
+            if (_isDisposed || !ReferenceEquals(_currentState, sourceState))
             {
                 return;
             }
 
-            _phase = Phase.OutcomePending;
-            _inputService.DisablePlayerPress();
-            _capturedOutcome = _boardPresenter.Outcome;
-            _pendingOutcomePresentation = _delayScheduler.Schedule(OUTCOME_PRESENTATION_DELAY_SECONDS, PresentOutcome);
-        }
+            IApplicationState previousState = _currentState;
+            _currentState = null;
 
-        private void PresentOutcome()
-        {
-            if (_phase != Phase.OutcomePending)
+            if (previousState != null)
             {
-                return;
+                previousState.Exit();
             }
 
-            _pendingOutcomePresentation = null;
-            _phase = Phase.OutcomePresented;
-            _applicationUI.ShowOutcome(_capturedOutcome, AcknowledgeOutcome);
-        }
-
-        private void AcknowledgeOutcome()
-        {
-            if (_phase != Phase.OutcomePresented)
-            {
-                return;
-            }
-
-            EnterMainMenu();
-        }
-
-        private void CancelPendingOutcomePresentation()
-        {
-            _pendingOutcomePresentation?.Dispose();
-            _pendingOutcomePresentation = null;
-        }
-
-        private void EnterMainMenu()
-        {
-            _phase = Phase.MainMenu;
-            _activeQuitConfirmation = null;
-            _inputService.DisablePlayerPress();
-            _applicationUI.ClosePopup();
-            _applicationUI.ShowMainMenu(StartGame);
-        }
-
-        private void StartGame()
-        {
-            if (_phase != Phase.MainMenu)
-            {
-                return;
-            }
-
-            _phase = Phase.Gameplay;
-            _boardPresenter.Reset();
-            _applicationUI.ShowGameplay(_boardPresenter, HandleGameplayBack);
-            _inputService.EnablePlayerPress();
-        }
-
-        private void HandleGameplayBack()
-        {
-            if (_phase != Phase.Gameplay)
-            {
-                return;
-            }
-
-            if (_activeQuitConfirmation != null)
-            {
-                CloseActiveQuitConfirmation();
-                return;
-            }
-
-            OpenQuitConfirmation();
-        }
-
-        private void OpenQuitConfirmation()
-        {
-            QuitConfirmation confirmation = new(this);
-            _activeQuitConfirmation = confirmation;
-            _inputService.DisablePlayerPress();
-            _applicationUI.ShowQuitConfirmation(confirmation.Confirm, confirmation.Close);
-        }
-
-        private void CloseQuitConfirmation(QuitConfirmation confirmation)
-        {
-            if (!IsActiveQuitConfirmation(confirmation))
-            {
-                return;
-            }
-
-            CloseActiveQuitConfirmation();
-        }
-
-        private void CloseActiveQuitConfirmation()
-        {
-            _activeQuitConfirmation = null;
-            _applicationUI.CloseQuitConfirmation();
-            _inputService.EnablePlayerPress();
-        }
-
-        private bool IsActiveQuitConfirmation(QuitConfirmation confirmation)
-        {
-            return _phase == Phase.Gameplay && _activeQuitConfirmation == confirmation;
-        }
-
-        private void ConfirmQuit(QuitConfirmation confirmation)
-        {
-            if (!IsActiveQuitConfirmation(confirmation))
-            {
-                return;
-            }
-
-            _activeQuitConfirmation = null;
-            EnterMainMenu();
-        }
-
-        private sealed class QuitConfirmation
-        {
-            private readonly ApplicationFlow _flow;
-
-            public QuitConfirmation(ApplicationFlow flow)
-            {
-                _flow = flow;
-            }
-
-            public void Confirm()
-            {
-                _flow.ConfirmQuit(this);
-            }
-
-            public void Close()
-            {
-                _flow.CloseQuitConfirmation(this);
-            }
+            _currentState = destinationState;
+            destinationState.Enter();
         }
     }
 }
