@@ -2,7 +2,7 @@ using System;
 
 namespace TicTacToeLab.Runtime
 {
-    public class BoardModel
+    public sealed class BoardModel
     {
         private const int DIMENSION = 3;
 

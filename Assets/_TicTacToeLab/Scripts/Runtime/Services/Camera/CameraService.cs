@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public class CameraService : ICameraService
+    public sealed class CameraService : ICameraService
     {
         private readonly Camera _camera;
 

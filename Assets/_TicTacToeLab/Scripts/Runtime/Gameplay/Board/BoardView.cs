@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public class BoardView : MonoBehaviour, IBoardView
+    public sealed class BoardView : MonoBehaviour, IBoardView
     {
         [SerializeField] private CellView _cellViewPrefab;
 

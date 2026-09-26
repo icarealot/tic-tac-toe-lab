@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.Runtime
 {
-    public class GameplayPanel : MonoBehaviour
+    public sealed class GameplayPanel : MonoBehaviour
     {
         [SerializeField] private Button _backButton;
         [SerializeField] private TMP_Text _turnText;

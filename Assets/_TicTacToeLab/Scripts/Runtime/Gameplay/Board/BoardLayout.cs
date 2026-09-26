@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public class BoardLayout
+    public sealed class BoardLayout
     {
         private const float CELL_SIZE = 1f;
         private const float CELL_SPACING = 0.2f;

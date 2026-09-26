@@ -256,7 +256,7 @@ namespace Icarealot.UnityTools
     /// <summary>
     /// The inputs one Android build is made from, however they were supplied.
     /// </summary>
-    internal class AndroidBuildRequest
+    internal sealed class AndroidBuildRequest
     {
         public string OutputPath { get; set; }
         public string Version { get; set; }
@@ -272,7 +272,7 @@ namespace Icarealot.UnityTools
     /// <summary>
     /// What one Android build produced, serialized back to the caller by the Pipeline command.
     /// </summary>
-    public class AndroidBuildOutcome
+    public sealed class AndroidBuildOutcome
     {
         public bool Success { get; set; }
         public string OutputPath { get; set; }

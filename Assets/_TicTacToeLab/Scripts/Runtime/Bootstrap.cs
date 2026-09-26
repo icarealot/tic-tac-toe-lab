@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public class Bootstrap : MonoBehaviour
+    public sealed class Bootstrap : MonoBehaviour
     {
         [SerializeField] private Camera _cameraPrefab;
         [SerializeField] private BoardView _boardViewPrefab;

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public class DelayScheduler : MonoBehaviour, IDelayScheduler
+    public sealed class DelayScheduler : MonoBehaviour, IDelayScheduler
     {
         public IDisposable Schedule(float delaySeconds, Action callback)
         {

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace TicTacToeLab.Runtime
 {
     [RequireComponent(typeof(SpriteRenderer))]
-    public class CellView : MonoBehaviour
+    public sealed class CellView : MonoBehaviour
     {
         [SerializeField] private MarkView _markViewPrefab;
 

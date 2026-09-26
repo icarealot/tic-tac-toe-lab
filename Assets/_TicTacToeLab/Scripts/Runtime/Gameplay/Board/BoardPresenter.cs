@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public class BoardPresenter : IDisposable
+    public sealed class BoardPresenter : IDisposable
     {
         public event Action GameEnded;
         public event Action<Mark> TurnChanged;

@@ -74,17 +74,15 @@ namespace TicTacToeLab.PlayModeTests
             BoardLayout layout = Layout;
             Vector3 expectedLocalPoint = layout.GetCellLocalPoint(coordinate);
 
-            foreach (CellView cell in board.GetComponentsInChildren<CellView>())
-            {
-                Transform cellTransform = cell.transform;
-                if (cellTransform.localPosition == expectedLocalPoint)
-                {
-                    return cell;
-                }
-            }
+            CellView matchingCell = board.GetComponentsInChildren<CellView>()
+                .FirstOrDefault(cell => cell.transform.localPosition == expectedLocalPoint);
 
-            Assert.Fail($"The board should create a cell at cell coordinate ({coordinate.Row}, {coordinate.Column}).");
-            return null;
+            Assert.That(
+                matchingCell,
+                Is.Not.Null,
+                $"The board should create a cell at cell coordinate ({coordinate.Row}, {coordinate.Column}).");
+
+            return matchingCell;
         }
 
         public IEnumerator IE_DestroyAll()

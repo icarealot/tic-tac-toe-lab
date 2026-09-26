@@ -3,7 +3,7 @@ using UnityEngine;
 namespace TicTacToeLab.Runtime
 {
     [RequireComponent(typeof(RectTransform))]
-    public class SafeAreaRect : MonoBehaviour
+    public sealed class SafeAreaRect : MonoBehaviour
     {
         private RectTransform RectTransformComponent
         {
