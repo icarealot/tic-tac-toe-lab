@@ -26,6 +26,15 @@ Make the smallest sufficient change. Preserve required behavior, clarity, and do
 - Use fixture setup and teardown only for shared lifecycle ownership and reliable cleanup.
 - Parameterize cases or extract helpers only to remove meaningful duplication.
 
+## Member order
+
+Order class members as follows:
+
+1. Events
+2. Properties
+3. Fields
+4. Methods
+
 ## Do
 
 - Prefer, in order: delete obsolete behavior, reuse an existing capability, change configuration, simplify the design, then add code.
