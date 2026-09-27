@@ -1,9 +1,9 @@
 namespace TicTacToeLab.Runtime
 {
-    internal sealed class GameplayApplicationState : IApplicationState
+    internal sealed class GameplayAppState : IAppState
     {
-        private readonly ApplicationFlow _flow;
-        private readonly ApplicationStateFactory _stateFactory;
+        private readonly AppStateMachine _stateMachine;
+        private readonly AppStateFactory _stateFactory;
         private readonly BoardPresenter _boardPresenter;
         private readonly IApplicationUI _applicationUI;
         private readonly IInputService _inputService;
@@ -11,14 +11,14 @@ namespace TicTacToeLab.Runtime
         private bool _isActive;
         private QuitConfirmation _activeQuitConfirmation;
 
-        public GameplayApplicationState(
-            ApplicationFlow flow,
-            ApplicationStateFactory stateFactory,
+        public GameplayAppState(
+            AppStateMachine stateMachine,
+            AppStateFactory stateFactory,
             BoardPresenter boardPresenter,
             IApplicationUI applicationUI,
             IInputService inputService)
         {
-            _flow = flow;
+            _stateMachine = stateMachine;
             _stateFactory = stateFactory;
             _boardPresenter = boardPresenter;
             _applicationUI = applicationUI;
@@ -67,7 +67,7 @@ namespace TicTacToeLab.Runtime
             }
 
             Outcome outcome = _boardPresenter.Outcome;
-            _flow.TransitionFrom(this, _stateFactory.CreateOutcomeState(outcome));
+            _stateMachine.TransitionFrom(this, _stateFactory.CreateOutcomeState(outcome));
         }
 
         private void OpenQuitConfirmation()
@@ -85,7 +85,7 @@ namespace TicTacToeLab.Runtime
                 return;
             }
 
-            _flow.TransitionFrom(this, _stateFactory.CreateMainMenuState());
+            _stateMachine.TransitionFrom(this, _stateFactory.CreateMainMenuState());
         }
 
         private void CloseQuitConfirmation(QuitConfirmation quitConfirmation)
@@ -112,9 +112,9 @@ namespace TicTacToeLab.Runtime
 
         private sealed class QuitConfirmation
         {
-            private readonly GameplayApplicationState _gameplayState;
+            private readonly GameplayAppState _gameplayState;
 
-            public QuitConfirmation(GameplayApplicationState gameplayState)
+            public QuitConfirmation(GameplayAppState gameplayState)
             {
                 _gameplayState = gameplayState;
             }

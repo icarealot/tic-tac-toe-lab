@@ -1,40 +1,40 @@
 namespace TicTacToeLab.Runtime
 {
-    internal sealed class ApplicationStateFactory
+    internal sealed class AppStateFactory
     {
-        private readonly ApplicationFlow _flow;
+        private readonly AppStateMachine _stateMachine;
         private readonly BoardPresenter _boardPresenter;
         private readonly IApplicationUI _applicationUI;
         private readonly IDelayScheduler _delayScheduler;
         private readonly IInputService _inputService;
 
-        public ApplicationStateFactory(
-            ApplicationFlow flow,
+        public AppStateFactory(
+            AppStateMachine stateMachine,
             BoardPresenter boardPresenter,
             IApplicationUI applicationUI,
             IDelayScheduler delayScheduler,
             IInputService inputService)
         {
-            _flow = flow;
+            _stateMachine = stateMachine;
             _boardPresenter = boardPresenter;
             _applicationUI = applicationUI;
             _delayScheduler = delayScheduler;
             _inputService = inputService;
         }
 
-        public IApplicationState CreateMainMenuState()
+        public IAppState CreateMainMenuState()
         {
-            return new MainMenuApplicationState(_flow, this, _applicationUI, _inputService);
+            return new MainMenuAppState(_stateMachine, this, _applicationUI, _inputService);
         }
 
-        public IApplicationState CreateGameplayState()
+        public IAppState CreateGameplayState()
         {
-            return new GameplayApplicationState(_flow, this, _boardPresenter, _applicationUI, _inputService);
+            return new GameplayAppState(_stateMachine, this, _boardPresenter, _applicationUI, _inputService);
         }
 
-        public IApplicationState CreateOutcomeState(Outcome outcome)
+        public IAppState CreateOutcomeState(Outcome outcome)
         {
-            return new OutcomeApplicationState(_flow, this, _applicationUI, _delayScheduler, _inputService, outcome);
+            return new OutcomeAppState(_stateMachine, this, _applicationUI, _delayScheduler, _inputService, outcome);
         }
     }
 }

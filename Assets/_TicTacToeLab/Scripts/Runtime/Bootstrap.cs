@@ -15,7 +15,7 @@ namespace TicTacToeLab.Runtime
         private InputService _inputService;
         private DelayScheduler _delayScheduler;
         private BoardPresenter _boardPresenter;
-        private ApplicationFlow _applicationFlow;
+        private AppStateMachine _appStateMachine;
 
         public void Awake()
         {
@@ -38,8 +38,8 @@ namespace TicTacToeLab.Runtime
 
             _boardView.Construct(boardModel.Dimension, boardLayout.GetCellPlacements());
             _boardPresenter = new BoardPresenter(boardModel, boardLayout, _boardView, _inputService, cameraService);
-            _applicationFlow = new ApplicationFlow(_boardPresenter, _applicationUI, _delayScheduler, _inputService);
-            _applicationFlow.Start();
+            _appStateMachine = new AppStateMachine(_boardPresenter, _applicationUI, _delayScheduler, _inputService);
+            _appStateMachine.Start();
         }
 
         public void OnDestroy()
@@ -81,10 +81,10 @@ namespace TicTacToeLab.Runtime
 
         private void DisposeCollaborators()
         {
-            if (_applicationFlow != null)
+            if (_appStateMachine != null)
             {
-                _applicationFlow.Dispose();
-                _applicationFlow = null;
+                _appStateMachine.Dispose();
+                _appStateMachine = null;
             }
 
             if (_boardPresenter != null)

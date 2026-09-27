@@ -2,20 +2,20 @@ using System;
 
 namespace TicTacToeLab.Runtime
 {
-    public sealed class ApplicationFlow : IDisposable
+    public sealed class AppStateMachine : IDisposable
     {
-        private readonly ApplicationStateFactory _stateFactory;
+        private readonly AppStateFactory _stateFactory;
 
-        private IApplicationState _currentState;
+        private IAppState _currentState;
         private bool _isDisposed;
 
-        public ApplicationFlow(
+        public AppStateMachine(
             BoardPresenter boardPresenter,
             IApplicationUI applicationUI,
             IDelayScheduler delayScheduler,
             IInputService inputService)
         {
-            _stateFactory = new ApplicationStateFactory(this, boardPresenter, applicationUI, delayScheduler, inputService);
+            _stateFactory = new AppStateFactory(this, boardPresenter, applicationUI, delayScheduler, inputService);
         }
 
         public void Start()
@@ -36,7 +36,7 @@ namespace TicTacToeLab.Runtime
             }
 
             _isDisposed = true;
-            IApplicationState currentState = _currentState;
+            IAppState currentState = _currentState;
             _currentState = null;
 
             if (currentState != null)
@@ -45,14 +45,14 @@ namespace TicTacToeLab.Runtime
             }
         }
 
-        internal void TransitionFrom(IApplicationState sourceState, IApplicationState destinationState)
+        internal void TransitionFrom(IAppState sourceState, IAppState destinationState)
         {
             if (_isDisposed || !ReferenceEquals(_currentState, sourceState))
             {
                 return;
             }
 
-            IApplicationState previousState = _currentState;
+            IAppState previousState = _currentState;
             _currentState = null;
 
             if (previousState != null)

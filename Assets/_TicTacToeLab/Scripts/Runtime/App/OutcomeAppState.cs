@@ -2,12 +2,12 @@ using System;
 
 namespace TicTacToeLab.Runtime
 {
-    internal sealed class OutcomeApplicationState : IApplicationState
+    internal sealed class OutcomeAppState : IAppState
     {
         private const float OUTCOME_PRESENTATION_DELAY_SECONDS = 1f;
 
-        private readonly ApplicationFlow _flow;
-        private readonly ApplicationStateFactory _stateFactory;
+        private readonly AppStateMachine _stateMachine;
+        private readonly AppStateFactory _stateFactory;
         private readonly IApplicationUI _applicationUI;
         private readonly IDelayScheduler _delayScheduler;
         private readonly IInputService _inputService;
@@ -17,15 +17,15 @@ namespace TicTacToeLab.Runtime
         private bool _isPresentationPending;
         private IDisposable _pendingPresentation;
 
-        public OutcomeApplicationState(
-            ApplicationFlow flow,
-            ApplicationStateFactory stateFactory,
+        public OutcomeAppState(
+            AppStateMachine stateMachine,
+            AppStateFactory stateFactory,
             IApplicationUI applicationUI,
             IDelayScheduler delayScheduler,
             IInputService inputService,
             Outcome outcome)
         {
-            _flow = flow;
+            _stateMachine = stateMachine;
             _stateFactory = stateFactory;
             _applicationUI = applicationUI;
             _delayScheduler = delayScheduler;
@@ -84,7 +84,7 @@ namespace TicTacToeLab.Runtime
                 return;
             }
 
-            _flow.TransitionFrom(this, _stateFactory.CreateMainMenuState());
+            _stateMachine.TransitionFrom(this, _stateFactory.CreateMainMenuState());
         }
     }
 }

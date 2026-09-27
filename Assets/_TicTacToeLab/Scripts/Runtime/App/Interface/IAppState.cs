@@ -1,6 +1,6 @@
 namespace TicTacToeLab.Runtime
 {
-    internal interface IApplicationState
+    internal interface IAppState
     {
         public void Enter();
         public void Exit();

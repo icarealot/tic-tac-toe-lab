@@ -5,7 +5,7 @@ using TicTacToeLab.Runtime;
 
 namespace TicTacToeLab.EditModeTests
 {
-    public sealed class ApplicationFlowTests
+    public sealed class AppStateMachineTests
     {
         private BoardModel _boardModel;
         private BoardLayout _boardLayout;
@@ -15,7 +15,7 @@ namespace TicTacToeLab.EditModeTests
         private FakeApplicationUI _applicationUI;
         private FakeDelayScheduler _delayScheduler;
         private BoardPresser _presser;
-        private ApplicationFlow _sut;
+        private AppStateMachine _sut;
 
         [SetUp]
         public void SetUp()
@@ -29,7 +29,7 @@ namespace TicTacToeLab.EditModeTests
 
             _boardPresenter = BoardPresenterBuilder.Build(_boardModel, _boardLayout, _boardView, _inputService);
             _presser = new BoardPresser(_inputService, _boardLayout);
-            _sut = new ApplicationFlow(_boardPresenter, _applicationUI, _delayScheduler, _inputService);
+            _sut = new AppStateMachine(_boardPresenter, _applicationUI, _delayScheduler, _inputService);
         }
 
         [TearDown]
@@ -47,7 +47,7 @@ namespace TicTacToeLab.EditModeTests
         // --- Startup and the main menu ---
 
         [Test]
-        public void Starting_the_flow_shows_the_main_menu_with_board_presses_disabled()
+        public void Starting_the_state_machine_shows_the_main_menu_with_board_presses_disabled()
         {
             // Act
             _sut.Start();
@@ -390,14 +390,14 @@ namespace TicTacToeLab.EditModeTests
         private static IEnumerable<TestCaseData> DisposedConfirmationCallbacks()
         {
             yield return new TestCaseData((Action<FakeApplicationUI>)(applicationUI => applicationUI.ClickYes()))
-                .SetName("Replaying_yes_from_a_confirmation_open_at_disposal_keeps_the_flow_inert");
+                .SetName("Replaying_yes_from_a_confirmation_open_at_disposal_keeps_the_state_machine_inert");
 
             yield return new TestCaseData((Action<FakeApplicationUI>)(applicationUI => applicationUI.ClickNo()))
-                .SetName("Replaying_no_from_a_confirmation_open_at_disposal_keeps_the_flow_inert");
+                .SetName("Replaying_no_from_a_confirmation_open_at_disposal_keeps_the_state_machine_inert");
         }
 
         [TestCaseSource(nameof(DisposedConfirmationCallbacks))]
-        public void Replaying_a_confirmation_callback_after_disposal_keeps_the_flow_inert(Action<FakeApplicationUI> replay)
+        public void Replaying_a_confirmation_callback_after_disposal_keeps_the_state_machine_inert(Action<FakeApplicationUI> replay)
         {
             // Arrange
             StartGameplay();

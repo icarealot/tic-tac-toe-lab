@@ -1,19 +1,19 @@
 namespace TicTacToeLab.Runtime
 {
-    internal sealed class MainMenuApplicationState : IApplicationState
+    internal sealed class MainMenuAppState : IAppState
     {
-        private readonly ApplicationFlow _flow;
-        private readonly ApplicationStateFactory _stateFactory;
+        private readonly AppStateMachine _stateMachine;
+        private readonly AppStateFactory _stateFactory;
         private readonly IApplicationUI _applicationUI;
         private readonly IInputService _inputService;
 
-        public MainMenuApplicationState(
-            ApplicationFlow flow,
-            ApplicationStateFactory stateFactory,
+        public MainMenuAppState(
+            AppStateMachine stateMachine,
+            AppStateFactory stateFactory,
             IApplicationUI applicationUI,
             IInputService inputService)
         {
-            _flow = flow;
+            _stateMachine = stateMachine;
             _stateFactory = stateFactory;
             _applicationUI = applicationUI;
             _inputService = inputService;
@@ -32,7 +32,7 @@ namespace TicTacToeLab.Runtime
 
         private void StartGame()
         {
-            _flow.TransitionFrom(this, _stateFactory.CreateGameplayState());
+            _stateMachine.TransitionFrom(this, _stateFactory.CreateGameplayState());
         }
     }
 }
