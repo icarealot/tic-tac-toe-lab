@@ -4,26 +4,26 @@ namespace TicTacToeLab.Runtime
     {
         private readonly AppStateMachine _stateMachine;
         private readonly AppStateFactory _stateFactory;
-        private readonly IApplicationUI _applicationUI;
+        private readonly IAppUI _appUI;
         private readonly IInputService _inputService;
 
         public MainMenuAppState(
             AppStateMachine stateMachine,
             AppStateFactory stateFactory,
-            IApplicationUI applicationUI,
+            IAppUI appUI,
             IInputService inputService)
         {
             _stateMachine = stateMachine;
             _stateFactory = stateFactory;
-            _applicationUI = applicationUI;
+            _appUI = appUI;
             _inputService = inputService;
         }
 
         public void Enter()
         {
             _inputService.DisablePlayerPress();
-            _applicationUI.ClosePopup();
-            _applicationUI.ShowMainMenu(StartGame);
+            _appUI.ClosePopup();
+            _appUI.ShowMainMenu(StartGame);
         }
 
         public void Exit()

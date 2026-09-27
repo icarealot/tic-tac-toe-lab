@@ -12,9 +12,9 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class ApplicationUIPrefabWiringTests
+    public sealed class AppUIPrefabWiringTests
     {
-        private const string APPLICATION_UI_PREFAB_PATH = "Assets/_TicTacToeLab/Prefabs/UI/ApplicationUI.prefab";
+        private const string APP_UI_PREFAB_PATH = "Assets/_TicTacToeLab/Prefabs/UI/AppUI.prefab";
 
         private readonly List<GameObject> _productionInstances = new();
 
@@ -41,7 +41,7 @@ namespace TicTacToeLab.PlayModeTests
         public void Showing_the_production_main_menu_routes_its_start_button_to_the_supplied_action()
         {
             // Arrange
-            ApplicationUI sut = CreateProductionApplicationUI();
+            AppUI sut = CreateProductionAppUI();
             int startCount = 0;
             sut.ShowMainMenu(() => startCount++);
             MainMenuPanel mainMenu = RequireSingleWindow<MainMenuPanel>(sut);
@@ -61,7 +61,7 @@ namespace TicTacToeLab.PlayModeTests
         public void Showing_production_gameplay_presents_the_current_turn_and_routes_its_back_button()
         {
             // Arrange
-            ApplicationUI sut = CreateProductionApplicationUI();
+            AppUI sut = CreateProductionAppUI();
             BoardPresenterHarness boardPresenterHarness = new();
             // X owns the first turn; this places a mark so the presenter's current turn is not the default one.
             boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
@@ -88,7 +88,7 @@ namespace TicTacToeLab.PlayModeTests
         public void Showing_the_production_quit_confirmation_routes_both_buttons_to_the_supplied_actions_exactly_once()
         {
             // Arrange
-            ApplicationUI sut = CreateProductionApplicationUI();
+            AppUI sut = CreateProductionAppUI();
             int quitCount = 0;
             int cancelCount = 0;
             sut.ShowQuitConfirmation(() => quitCount++, () => cancelCount++);
@@ -129,7 +129,7 @@ namespace TicTacToeLab.PlayModeTests
         public void Showing_each_terminal_outcome_presents_it_and_routes_the_production_continue_button(Outcome outcome, string expectedTitle)
         {
             // Arrange
-            ApplicationUI sut = CreateProductionApplicationUI();
+            AppUI sut = CreateProductionAppUI();
             int continueCount = 0;
             sut.ShowOutcome(outcome, () => continueCount++);
             OutcomePopup outcomePopup = RequireSingleWindow<OutcomePopup>(sut);
@@ -149,22 +149,22 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(continueCount, Is.EqualTo(1), "The production outcome popup's Continue button should invoke the supplied action exactly once.");
         }
 
-        private ApplicationUI CreateProductionApplicationUI()
+        private AppUI CreateProductionAppUI()
         {
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(APPLICATION_UI_PREFAB_PATH);
-            Assert.That(prefab, Is.Not.Null, $"The production prefab must exist at {APPLICATION_UI_PREFAB_PATH}.");
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(APP_UI_PREFAB_PATH);
+            Assert.That(prefab, Is.Not.Null, $"The production prefab must exist at {APP_UI_PREFAB_PATH}.");
 
             GameObject instance = Object.Instantiate(prefab);
             _productionInstances.Add(instance);
 
-            ApplicationUI applicationUI = instance.GetComponent<ApplicationUI>();
-            Assert.That(applicationUI, Is.Not.Null, "The production application UI prefab must carry ApplicationUI.");
-            return applicationUI;
+            AppUI appUI = instance.GetComponent<AppUI>();
+            Assert.That(appUI, Is.Not.Null, "The production application UI prefab must carry AppUI.");
+            return appUI;
         }
 
-        private static T RequireSingleWindow<T>(ApplicationUI applicationUI) where T : Component
+        private static T RequireSingleWindow<T>(AppUI appUI) where T : Component
         {
-            T[] windows = applicationUI.GetComponentsInChildren<T>(true);
+            T[] windows = appUI.GetComponentsInChildren<T>(true);
             Assert.That(windows, Has.Length.EqualTo(1), $"The production application UI should show exactly one {typeof(T).Name} window.");
             return windows[0];
         }

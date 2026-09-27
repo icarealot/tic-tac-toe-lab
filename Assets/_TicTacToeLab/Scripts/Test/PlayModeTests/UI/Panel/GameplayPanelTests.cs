@@ -10,7 +10,7 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class GameplayPanelTests
     {
-        private GeneratedApplicationUIFixture _fixture;
+        private GeneratedAppUIFixture _fixture;
         private GameplayPanel _sut;
         private Button _backButton;
         private TMP_Text _turnText;
@@ -19,7 +19,7 @@ namespace TicTacToeLab.PlayModeTests
         [SetUp]
         public void CreateGeneratedGameplayPanel()
         {
-            _fixture = new GeneratedApplicationUIFixture();
+            _fixture = new GeneratedAppUIFixture();
             (_sut, _backButton, _turnText) = _fixture.CreateGameplayPanel();
             _boardPresenterHarness = new BoardPresenterHarness();
         }

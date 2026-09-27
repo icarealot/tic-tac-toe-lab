@@ -36,7 +36,7 @@ namespace TicTacToeLab.PlayModeTests
         private Bootstrap _bootstrap;
         private Camera _camera;
         private BoardView _boardView;
-        private ApplicationUI _applicationUI;
+        private AppUI _appUI;
         private DelayScheduler _delayScheduler;
         private InputActionAsset[] _journeyInputAssets = new InputActionAsset[0];
 
@@ -56,10 +56,10 @@ namespace TicTacToeLab.PlayModeTests
                 Object.Destroy(bootstrap.gameObject);
             }
 
-            Component[] ownedRoots = { _camera, _boardView, _applicationUI, _delayScheduler };
+            Component[] ownedRoots = { _camera, _boardView, _appUI, _delayScheduler };
             _camera = null;
             _boardView = null;
-            _applicationUI = null;
+            _appUI = null;
             _delayScheduler = null;
 
             InputActionAsset[] journeyInputAssets = _journeyInputAssets;
@@ -203,7 +203,7 @@ namespace TicTacToeLab.PlayModeTests
                 .Single(component => component != null);
             _camera = RequireSingleAdapter<Camera>();
             _boardView = RequireSingleAdapter<BoardView>();
-            _applicationUI = RequireSingleAdapter<ApplicationUI>();
+            _appUI = RequireSingleAdapter<AppUI>();
             _delayScheduler = RequireSingleAdapter<DelayScheduler>();
 
             _journeyInputAssets = Resources.FindObjectsOfTypeAll<InputActionAsset>()
@@ -282,7 +282,7 @@ namespace TicTacToeLab.PlayModeTests
 
         private T FindActiveWindow<T>() where T : Component
         {
-            return _applicationUI.GetComponentsInChildren<T>(true)
+            return _appUI.GetComponentsInChildren<T>(true)
                 .FirstOrDefault(window => window != null && window.gameObject.activeInHierarchy);
         }
 

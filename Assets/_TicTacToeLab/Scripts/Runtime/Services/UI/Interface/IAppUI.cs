@@ -2,7 +2,7 @@ using System;
 
 namespace TicTacToeLab.Runtime
 {
-    public interface IApplicationUI
+    public interface IAppUI
     {
         public void ShowMainMenu(Action onStart);
         public void ShowGameplay(BoardPresenter boardPresenter, Action onBack);

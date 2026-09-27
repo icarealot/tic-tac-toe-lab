@@ -5,7 +5,7 @@ namespace TicTacToeLab.Runtime
         private readonly AppStateMachine _stateMachine;
         private readonly AppStateFactory _stateFactory;
         private readonly BoardPresenter _boardPresenter;
-        private readonly IApplicationUI _applicationUI;
+        private readonly IAppUI _appUI;
         private readonly IInputService _inputService;
 
         private bool _isActive;
@@ -15,13 +15,13 @@ namespace TicTacToeLab.Runtime
             AppStateMachine stateMachine,
             AppStateFactory stateFactory,
             BoardPresenter boardPresenter,
-            IApplicationUI applicationUI,
+            IAppUI appUI,
             IInputService inputService)
         {
             _stateMachine = stateMachine;
             _stateFactory = stateFactory;
             _boardPresenter = boardPresenter;
-            _applicationUI = applicationUI;
+            _appUI = appUI;
             _inputService = inputService;
         }
 
@@ -31,7 +31,7 @@ namespace TicTacToeLab.Runtime
             _boardPresenter.Reset();
             _inputService.BackPressed += HandleBack;
             _boardPresenter.GameEnded += HandleGameEnded;
-            _applicationUI.ShowGameplay(_boardPresenter, HandleBack);
+            _appUI.ShowGameplay(_boardPresenter, HandleBack);
             _inputService.EnablePlayerPress();
         }
 
@@ -75,7 +75,7 @@ namespace TicTacToeLab.Runtime
             QuitConfirmation quitConfirmation = new(this);
             _activeQuitConfirmation = quitConfirmation;
             _inputService.DisablePlayerPress();
-            _applicationUI.ShowQuitConfirmation(quitConfirmation.Confirm, quitConfirmation.Close);
+            _appUI.ShowQuitConfirmation(quitConfirmation.Confirm, quitConfirmation.Close);
         }
 
         private void ConfirmQuit(QuitConfirmation quitConfirmation)
@@ -101,7 +101,7 @@ namespace TicTacToeLab.Runtime
         private void CloseActiveQuitConfirmation()
         {
             _activeQuitConfirmation = null;
-            _applicationUI.CloseQuitConfirmation();
+            _appUI.CloseQuitConfirmation();
             _inputService.EnablePlayerPress();
         }
 

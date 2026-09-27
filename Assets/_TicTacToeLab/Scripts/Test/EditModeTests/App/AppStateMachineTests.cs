@@ -12,7 +12,7 @@ namespace TicTacToeLab.EditModeTests
         private BoardPresenter _boardPresenter;
         private FakeBoardView _boardView;
         private FakeInputService _inputService;
-        private FakeApplicationUI _applicationUI;
+        private FakeAppUI _appUI;
         private FakeDelayScheduler _delayScheduler;
         private BoardPresser _presser;
         private AppStateMachine _sut;
@@ -24,12 +24,12 @@ namespace TicTacToeLab.EditModeTests
             _boardLayout = new BoardLayout(_boardModel.Dimension);
             _boardView = new FakeBoardView();
             _inputService = new FakeInputService();
-            _applicationUI = new FakeApplicationUI();
+            _appUI = new FakeAppUI();
             _delayScheduler = new FakeDelayScheduler();
 
             _boardPresenter = BoardPresenterBuilder.Build(_boardModel, _boardLayout, _boardView, _inputService);
             _presser = new BoardPresser(_inputService, _boardLayout);
-            _sut = new AppStateMachine(_boardPresenter, _applicationUI, _delayScheduler, _inputService);
+            _sut = new AppStateMachine(_boardPresenter, _appUI, _delayScheduler, _inputService);
         }
 
         [TearDown]
@@ -41,7 +41,7 @@ namespace TicTacToeLab.EditModeTests
         private void StartGameplay()
         {
             _sut.Start();
-            _applicationUI.ClickStart();
+            _appUI.ClickStart();
         }
 
         // --- Startup and the main menu ---
@@ -53,9 +53,9 @@ namespace TicTacToeLab.EditModeTests
             _sut.Start();
 
             // Assert
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.True);
-            Assert.That(_applicationUI.IsGameplayVisible, Is.False);
-            Assert.That(_applicationUI.HasPopup, Is.False);
+            Assert.That(_appUI.IsMainMenuVisible, Is.True);
+            Assert.That(_appUI.IsGameplayVisible, Is.False);
+            Assert.That(_appUI.HasPopup, Is.False);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
         }
 
@@ -64,17 +64,17 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             _sut.Start();
-            int mainMenuPresentationsBefore = _applicationUI.MainMenuPresentationCount;
+            int mainMenuPresentationsBefore = _appUI.MainMenuPresentationCount;
 
             // Act
             _inputService.RaiseBack();
 
             // Assert
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.True);
-            Assert.That(_applicationUI.IsGameplayVisible, Is.False);
-            Assert.That(_applicationUI.HasPopup, Is.False);
+            Assert.That(_appUI.IsMainMenuVisible, Is.True);
+            Assert.That(_appUI.IsGameplayVisible, Is.False);
+            Assert.That(_appUI.HasPopup, Is.False);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-            Assert.That(_applicationUI.MainMenuPresentationCount, Is.EqualTo(mainMenuPresentationsBefore));
+            Assert.That(_appUI.MainMenuPresentationCount, Is.EqualTo(mainMenuPresentationsBefore));
         }
 
         // --- Starting a game ---
@@ -92,13 +92,13 @@ namespace TicTacToeLab.EditModeTests
 
             // Act
             _sut.Start();
-            _applicationUI.ClickStart();
+            _appUI.ClickStart();
 
             // Assert
             Assert.That(BoardState.IsEmpty(_boardModel), Is.True);
             Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
-            Assert.That(_applicationUI.OutcomeWhenGameplayShown, Is.EqualTo(Outcome.InProgress));
-            Assert.That(_applicationUI.IsGameplayVisible, Is.True);
+            Assert.That(_appUI.OutcomeWhenGameplayShown, Is.EqualTo(Outcome.InProgress));
+            Assert.That(_appUI.IsGameplayVisible, Is.True);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
         }
 
@@ -111,11 +111,11 @@ namespace TicTacToeLab.EditModeTests
             StartGameplay();
 
             // Act
-            _applicationUI.ClickGameplayBack();
+            _appUI.ClickGameplayBack();
 
             // Assert
-            Assert.That(_applicationUI.IsQuitConfirmationVisible, Is.True);
-            Assert.That(_applicationUI.IsGameplayVisible, Is.True);
+            Assert.That(_appUI.IsQuitConfirmationVisible, Is.True);
+            Assert.That(_appUI.IsGameplayVisible, Is.True);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
 
             // Act
@@ -128,28 +128,28 @@ namespace TicTacToeLab.EditModeTests
 
         private static IEnumerable<TestCaseData> QuitConfirmationDismissals()
         {
-            yield return new TestCaseData((Action<FakeApplicationUI, FakeInputService>)((applicationUI, _) => applicationUI.ClickNo()))
+            yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((appUI, _) => appUI.ClickNo()))
                 .SetName("Dismissing_quit_confirmation_with_no_closes_it_and_restores_board_presses");
 
-            yield return new TestCaseData((Action<FakeApplicationUI, FakeInputService>)((_, inputService) => inputService.RaiseBack()))
+            yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((_, inputService) => inputService.RaiseBack()))
                 .SetName("Dismissing_quit_confirmation_with_back_closes_it_and_restores_board_presses");
         }
 
         [TestCaseSource(nameof(QuitConfirmationDismissals))]
         public void Dismissing_quit_confirmation_closes_it_and_restores_board_presses(
-            Action<FakeApplicationUI, FakeInputService> dismiss)
+            Action<FakeAppUI, FakeInputService> dismiss)
         {
             // Arrange
             StartGameplay();
             _inputService.RaiseBack();
-            Assert.That(_applicationUI.IsQuitConfirmationVisible, Is.True);
+            Assert.That(_appUI.IsQuitConfirmationVisible, Is.True);
 
             // Act
-            dismiss(_applicationUI, _inputService);
+            dismiss(_appUI, _inputService);
 
             // Assert
-            Assert.That(_applicationUI.IsQuitConfirmationVisible, Is.False);
-            Assert.That(_applicationUI.IsGameplayVisible, Is.True);
+            Assert.That(_appUI.IsQuitConfirmationVisible, Is.False);
+            Assert.That(_appUI.IsGameplayVisible, Is.True);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
         }
 
@@ -162,12 +162,12 @@ namespace TicTacToeLab.EditModeTests
             _inputService.RaiseBack();
 
             // Act
-            _applicationUI.ClickYes();
+            _appUI.ClickYes();
 
             // Assert
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.True);
-            Assert.That(_applicationUI.IsGameplayVisible, Is.False);
-            Assert.That(_applicationUI.HasPopup, Is.False);
+            Assert.That(_appUI.IsMainMenuVisible, Is.True);
+            Assert.That(_appUI.IsGameplayVisible, Is.False);
+            Assert.That(_appUI.HasPopup, Is.False);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
             Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 0)), Is.False);
         }
@@ -189,7 +189,7 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
             Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(1f));
             Assert.That(_delayScheduler.HasPendingWork, Is.True);
-            Assert.That(_applicationUI.IsOutcomeVisible, Is.False);
+            Assert.That(_appUI.IsOutcomeVisible, Is.False);
         }
 
         [Test]
@@ -203,7 +203,7 @@ namespace TicTacToeLab.EditModeTests
             _inputService.RaiseBack();
 
             // Assert
-            Assert.That(_applicationUI.HasPopup, Is.False);
+            Assert.That(_appUI.HasPopup, Is.False);
             Assert.That(_delayScheduler.HasPendingWork, Is.True);
             Assert.That(_delayScheduler.WasCancelled, Is.False);
 
@@ -211,8 +211,8 @@ namespace TicTacToeLab.EditModeTests
             _delayScheduler.FirePending();
 
             // Assert
-            Assert.That(_applicationUI.IsOutcomeVisible, Is.True);
-            Assert.That(_applicationUI.IsQuitConfirmationVisible, Is.False);
+            Assert.That(_appUI.IsOutcomeVisible, Is.True);
+            Assert.That(_appUI.IsQuitConfirmationVisible, Is.False);
         }
 
         // --- Outcome presentation and acknowledgement ---
@@ -244,25 +244,25 @@ namespace TicTacToeLab.EditModeTests
             _delayScheduler.FirePending();
 
             // Assert
-            Assert.That(_applicationUI.IsOutcomeVisible, Is.True);
-            Assert.That(_applicationUI.ShownOutcome, Is.EqualTo(expectedOutcome));
-            Assert.That(_applicationUI.IsGameplayVisible, Is.True, "The popup should appear over the still-visible gameplay panel.");
+            Assert.That(_appUI.IsOutcomeVisible, Is.True);
+            Assert.That(_appUI.ShownOutcome, Is.EqualTo(expectedOutcome));
+            Assert.That(_appUI.IsGameplayVisible, Is.True, "The popup should appear over the still-visible gameplay panel.");
             Assert.That(BoardState.CaptureMarks(_boardModel), Is.EqualTo(completedMarks));
             Assert.That(_boardView.ShownMarks, Is.EqualTo(renderedMarks));
         }
 
         private static IEnumerable<TestCaseData> OutcomeAcknowledgements()
         {
-            yield return new TestCaseData((Action<FakeApplicationUI, FakeInputService>)((applicationUI, _) => applicationUI.ClickContinue()))
+            yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((appUI, _) => appUI.ClickContinue()))
                 .SetName("Continuing_the_outcome_returns_to_the_main_menu_without_resetting_the_board");
 
-            yield return new TestCaseData((Action<FakeApplicationUI, FakeInputService>)((_, inputService) => inputService.RaiseBack()))
+            yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((_, inputService) => inputService.RaiseBack()))
                 .SetName("Going_back_from_the_outcome_returns_to_the_main_menu_without_resetting_the_board");
         }
 
         [TestCaseSource(nameof(OutcomeAcknowledgements))]
         public void Acknowledging_the_outcome_returns_to_the_main_menu_without_resetting_the_board(
-            Action<FakeApplicationUI, FakeInputService> acknowledge)
+            Action<FakeAppUI, FakeInputService> acknowledge)
         {
             // Arrange
             StartGameplay();
@@ -271,12 +271,12 @@ namespace TicTacToeLab.EditModeTests
             _delayScheduler.FirePending();
 
             // Act
-            acknowledge(_applicationUI, _inputService);
+            acknowledge(_appUI, _inputService);
 
             // Assert
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.True);
-            Assert.That(_applicationUI.IsGameplayVisible, Is.False);
-            Assert.That(_applicationUI.HasPopup, Is.False);
+            Assert.That(_appUI.IsMainMenuVisible, Is.True);
+            Assert.That(_appUI.IsGameplayVisible, Is.False);
+            Assert.That(_appUI.HasPopup, Is.False);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
             Assert.That(BoardState.CaptureMarks(_boardModel), Is.EqualTo(completedMarks));
         }
@@ -293,8 +293,8 @@ namespace TicTacToeLab.EditModeTests
             _delayScheduler.ReplayLastDelivered();
 
             // Assert
-            Assert.That(_applicationUI.OutcomePresentationCount, Is.EqualTo(1));
-            Assert.That(_applicationUI.IsGameplayVisible, Is.True);
+            Assert.That(_appUI.OutcomePresentationCount, Is.EqualTo(1));
+            Assert.That(_appUI.IsGameplayVisible, Is.True);
         }
 
         [Test]
@@ -304,16 +304,16 @@ namespace TicTacToeLab.EditModeTests
             StartGameplay();
             BoardPresses.WinRowZeroForX(_presser);
             _delayScheduler.FirePending();
-            int mainMenuPresentationsBefore = _applicationUI.MainMenuPresentationCount;
+            int mainMenuPresentationsBefore = _appUI.MainMenuPresentationCount;
 
             // Act
-            _applicationUI.ClickContinue();
-            _applicationUI.ClickContinue();
+            _appUI.ClickContinue();
+            _appUI.ClickContinue();
             _inputService.RaiseBack();
 
             // Assert
-            Assert.That(_applicationUI.MainMenuPresentationCount, Is.EqualTo(mainMenuPresentationsBefore + 1));
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.True);
+            Assert.That(_appUI.MainMenuPresentationCount, Is.EqualTo(mainMenuPresentationsBefore + 1));
+            Assert.That(_appUI.IsMainMenuVisible, Is.True);
         }
 
         [Test]
@@ -323,15 +323,15 @@ namespace TicTacToeLab.EditModeTests
             StartGameplay();
             BoardPresses.WinRowZeroForX(_presser);
             _delayScheduler.FirePending();
-            _applicationUI.ClickContinue();
+            _appUI.ClickContinue();
 
             // Act
             _delayScheduler.ReplayLastDelivered();
 
             // Assert
-            Assert.That(_applicationUI.OutcomePresentationCount, Is.EqualTo(1));
-            Assert.That(_applicationUI.IsOutcomeVisible, Is.False);
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.True);
+            Assert.That(_appUI.OutcomePresentationCount, Is.EqualTo(1));
+            Assert.That(_appUI.IsOutcomeVisible, Is.False);
+            Assert.That(_appUI.IsMainMenuVisible, Is.True);
         }
 
         [Test]
@@ -340,15 +340,15 @@ namespace TicTacToeLab.EditModeTests
             // Arrange
             StartGameplay();
             _inputService.RaiseBack();
-            _applicationUI.ClickYes();
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.True);
+            _appUI.ClickYes();
+            Assert.That(_appUI.IsMainMenuVisible, Is.True);
 
             // Act
-            _applicationUI.ClickGameplayBack();
+            _appUI.ClickGameplayBack();
 
             // Assert
-            Assert.That(_applicationUI.HasPopup, Is.False);
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.True);
+            Assert.That(_appUI.HasPopup, Is.False);
+            Assert.That(_appUI.IsMainMenuVisible, Is.True);
         }
 
         [Test]
@@ -357,14 +357,14 @@ namespace TicTacToeLab.EditModeTests
             // Arrange
             StartGameplay();
             _presser.Press(new CellCoordinate(0, 0));
-            int mainMenuPresentationsBefore = _applicationUI.MainMenuPresentationCount;
+            int mainMenuPresentationsBefore = _appUI.MainMenuPresentationCount;
 
             // Act
-            _applicationUI.ClickStart();
+            _appUI.ClickStart();
 
             // Assert
-            Assert.That(_applicationUI.IsGameplayVisible, Is.True);
-            Assert.That(_applicationUI.MainMenuPresentationCount, Is.EqualTo(mainMenuPresentationsBefore));
+            Assert.That(_appUI.IsGameplayVisible, Is.True);
+            Assert.That(_appUI.MainMenuPresentationCount, Is.EqualTo(mainMenuPresentationsBefore));
             Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 0)), Is.False, "The in-progress board should not be reset.");
         }
 
@@ -374,14 +374,14 @@ namespace TicTacToeLab.EditModeTests
             // Arrange
             StartGameplay();
             _inputService.RaiseBack();
-            _applicationUI.ClickYes();
+            _appUI.ClickYes();
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
 
             // Act
-            _applicationUI.ClickNo();
+            _appUI.ClickNo();
 
             // Assert
-            Assert.That(_applicationUI.IsQuitConfirmationVisible, Is.False);
+            Assert.That(_appUI.IsQuitConfirmationVisible, Is.False);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
         }
 
@@ -389,30 +389,30 @@ namespace TicTacToeLab.EditModeTests
 
         private static IEnumerable<TestCaseData> DisposedConfirmationCallbacks()
         {
-            yield return new TestCaseData((Action<FakeApplicationUI>)(applicationUI => applicationUI.ClickYes()))
+            yield return new TestCaseData((Action<FakeAppUI>)(appUI => appUI.ClickYes()))
                 .SetName("Replaying_yes_from_a_confirmation_open_at_disposal_keeps_the_state_machine_inert");
 
-            yield return new TestCaseData((Action<FakeApplicationUI>)(applicationUI => applicationUI.ClickNo()))
+            yield return new TestCaseData((Action<FakeAppUI>)(appUI => appUI.ClickNo()))
                 .SetName("Replaying_no_from_a_confirmation_open_at_disposal_keeps_the_state_machine_inert");
         }
 
         [TestCaseSource(nameof(DisposedConfirmationCallbacks))]
-        public void Replaying_a_confirmation_callback_after_disposal_keeps_the_state_machine_inert(Action<FakeApplicationUI> replay)
+        public void Replaying_a_confirmation_callback_after_disposal_keeps_the_state_machine_inert(Action<FakeAppUI> replay)
         {
             // Arrange
             StartGameplay();
             _presser.Press(new CellCoordinate(0, 0));
             _inputService.RaiseBack();
             Mark?[,] marksBefore = BoardState.CaptureMarks(_boardModel);
-            int mainMenuPresentationsBefore = _applicationUI.MainMenuPresentationCount;
+            int mainMenuPresentationsBefore = _appUI.MainMenuPresentationCount;
             _sut.Dispose();
 
             // Act
-            replay(_applicationUI);
+            replay(_appUI);
 
             // Assert
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.False);
-            Assert.That(_applicationUI.MainMenuPresentationCount, Is.EqualTo(mainMenuPresentationsBefore));
+            Assert.That(_appUI.IsMainMenuVisible, Is.False);
+            Assert.That(_appUI.MainMenuPresentationCount, Is.EqualTo(mainMenuPresentationsBefore));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
             Assert.That(BoardState.CaptureMarks(_boardModel), Is.EqualTo(marksBefore));
         }
@@ -423,17 +423,17 @@ namespace TicTacToeLab.EditModeTests
             // Arrange
             StartGameplay();
             _inputService.RaiseBack();
-            Action staleConfirm = _applicationUI.QuitConfirmationOnConfirm;
-            _applicationUI.ClickNo();
+            Action staleConfirm = _appUI.QuitConfirmationOnConfirm;
+            _appUI.ClickNo();
             _inputService.RaiseBack();
-            Assert.That(_applicationUI.IsQuitConfirmationVisible, Is.True);
+            Assert.That(_appUI.IsQuitConfirmationVisible, Is.True);
 
             // Act
             staleConfirm();
 
             // Assert
-            Assert.That(_applicationUI.IsQuitConfirmationVisible, Is.True);
-            Assert.That(_applicationUI.IsMainMenuVisible, Is.False);
+            Assert.That(_appUI.IsQuitConfirmationVisible, Is.True);
+            Assert.That(_appUI.IsMainMenuVisible, Is.False);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
         }
 
@@ -443,16 +443,16 @@ namespace TicTacToeLab.EditModeTests
             // Arrange
             StartGameplay();
             _inputService.RaiseBack();
-            Action staleCancel = _applicationUI.QuitConfirmationOnCancel;
-            _applicationUI.ClickNo();
+            Action staleCancel = _appUI.QuitConfirmationOnCancel;
+            _appUI.ClickNo();
             _inputService.RaiseBack();
-            Assert.That(_applicationUI.IsQuitConfirmationVisible, Is.True);
+            Assert.That(_appUI.IsQuitConfirmationVisible, Is.True);
 
             // Act
             staleCancel();
 
             // Assert
-            Assert.That(_applicationUI.IsQuitConfirmationVisible, Is.True);
+            Assert.That(_appUI.IsQuitConfirmationVisible, Is.True);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
         }
 
@@ -479,8 +479,8 @@ namespace TicTacToeLab.EditModeTests
             _inputService.RaiseBack();
 
             // Assert
-            Assert.That(_applicationUI.HasPopup, Is.False);
-            Assert.That(_applicationUI.IsGameplayVisible, Is.True);
+            Assert.That(_appUI.HasPopup, Is.False);
+            Assert.That(_appUI.IsGameplayVisible, Is.True);
         }
 
         [Test]

@@ -6,22 +6,22 @@ using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class ApplicationUITests
+    public sealed class AppUITests
     {
-        private GeneratedApplicationUIFixture _fixture;
-        private ApplicationUI _sut;
+        private GeneratedAppUIFixture _fixture;
+        private AppUI _sut;
         private BoardPresenter _boardPresenter;
 
         [SetUp]
-        public void CreateGeneratedApplicationUI()
+        public void CreateGeneratedAppUI()
         {
-            _fixture = new GeneratedApplicationUIFixture();
-            _sut = _fixture.CreateApplicationUI();
+            _fixture = new GeneratedAppUIFixture();
+            _sut = _fixture.CreateAppUI();
             _boardPresenter = new BoardPresenterHarness().Presenter;
         }
 
         [UnityTearDown]
-        public IEnumerator DestroyGeneratedApplicationUI()
+        public IEnumerator DestroyGeneratedAppUI()
         {
             yield return _fixture.IE_DestroyAll();
         }

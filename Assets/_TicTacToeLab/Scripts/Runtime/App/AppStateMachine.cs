@@ -11,11 +11,11 @@ namespace TicTacToeLab.Runtime
 
         public AppStateMachine(
             BoardPresenter boardPresenter,
-            IApplicationUI applicationUI,
+            IAppUI appUI,
             IDelayScheduler delayScheduler,
             IInputService inputService)
         {
-            _stateFactory = new AppStateFactory(this, boardPresenter, applicationUI, delayScheduler, inputService);
+            _stateFactory = new AppStateFactory(this, boardPresenter, appUI, delayScheduler, inputService);
         }
 
         public void Start()

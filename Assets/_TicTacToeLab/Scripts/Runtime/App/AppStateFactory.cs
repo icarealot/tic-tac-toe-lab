@@ -4,37 +4,37 @@ namespace TicTacToeLab.Runtime
     {
         private readonly AppStateMachine _stateMachine;
         private readonly BoardPresenter _boardPresenter;
-        private readonly IApplicationUI _applicationUI;
+        private readonly IAppUI _appUI;
         private readonly IDelayScheduler _delayScheduler;
         private readonly IInputService _inputService;
 
         public AppStateFactory(
             AppStateMachine stateMachine,
             BoardPresenter boardPresenter,
-            IApplicationUI applicationUI,
+            IAppUI appUI,
             IDelayScheduler delayScheduler,
             IInputService inputService)
         {
             _stateMachine = stateMachine;
             _boardPresenter = boardPresenter;
-            _applicationUI = applicationUI;
+            _appUI = appUI;
             _delayScheduler = delayScheduler;
             _inputService = inputService;
         }
 
         public IAppState CreateMainMenuState()
         {
-            return new MainMenuAppState(_stateMachine, this, _applicationUI, _inputService);
+            return new MainMenuAppState(_stateMachine, this, _appUI, _inputService);
         }
 
         public IAppState CreateGameplayState()
         {
-            return new GameplayAppState(_stateMachine, this, _boardPresenter, _applicationUI, _inputService);
+            return new GameplayAppState(_stateMachine, this, _boardPresenter, _appUI, _inputService);
         }
 
         public IAppState CreateOutcomeState(Outcome outcome)
         {
-            return new OutcomeAppState(_stateMachine, this, _applicationUI, _delayScheduler, _inputService, outcome);
+            return new OutcomeAppState(_stateMachine, this, _appUI, _delayScheduler, _inputService, outcome);
         }
     }
 }

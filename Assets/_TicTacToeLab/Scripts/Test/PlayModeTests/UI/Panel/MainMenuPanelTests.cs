@@ -9,14 +9,14 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class MainMenuPanelTests
     {
-        private GeneratedApplicationUIFixture _fixture;
+        private GeneratedAppUIFixture _fixture;
         private MainMenuPanel _sut;
         private Button _startButton;
 
         [SetUp]
         public void CreateGeneratedMainMenuPanel()
         {
-            _fixture = new GeneratedApplicationUIFixture();
+            _fixture = new GeneratedAppUIFixture();
             (_sut, _startButton) = _fixture.CreateMainMenuPanel();
         }
 

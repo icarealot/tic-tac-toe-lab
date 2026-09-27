@@ -12,16 +12,16 @@ namespace TicTacToeLab.PlayModeTests
     /// <summary>
     /// Generates the application UI's panels, popups, and layers so isolated checks never load production assets.
     /// Every requested object is returned with the direct button and text references it was wired with, and windows
-    /// that ApplicationUI creates from these templates are observed through <see cref="Windows"/>.
+    /// that AppUI creates from these templates are observed through <see cref="Windows"/>.
     /// The generated application UI can also serve as Bootstrap's application UI adapter template.
     /// </summary>
-    public sealed class GeneratedApplicationUIFixture
+    public sealed class GeneratedAppUIFixture
     {
         public GeneratedWindowRegistry Windows { get; }
 
         private readonly List<GameObject> _generatedRoots = new();
 
-        public GeneratedApplicationUIFixture()
+        public GeneratedAppUIFixture()
         {
             GameObject registryRoot = CreateRoot("Generated window registry");
             Windows = registryRoot.AddComponent<GeneratedWindowRegistry>();
@@ -77,7 +77,7 @@ namespace TicTacToeLab.PlayModeTests
             return (popup, continueButton, titleText);
         }
 
-        public ApplicationUI CreateApplicationUI()
+        public AppUI CreateAppUI()
         {
             GameObject root = CreateRoot("Generated application UI");
             RectTransform panelLayer = CreateLayer(root.transform, "Generated panel layer");
@@ -93,15 +93,15 @@ namespace TicTacToeLab.PlayModeTests
             IgnoreAsTemplate(quitConfirmation.gameObject);
             IgnoreAsTemplate(outcome.gameObject);
 
-            ApplicationUI applicationUI = root.AddComponent<ApplicationUI>();
-            TestSerializedReference.AssignPrefab(applicationUI, "_mainMenuPanelPrefab", mainMenu);
-            TestSerializedReference.AssignPrefab(applicationUI, "_gameplayPanelPrefab", gameplay);
-            TestSerializedReference.AssignPrefab(applicationUI, "_quitConfirmationPopupPrefab", quitConfirmation);
-            TestSerializedReference.AssignPrefab(applicationUI, "_outcomePopupPrefab", outcome);
-            TestSerializedReference.AssignPrefab(applicationUI, "_panelLayer", panelLayer);
-            TestSerializedReference.AssignPrefab(applicationUI, "_popupLayer", popupLayer);
+            AppUI appUI = root.AddComponent<AppUI>();
+            TestSerializedReference.AssignPrefab(appUI, "_mainMenuPanelPrefab", mainMenu);
+            TestSerializedReference.AssignPrefab(appUI, "_gameplayPanelPrefab", gameplay);
+            TestSerializedReference.AssignPrefab(appUI, "_quitConfirmationPopupPrefab", quitConfirmation);
+            TestSerializedReference.AssignPrefab(appUI, "_outcomePopupPrefab", outcome);
+            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", panelLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_popupLayer", popupLayer);
             root.SetActive(true);
-            return applicationUI;
+            return appUI;
         }
 
         public IEnumerator IE_DestroyAll()

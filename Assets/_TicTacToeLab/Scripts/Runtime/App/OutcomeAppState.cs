@@ -8,7 +8,7 @@ namespace TicTacToeLab.Runtime
 
         private readonly AppStateMachine _stateMachine;
         private readonly AppStateFactory _stateFactory;
-        private readonly IApplicationUI _applicationUI;
+        private readonly IAppUI _appUI;
         private readonly IDelayScheduler _delayScheduler;
         private readonly IInputService _inputService;
         private readonly Outcome _outcome;
@@ -20,14 +20,14 @@ namespace TicTacToeLab.Runtime
         public OutcomeAppState(
             AppStateMachine stateMachine,
             AppStateFactory stateFactory,
-            IApplicationUI applicationUI,
+            IAppUI appUI,
             IDelayScheduler delayScheduler,
             IInputService inputService,
             Outcome outcome)
         {
             _stateMachine = stateMachine;
             _stateFactory = stateFactory;
-            _applicationUI = applicationUI;
+            _appUI = appUI;
             _delayScheduler = delayScheduler;
             _inputService = inputService;
             _outcome = outcome;
@@ -74,7 +74,7 @@ namespace TicTacToeLab.Runtime
 
             _pendingPresentation = null;
             _isPresentationPending = false;
-            _applicationUI.ShowOutcome(_outcome, AcknowledgeOutcome);
+            _appUI.ShowOutcome(_outcome, AcknowledgeOutcome);
         }
 
         private void AcknowledgeOutcome()

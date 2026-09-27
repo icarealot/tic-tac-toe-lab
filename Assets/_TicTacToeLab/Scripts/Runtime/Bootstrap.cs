@@ -6,12 +6,12 @@ namespace TicTacToeLab.Runtime
     {
         [SerializeField] private Camera _cameraPrefab;
         [SerializeField] private BoardView _boardViewPrefab;
-        [SerializeField] private ApplicationUI _applicationUIPrefab;
+        [SerializeField] private AppUI _appUIPrefab;
         [SerializeField] private DelayScheduler _delaySchedulerPrefab;
 
         private Camera _camera;
         private BoardView _boardView;
-        private ApplicationUI _applicationUI;
+        private AppUI _appUI;
         private InputService _inputService;
         private DelayScheduler _delayScheduler;
         private BoardPresenter _boardPresenter;
@@ -28,7 +28,7 @@ namespace TicTacToeLab.Runtime
 
             _camera = InstantiateRoot(_cameraPrefab);
             _boardView = InstantiateRoot(_boardViewPrefab);
-            _applicationUI = InstantiateRoot(_applicationUIPrefab);
+            _appUI = InstantiateRoot(_appUIPrefab);
             _delayScheduler = InstantiateRoot(_delaySchedulerPrefab);
             _inputService = new InputService();
 
@@ -38,7 +38,7 @@ namespace TicTacToeLab.Runtime
 
             _boardView.Construct(boardModel.Dimension, boardLayout.GetCellPlacements());
             _boardPresenter = new BoardPresenter(boardModel, boardLayout, _boardView, _inputService, cameraService);
-            _appStateMachine = new AppStateMachine(_boardPresenter, _applicationUI, _delayScheduler, _inputService);
+            _appStateMachine = new AppStateMachine(_boardPresenter, _appUI, _delayScheduler, _inputService);
             _appStateMachine.Start();
         }
 
@@ -52,12 +52,12 @@ namespace TicTacToeLab.Runtime
         {
             bool hasCameraPrefab = IsPrefabAssigned(_cameraPrefab, "MainCamera");
             bool hasBoardViewPrefab = IsPrefabAssigned(_boardViewPrefab, "BoardView");
-            bool hasApplicationUIPrefab = IsPrefabAssigned(_applicationUIPrefab, "ApplicationUI");
+            bool hasAppUIPrefab = IsPrefabAssigned(_appUIPrefab, "AppUI");
             bool hasDelaySchedulerPrefab = IsPrefabAssigned(_delaySchedulerPrefab, "DelayScheduler");
 
             return hasCameraPrefab
                 && hasBoardViewPrefab
-                && hasApplicationUIPrefab
+                && hasAppUIPrefab
                 && hasDelaySchedulerPrefab;
         }
 
@@ -104,12 +104,12 @@ namespace TicTacToeLab.Runtime
         {
             DestroyOwnedRoot(_camera);
             DestroyOwnedRoot(_boardView);
-            DestroyOwnedRoot(_applicationUI);
+            DestroyOwnedRoot(_appUI);
             DestroyOwnedRoot(_delayScheduler);
 
             _camera = null;
             _boardView = null;
-            _applicationUI = null;
+            _appUI = null;
             _delayScheduler = null;
         }
 

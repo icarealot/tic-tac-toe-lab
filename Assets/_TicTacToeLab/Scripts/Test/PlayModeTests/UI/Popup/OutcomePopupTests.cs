@@ -10,7 +10,7 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class OutcomePopupTests
     {
-        private GeneratedApplicationUIFixture _fixture;
+        private GeneratedAppUIFixture _fixture;
         private OutcomePopup _sut;
         private Button _continueButton;
         private TMP_Text _titleText;
@@ -18,7 +18,7 @@ namespace TicTacToeLab.PlayModeTests
         [SetUp]
         public void CreateGeneratedOutcomePopup()
         {
-            _fixture = new GeneratedApplicationUIFixture();
+            _fixture = new GeneratedAppUIFixture();
             (_sut, _continueButton, _titleText) = _fixture.CreateOutcomePopup();
         }
 

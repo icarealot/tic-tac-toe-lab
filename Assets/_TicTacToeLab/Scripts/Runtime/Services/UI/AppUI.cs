@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TicTacToeLab.Runtime
 {
-    public sealed class ApplicationUI : MonoBehaviour, IApplicationUI
+    public sealed class AppUI : MonoBehaviour, IAppUI
     {
         [SerializeField] private MainMenuPanel _mainMenuPanelPrefab;
         [SerializeField] private GameplayPanel _gameplayPanelPrefab;

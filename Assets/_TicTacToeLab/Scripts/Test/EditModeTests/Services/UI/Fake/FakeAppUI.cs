@@ -3,7 +3,7 @@ using TicTacToeLab.Runtime;
 
 namespace TicTacToeLab.EditModeTests
 {
-    public sealed class FakeApplicationUI : IApplicationUI
+    public sealed class FakeAppUI : IAppUI
     {
         public bool IsMainMenuVisible { get; private set; }
         public bool IsGameplayVisible { get; private set; }

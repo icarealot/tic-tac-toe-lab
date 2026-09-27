@@ -66,10 +66,10 @@ namespace TicTacToeLab.PlayModeTests
             _ = _fixture.CreateConfiguredBootstrap();
 
             // Assert
-            LifecycleProbe mainMenu = _fixture.ApplicationUI.Windows.RequireLatestFor<MainMenuPanel>();
+            LifecycleProbe mainMenu = _fixture.AppUI.Windows.RequireLatestFor<MainMenuPanel>();
             Assert.That(mainMenu.IsShown, Is.True, "Starting the application should present the main menu.");
             Assert.That(
-                _fixture.ApplicationUI.Windows.LatestFor<GameplayPanel>(),
+                _fixture.AppUI.Windows.LatestFor<GameplayPanel>(),
                 Is.Null,
                 "Starting the application should not present gameplay before the player starts a game.");
         }

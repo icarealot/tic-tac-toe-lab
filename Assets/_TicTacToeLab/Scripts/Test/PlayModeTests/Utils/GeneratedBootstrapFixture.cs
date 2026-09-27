@@ -14,13 +14,13 @@ namespace TicTacToeLab.PlayModeTests
     /// </summary>
     public sealed class GeneratedBootstrapFixture
     {
-        public GeneratedApplicationUIFixture ApplicationUI { get; }
+        public GeneratedAppUIFixture AppUI { get; }
 
         private readonly Scene _previousActiveScene;
         private readonly Scene _fixtureScene;
         private readonly List<GameObject> _generatedRoots = new();
         private readonly BoardView _boardViewTemplate;
-        private readonly ApplicationUI _applicationUITemplate;
+        private readonly AppUI _appUITemplate;
         private readonly Camera _cameraTemplate;
         private readonly DelayScheduler _delaySchedulerTemplate;
 
@@ -31,10 +31,10 @@ namespace TicTacToeLab.PlayModeTests
             _ = SceneManager.SetActiveScene(_fixtureScene);
 
             GeneratedBoardFixture board = new();
-            ApplicationUI = new GeneratedApplicationUIFixture();
+            AppUI = new GeneratedAppUIFixture();
 
             _boardViewTemplate = board.BoardTemplate;
-            _applicationUITemplate = ApplicationUI.CreateApplicationUI();
+            _appUITemplate = AppUI.CreateAppUI();
             _cameraTemplate = CreateRoot("Generated camera template").AddComponent<Camera>();
             _delaySchedulerTemplate = CreateRoot("Generated delay scheduler template").AddComponent<DelayScheduler>();
         }
@@ -50,7 +50,7 @@ namespace TicTacToeLab.PlayModeTests
         {
             TestSerializedReference.AssignPrefab(bootstrap, "_cameraPrefab", _cameraTemplate);
             TestSerializedReference.AssignPrefab(bootstrap, "_boardViewPrefab", _boardViewTemplate);
-            TestSerializedReference.AssignPrefab(bootstrap, "_applicationUIPrefab", _applicationUITemplate);
+            TestSerializedReference.AssignPrefab(bootstrap, "_appUIPrefab", _appUITemplate);
             TestSerializedReference.AssignPrefab(bootstrap, "_delaySchedulerPrefab", _delaySchedulerTemplate);
         }
 
@@ -66,7 +66,7 @@ namespace TicTacToeLab.PlayModeTests
         {
             return AdaptersInFixtureScene<Camera>().Cast<Component>()
                 .Concat(AdaptersInFixtureScene<BoardView>())
-                .Concat(AdaptersInFixtureScene<ApplicationUI>())
+                .Concat(AdaptersInFixtureScene<AppUI>())
                 .Concat(AdaptersInFixtureScene<DelayScheduler>())
                 .ToArray();
         }
@@ -98,7 +98,7 @@ namespace TicTacToeLab.PlayModeTests
         {
             return adapter == _cameraTemplate
                 || adapter == _boardViewTemplate
-                || adapter == _applicationUITemplate
+                || adapter == _appUITemplate
                 || adapter == _delaySchedulerTemplate;
         }
 

@@ -9,7 +9,7 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class ConfirmQuitPopupTests
     {
-        private GeneratedApplicationUIFixture _fixture;
+        private GeneratedAppUIFixture _fixture;
         private ConfirmQuitPopup _sut;
         private Button _yesButton;
         private Button _noButton;
@@ -17,7 +17,7 @@ namespace TicTacToeLab.PlayModeTests
         [SetUp]
         public void CreateGeneratedQuitConfirmationPopup()
         {
-            _fixture = new GeneratedApplicationUIFixture();
+            _fixture = new GeneratedAppUIFixture();
             (_sut, _yesButton, _noButton) = _fixture.CreateQuitConfirmationPopup();
         }
 
