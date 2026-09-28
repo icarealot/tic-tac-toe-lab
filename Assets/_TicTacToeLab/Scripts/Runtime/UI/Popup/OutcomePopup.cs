@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.Runtime
 {
-    public sealed class OutcomePopup : MonoBehaviour
+    public sealed class OutcomePopup : MonoBehaviour, IOutcomeScreen
     {
         private const string WIN_TITLE_FORMAT = "{0} Wins!";
         private const string DRAW_TITLE = "Draw!";

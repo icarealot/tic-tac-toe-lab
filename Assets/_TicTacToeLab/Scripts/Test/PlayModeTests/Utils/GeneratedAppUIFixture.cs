@@ -18,6 +18,8 @@ namespace TicTacToeLab.PlayModeTests
     public sealed class GeneratedAppUIFixture
     {
         public GeneratedWindowRegistry Windows { get; }
+        public RectTransform PanelLayer { get; private set; }
+        public RectTransform PopupLayer { get; private set; }
 
         private readonly List<GameObject> _generatedRoots = new();
 
@@ -77,11 +79,34 @@ namespace TicTacToeLab.PlayModeTests
             return (popup, continueButton, titleText);
         }
 
+        public T CreateScreenTemplate<T>() where T : MonoBehaviour
+        {
+            GameObject root = CreateRoot($"Generated {typeof(T).Name}");
+            T screen = root.AddComponent<T>();
+            AttachLifecycleProbe(root);
+            root.SetActive(true);
+            IgnoreAsTemplate(root);
+            return screen;
+        }
+
+        public AppUI CreateInactiveAppUI(params ScreenRegistration[] registrations)
+        {
+            GameObject root = CreateRoot("Generated application UI");
+            PanelLayer = CreateLayer(root.transform, "Generated panel layer");
+            PopupLayer = CreateLayer(root.transform, "Generated popup layer");
+
+            AppUI appUI = root.AddComponent<AppUI>();
+            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", PanelLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_popupLayer", PopupLayer);
+            TestSerializedReference.AssignScreenRegistrations(appUI, registrations);
+            return appUI;
+        }
+
         public AppUI CreateAppUI()
         {
             GameObject root = CreateRoot("Generated application UI");
-            RectTransform panelLayer = CreateLayer(root.transform, "Generated panel layer");
-            RectTransform popupLayer = CreateLayer(root.transform, "Generated popup layer");
+            PanelLayer = CreateLayer(root.transform, "Generated panel layer");
+            PopupLayer = CreateLayer(root.transform, "Generated popup layer");
 
             (MainMenuPanel mainMenu, Button _) = CreateMainMenuPanel();
             (GameplayPanel gameplay, Button _, TMP_Text _) = CreateGameplayPanel();
@@ -98,8 +123,8 @@ namespace TicTacToeLab.PlayModeTests
             TestSerializedReference.AssignPrefab(appUI, "_gameplayPanelPrefab", gameplay);
             TestSerializedReference.AssignPrefab(appUI, "_quitConfirmationPopupPrefab", quitConfirmation);
             TestSerializedReference.AssignPrefab(appUI, "_outcomePopupPrefab", outcome);
-            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", panelLayer);
-            TestSerializedReference.AssignPrefab(appUI, "_popupLayer", popupLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", PanelLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_popupLayer", PopupLayer);
             root.SetActive(true);
             return appUI;
         }

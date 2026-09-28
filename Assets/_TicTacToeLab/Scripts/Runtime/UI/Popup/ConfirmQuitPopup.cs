@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.Runtime
 {
-    public sealed class ConfirmQuitPopup : MonoBehaviour
+    public sealed class ConfirmQuitPopup : MonoBehaviour, IConfirmQuitScreen
     {
         [SerializeField] private Button _yesButton;
         [SerializeField] private Button _noButton;

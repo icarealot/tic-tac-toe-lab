@@ -23,6 +23,14 @@ namespace TicTacToeLab.EditModeTests
         private Action _onBack;
         private Action _onContinue;
 
+        public void Show<TScreen>(Action<TScreen> configure = null) where TScreen : IScreen
+        {
+        }
+
+        public void Close<TScreen>() where TScreen : IScreen
+        {
+        }
+
         public void ShowMainMenu(Action onStart)
         {
             MainMenuPresentationCount++;
