@@ -95,7 +95,7 @@ Activation of a user-interface button through Unity's event system. A click is d
 _Avoid_: Press, tap
 
 **Back**:
-A request to leave or dismiss the current player-facing flow, produced by the platform back action, Escape, or an on-screen back button. Its effect depends on whether the player is at the main menu, playing, confirming departure, or viewing an outcome.
+A request to leave or dismiss the current player-facing flow, produced by the platform back action, Escape, or an on-screen back button. Its effect depends on whether the player is at Home, playing, confirming departure, or viewing an outcome.
 _Avoid_: Escape, return, cancel
 
 **Outcome screen**:

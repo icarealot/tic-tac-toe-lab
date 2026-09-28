@@ -96,7 +96,7 @@ namespace TicTacToeLab.PlayModeTests
             PopupLayer = CreateLayer(root.transform, "Generated popup layer");
 
             AppUI appUI = root.AddComponent<AppUI>();
-            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", BaseLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_baseLayer", BaseLayer);
             TestSerializedReference.AssignPrefab(appUI, "_popupLayer", PopupLayer);
             TestSerializedReference.AssignScreenRegistrations(appUI, registrations);
             return appUI;
@@ -119,11 +119,7 @@ namespace TicTacToeLab.PlayModeTests
             IgnoreAsTemplate(outcome.gameObject);
 
             AppUI appUI = root.AddComponent<AppUI>();
-            TestSerializedReference.AssignPrefab(appUI, "_homePanelPrefab", home);
-            TestSerializedReference.AssignPrefab(appUI, "_gameplayPanelPrefab", gameplay);
-            TestSerializedReference.AssignPrefab(appUI, "_quitConfirmationPopupPrefab", quitConfirmation);
-            TestSerializedReference.AssignPrefab(appUI, "_outcomePopupPrefab", outcome);
-            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", BaseLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_baseLayer", BaseLayer);
             TestSerializedReference.AssignPrefab(appUI, "_popupLayer", PopupLayer);
             TestSerializedReference.AssignScreenRegistrations(
                 appUI,

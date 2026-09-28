@@ -6,17 +6,11 @@ namespace TicTacToeLab.Runtime
 {
     public sealed class AppUI : MonoBehaviour, IAppUI
     {
-        [SerializeField] private HomeScreen _homePanelPrefab;
-        [SerializeField] private GameplayScreen _gameplayPanelPrefab;
-        [SerializeField] private ConfirmQuitScreen _quitConfirmationPopupPrefab;
-        [SerializeField] private OutcomeScreen _outcomePopupPrefab;
         [SerializeField] private List<ScreenRegistration> _screenRegistrations = new();
-        [SerializeField] private RectTransform _panelLayer;
+        [SerializeField] private RectTransform _baseLayer;
         [SerializeField] private RectTransform _popupLayer;
 
         private readonly Dictionary<Type, ScreenRegistration> _registrationsByRole = new();
-        private Component _currentPanel;
-        private Component _currentPopup;
         private MonoBehaviour _activeBaseScreen;
         private MonoBehaviour _activePopupScreen;
 
@@ -64,52 +58,6 @@ namespace TicTacToeLab.Runtime
             }
 
             RemoveScreen(activeScreen, registration.Layer);
-        }
-
-        public void ShowHome(Action onStart)
-        {
-            DestroyCurrentPanel();
-
-            HomeScreen panel = Instantiate(_homePanelPrefab, _panelLayer);
-            panel.Setup(onStart);
-            _currentPanel = panel;
-        }
-
-        public void ShowGameplay(BoardPresenter boardPresenter, Action onBack)
-        {
-            DestroyCurrentPanel();
-
-            GameplayScreen panel = Instantiate(_gameplayPanelPrefab, _panelLayer);
-            panel.Setup(boardPresenter, onBack);
-            _currentPanel = panel;
-        }
-
-        public void ShowQuitConfirmation(Action onQuit, Action onCancel)
-        {
-            DestroyCurrentPopup();
-
-            ConfirmQuitScreen popup = Instantiate(_quitConfirmationPopupPrefab, _popupLayer);
-            popup.Setup(onQuit, onCancel);
-            _currentPopup = popup;
-        }
-
-        public void CloseQuitConfirmation()
-        {
-            DestroyCurrentPopup();
-        }
-
-        public void ShowOutcome(Outcome outcome, Action onContinue)
-        {
-            DestroyCurrentPopup();
-
-            OutcomeScreen popup = Instantiate(_outcomePopupPrefab, _popupLayer);
-            popup.Setup(outcome, onContinue);
-            _currentPopup = popup;
-        }
-
-        public void ClosePopup()
-        {
-            DestroyCurrentPopup();
         }
 
         private void BuildScreenRegistry()
@@ -219,7 +167,7 @@ namespace TicTacToeLab.Runtime
 
         private RectTransform LayerTransformFor(ScreenLayer layer)
         {
-            return layer == ScreenLayer.Base ? _panelLayer : _popupLayer;
+            return layer == ScreenLayer.Base ? _baseLayer : _popupLayer;
         }
 
         private MonoBehaviour ActiveScreenFor(ScreenLayer layer)
@@ -249,28 +197,6 @@ namespace TicTacToeLab.Runtime
             {
                 _activePopupScreen = null;
             }
-        }
-
-        private void DestroyCurrentPanel()
-        {
-            if (_currentPanel == null)
-            {
-                return;
-            }
-
-            Destroy(_currentPanel.gameObject);
-            _currentPanel = null;
-        }
-
-        private void DestroyCurrentPopup()
-        {
-            if (_currentPopup == null)
-            {
-                return;
-            }
-
-            Destroy(_currentPopup.gameObject);
-            _currentPopup = null;
         }
     }
 }

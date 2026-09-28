@@ -13,9 +13,6 @@ namespace TicTacToeLab.EditModeTests
         public bool HasPopup => ConfirmQuitScreen.IsVisible || OutcomeScreen.IsVisible;
         public IReadOnlyList<string> Operations => _operations;
 
-        private const string LEGACY_OPERATION_MESSAGE =
-            "The fake application UI only supports the generic screen contract; purpose-specific operations are not supported.";
-
         private static readonly Dictionary<Type, ScreenLayer> LAYERS_BY_ROLE = new()
         {
             { typeof(IHomeScreen), ScreenLayer.Base },
@@ -60,36 +57,6 @@ namespace TicTacToeLab.EditModeTests
             _operations.Add($"Close {typeof(TScreen).Name}");
             ClearActiveScreen(layer);
             screen.Dismiss();
-        }
-
-        public void ShowHome(Action onStart)
-        {
-            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
-        }
-
-        public void ShowGameplay(BoardPresenter boardPresenter, Action onBack)
-        {
-            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
-        }
-
-        public void ShowQuitConfirmation(Action onQuit, Action onCancel)
-        {
-            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
-        }
-
-        public void CloseQuitConfirmation()
-        {
-            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
-        }
-
-        public void ShowOutcome(Outcome outcome, Action onContinue)
-        {
-            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
-        }
-
-        public void ClosePopup()
-        {
-            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
         }
 
         private FakeScreen ScreenFor<TScreen>() where TScreen : IScreen
