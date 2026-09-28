@@ -3,29 +3,30 @@ using System.Collections;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using TMPro;
+using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class GameplayPanelTests
+    public sealed class GameplayScreenTests
     {
         private GeneratedAppUIFixture _fixture;
-        private GameplayPanel _sut;
+        private GameplayScreen _sut;
         private Button _backButton;
         private TMP_Text _turnText;
         private BoardPresenterHarness _boardPresenterHarness;
 
         [SetUp]
-        public void CreateGeneratedGameplayPanel()
+        public void CreateGeneratedGameplayScreen()
         {
             _fixture = new GeneratedAppUIFixture();
-            (_sut, _backButton, _turnText) = _fixture.CreateGameplayPanel();
+            (_sut, _backButton, _turnText) = _fixture.CreateGameplayScreen();
             _boardPresenterHarness = new BoardPresenterHarness();
         }
 
         [UnityTearDown]
-        public IEnumerator DestroyGeneratedGameplayPanel()
+        public IEnumerator DestroyGeneratedGameplayScreen()
         {
             yield return _fixture.IE_DestroyAll();
         }
@@ -69,6 +70,27 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             Assert.That(backCount, Is.EqualTo(1), "The Back button should route to the supplied back action exactly once.");
+        }
+
+        [UnityTest]
+        public IEnumerator Gameplay_detaches_from_the_presenter_when_destroyed()
+        {
+            // Arrange
+            _sut.Setup(_boardPresenterHarness.Presenter, () => { });
+            string turnBeforeDestruction = _turnText.text;
+            Object.Destroy(_sut);
+            yield return PlayModeWait.IE_WaitUntilOrFail(
+                () => _sut == null,
+                "The gameplay screen should be destroyed before its detachment is verified.");
+
+            // Act
+            _boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
+
+            // Assert
+            Assert.That(
+                _turnText.text,
+                Is.EqualTo(turnBeforeDestruction),
+                "Destroying gameplay should detach it from the board presenter's turn changes.");
         }
     }
 }

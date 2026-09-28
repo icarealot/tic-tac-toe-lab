@@ -8,22 +8,22 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class OutcomePopupTests
+    public sealed class OutcomeScreenTests
     {
         private GeneratedAppUIFixture _fixture;
-        private OutcomePopup _sut;
+        private OutcomeScreen _sut;
         private Button _continueButton;
         private TMP_Text _titleText;
 
         [SetUp]
-        public void CreateGeneratedOutcomePopup()
+        public void CreateGeneratedOutcomeScreen()
         {
             _fixture = new GeneratedAppUIFixture();
-            (_sut, _continueButton, _titleText) = _fixture.CreateOutcomePopup();
+            (_sut, _continueButton, _titleText) = _fixture.CreateOutcomeScreen();
         }
 
         [UnityTearDown]
-        public IEnumerator DestroyGeneratedOutcomePopup()
+        public IEnumerator DestroyGeneratedOutcomeScreen()
         {
             yield return _fixture.IE_DestroyAll();
         }
@@ -31,13 +31,13 @@ namespace TicTacToeLab.PlayModeTests
         [TestCase(Outcome.XWin, "X Wins!")]
         [TestCase(Outcome.OWin, "O Wins!")]
         [TestCase(Outcome.Draw, "Draw!")]
-        public void The_popup_reports_the_terminal_outcome_as_its_title(Outcome outcome, string expectedTitle)
+        public void The_screen_reports_the_terminal_outcome_as_its_title(Outcome outcome, string expectedTitle)
         {
             // Act
             _sut.Setup(outcome, () => { });
 
             // Assert
-            Assert.That(_titleText.text, Is.EqualTo(expectedTitle), "The popup should report the outcome it was shown.");
+            Assert.That(_titleText.text, Is.EqualTo(expectedTitle), "The screen should report the outcome it was shown.");
         }
 
         [Test]

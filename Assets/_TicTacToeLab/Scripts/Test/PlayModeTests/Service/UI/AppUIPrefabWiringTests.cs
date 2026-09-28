@@ -44,7 +44,7 @@ namespace TicTacToeLab.PlayModeTests
             AppUI sut = CreateProductionAppUI();
             int startCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => startCount++));
-            HomePanel home = RequireSingleWindow<HomePanel>(sut);
+            HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
             Button startButton = RequireButton(home, "Start");
             Assert.That(startButton.isActiveAndEnabled, Is.True, "The production Home screen's Start button should be active and enabled.");
             Assert.That(startButton.interactable, Is.True, "The production Home screen's Start button should be interactable.");
@@ -67,9 +67,9 @@ namespace TicTacToeLab.PlayModeTests
             boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
             int backCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
-            HomePanel home = RequireSingleWindow<HomePanel>(sut);
+            HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
             sut.Show<IGameplayScreen>(screen => screen.Setup(boardPresenterHarness.Presenter, () => backCount++));
-            GameplayPanel gameplay = RequireSingleWindow<GameplayPanel>(sut);
+            GameplayScreen gameplay = RequireSingleScreen<GameplayScreen>(sut);
             Button backButton = RequireButton(gameplay, "Back");
             Assert.That(backButton.isActiveAndEnabled, Is.True, "The production gameplay's Back button should be active and enabled.");
             Assert.That(backButton.interactable, Is.True, "The production gameplay's Back button should be interactable.");
@@ -95,9 +95,9 @@ namespace TicTacToeLab.PlayModeTests
             int quitCount = 0;
             int cancelCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
-            HomePanel home = RequireSingleWindow<HomePanel>(sut);
+            HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => quitCount++, () => cancelCount++));
-            ConfirmQuitPopup quitConfirmation = RequireSingleWindow<ConfirmQuitPopup>(sut);
+            ConfirmQuitScreen quitConfirmation = RequireSingleScreen<ConfirmQuitScreen>(sut);
             Button yesButton = RequireButton(quitConfirmation, "Yes");
             Button noButton = RequireButton(quitConfirmation, "No");
             foreach (Button button in new[] { yesButton, noButton })
@@ -130,24 +130,24 @@ namespace TicTacToeLab.PlayModeTests
             AppUI sut = CreateProductionAppUI();
             int continueCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
-            HomePanel home = RequireSingleWindow<HomePanel>(sut);
+            HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
             sut.Show<IOutcomeScreen>(screen => screen.Setup(outcome, () => continueCount++));
-            OutcomePopup outcomePopup = RequireSingleWindow<OutcomePopup>(sut);
-            Button continueButton = RequireButton(outcomePopup, "Continue");
-            Assert.That(continueButton.isActiveAndEnabled, Is.True, "The production outcome popup's Continue button should be active and enabled.");
-            Assert.That(continueButton.interactable, Is.True, "The production outcome popup's Continue button should be interactable.");
+            OutcomeScreen outcomeScreen = RequireSingleScreen<OutcomeScreen>(sut);
+            Button continueButton = RequireButton(outcomeScreen, "Continue");
+            Assert.That(continueButton.isActiveAndEnabled, Is.True, "The production Outcome screen's Continue button should be active and enabled.");
+            Assert.That(continueButton.interactable, Is.True, "The production Outcome screen's Continue button should be interactable.");
 
             // Act
             continueButton.onClick.Invoke();
 
             // Assert
             Assert.That(home.gameObject.activeInHierarchy, Is.True, "Showing the production outcome should preserve the base screen.");
-            Assert.That(outcomePopup.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production outcome popup.");
+            Assert.That(outcomeScreen.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production Outcome screen.");
             Assert.That(
-                VisibleTexts(outcomePopup),
+                VisibleTexts(outcomeScreen),
                 Is.EquivalentTo(new[] { "Continue", expectedTitle }),
-                "The production outcome popup should present the terminal outcome and its Continue control as its complete visible state.");
-            Assert.That(continueCount, Is.EqualTo(1), "The production outcome popup's Continue button should invoke the supplied action exactly once.");
+                "The production Outcome screen should present the terminal outcome and its Continue control as its complete visible state.");
+            Assert.That(continueCount, Is.EqualTo(1), "The production Outcome screen's Continue button should invoke the supplied action exactly once.");
         }
 
         private AppUI CreateProductionAppUI()
@@ -163,22 +163,22 @@ namespace TicTacToeLab.PlayModeTests
             return appUI;
         }
 
-        private static T RequireSingleWindow<T>(AppUI appUI) where T : Component
+        private static T RequireSingleScreen<T>(AppUI appUI) where T : Component
         {
-            T[] windows = appUI.GetComponentsInChildren<T>(true);
-            Assert.That(windows, Has.Length.EqualTo(1), $"The production application UI should show exactly one {typeof(T).Name} window.");
-            return windows[0];
+            T[] screens = appUI.GetComponentsInChildren<T>(true);
+            Assert.That(screens, Has.Length.EqualTo(1), $"The production application UI should show exactly one {typeof(T).Name} screen.");
+            return screens[0];
         }
 
-        private static Button RequireButton(Component window, string label)
+        private static Button RequireButton(Component screen, string label)
         {
-            Button[] matchingButtons = window.GetComponentsInChildren<Button>(true)
+            Button[] matchingButtons = screen.GetComponentsInChildren<Button>(true)
                 .Where(button => LabelText(button) == label)
                 .ToArray();
             Assert.That(
                 matchingButtons,
                 Has.Length.EqualTo(1),
-                $"The production {window.GetType().Name} window should provide exactly one button labelled '{label}'.");
+                $"The production {screen.GetType().Name} screen should provide exactly one button labelled '{label}'.");
             return matchingButtons[0];
         }
 
@@ -188,9 +188,9 @@ namespace TicTacToeLab.PlayModeTests
             return label == null ? string.Empty : label.text;
         }
 
-        private static string[] VisibleTexts(Component window)
+        private static string[] VisibleTexts(Component screen)
         {
-            return window.GetComponentsInChildren<TMP_Text>(true)
+            return screen.GetComponentsInChildren<TMP_Text>(true)
                 .Where(text => text.isActiveAndEnabled)
                 .Select(text => text.text)
                 .ToArray();

@@ -410,7 +410,7 @@ GameObject:
   - component: {fileID: 6427381337086417004}
   - component: {fileID: 8594677800741898960}
   m_Layer: 0
-  m_Name: HomePanel
+  m_Name: HomeScreen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -448,7 +448,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 34752d35af83390439d55cececa2d9ae, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.HomePanel
+  m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.HomeScreen
   _startButton: {fileID: 240719815863700468}
 --- !u!1 &7280169203113401455
 GameObject:

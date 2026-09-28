@@ -10,73 +10,73 @@ using UnityEngine.UI;
 namespace TicTacToeLab.PlayModeTests
 {
     /// <summary>
-    /// Generates the application UI's panels, popups, and layers so isolated checks never load production assets.
-    /// Every requested object is returned with the direct button and text references it was wired with, and windows
-    /// that AppUI creates from these templates are observed through <see cref="Windows"/>.
+    /// Generates the application UI's base and popup screens and layers so isolated checks never load production assets.
+    /// Every requested object is returned with the direct button and text references it was wired with, and screens
+    /// that AppUI creates from these templates are observed through <see cref="Screens"/>.
     /// The generated application UI can also serve as Bootstrap's application UI adapter template.
     /// </summary>
     public sealed class GeneratedAppUIFixture
     {
-        public GeneratedWindowRegistry Windows { get; }
-        public RectTransform PanelLayer { get; private set; }
+        public GeneratedScreenRegistry Screens { get; }
+        public RectTransform BaseLayer { get; private set; }
         public RectTransform PopupLayer { get; private set; }
 
         private readonly List<GameObject> _generatedRoots = new();
 
         public GeneratedAppUIFixture()
         {
-            GameObject registryRoot = CreateRoot("Generated window registry");
-            Windows = registryRoot.AddComponent<GeneratedWindowRegistry>();
+            GameObject registryRoot = CreateRoot("Generated screen registry");
+            Screens = registryRoot.AddComponent<GeneratedScreenRegistry>();
         }
 
-        public (HomePanel Panel, Button StartButton) CreateHomePanel()
+        public (HomeScreen Screen, Button StartButton) CreateHomeScreen()
         {
-            GameObject root = CreateRoot("Generated Home panel");
+            GameObject root = CreateRoot("Generated Home screen");
             Button startButton = CreateButton(root.transform, "Start button");
-            HomePanel panel = root.AddComponent<HomePanel>();
+            HomeScreen screen = root.AddComponent<HomeScreen>();
             AttachLifecycleProbe(root);
-            TestSerializedReference.AssignPrefab(panel, "_startButton", startButton);
+            TestSerializedReference.AssignPrefab(screen, "_startButton", startButton);
             root.SetActive(true);
-            return (panel, startButton);
+            return (screen, startButton);
         }
 
-        public (GameplayPanel Panel, Button BackButton, TMP_Text TurnText) CreateGameplayPanel()
+        public (GameplayScreen Screen, Button BackButton, TMP_Text TurnText) CreateGameplayScreen()
         {
-            GameObject root = CreateRoot("Generated gameplay panel");
+            GameObject root = CreateRoot("Generated gameplay screen");
             Button backButton = CreateButton(root.transform, "Back button");
             TMP_Text turnText = CreateText(root.transform, "Turn text");
-            GameplayPanel panel = root.AddComponent<GameplayPanel>();
+            GameplayScreen screen = root.AddComponent<GameplayScreen>();
             AttachLifecycleProbe(root);
-            TestSerializedReference.AssignPrefab(panel, "_backButton", backButton);
-            TestSerializedReference.AssignPrefab(panel, "_turnText", turnText);
+            TestSerializedReference.AssignPrefab(screen, "_backButton", backButton);
+            TestSerializedReference.AssignPrefab(screen, "_turnText", turnText);
             root.SetActive(true);
-            return (panel, backButton, turnText);
+            return (screen, backButton, turnText);
         }
 
-        public (ConfirmQuitPopup Popup, Button YesButton, Button NoButton) CreateQuitConfirmationPopup()
+        public (ConfirmQuitScreen Screen, Button YesButton, Button NoButton) CreateConfirmQuitScreen()
         {
-            GameObject root = CreateRoot("Generated quit confirmation popup");
+            GameObject root = CreateRoot("Generated confirm quit screen");
             Button yesButton = CreateButton(root.transform, "Yes button");
             Button noButton = CreateButton(root.transform, "No button");
-            ConfirmQuitPopup popup = root.AddComponent<ConfirmQuitPopup>();
+            ConfirmQuitScreen screen = root.AddComponent<ConfirmQuitScreen>();
             AttachLifecycleProbe(root);
-            TestSerializedReference.AssignPrefab(popup, "_yesButton", yesButton);
-            TestSerializedReference.AssignPrefab(popup, "_noButton", noButton);
+            TestSerializedReference.AssignPrefab(screen, "_yesButton", yesButton);
+            TestSerializedReference.AssignPrefab(screen, "_noButton", noButton);
             root.SetActive(true);
-            return (popup, yesButton, noButton);
+            return (screen, yesButton, noButton);
         }
 
-        public (OutcomePopup Popup, Button ContinueButton, TMP_Text TitleText) CreateOutcomePopup()
+        public (OutcomeScreen Screen, Button ContinueButton, TMP_Text TitleText) CreateOutcomeScreen()
         {
-            GameObject root = CreateRoot("Generated outcome popup");
+            GameObject root = CreateRoot("Generated outcome screen");
             Button continueButton = CreateButton(root.transform, "Continue button");
             TMP_Text titleText = CreateText(root.transform, "Title text");
-            OutcomePopup popup = root.AddComponent<OutcomePopup>();
+            OutcomeScreen screen = root.AddComponent<OutcomeScreen>();
             AttachLifecycleProbe(root);
-            TestSerializedReference.AssignPrefab(popup, "_continueButton", continueButton);
-            TestSerializedReference.AssignPrefab(popup, "_titleText", titleText);
+            TestSerializedReference.AssignPrefab(screen, "_continueButton", continueButton);
+            TestSerializedReference.AssignPrefab(screen, "_titleText", titleText);
             root.SetActive(true);
-            return (popup, continueButton, titleText);
+            return (screen, continueButton, titleText);
         }
 
         public T CreateScreenTemplate<T>() where T : MonoBehaviour
@@ -92,11 +92,11 @@ namespace TicTacToeLab.PlayModeTests
         public AppUI CreateInactiveAppUI(params ScreenRegistration[] registrations)
         {
             GameObject root = CreateRoot("Generated application UI");
-            PanelLayer = CreateLayer(root.transform, "Generated panel layer");
+            BaseLayer = CreateLayer(root.transform, "Generated base layer");
             PopupLayer = CreateLayer(root.transform, "Generated popup layer");
 
             AppUI appUI = root.AddComponent<AppUI>();
-            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", PanelLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", BaseLayer);
             TestSerializedReference.AssignPrefab(appUI, "_popupLayer", PopupLayer);
             TestSerializedReference.AssignScreenRegistrations(appUI, registrations);
             return appUI;
@@ -105,13 +105,13 @@ namespace TicTacToeLab.PlayModeTests
         public AppUI CreateAppUI()
         {
             GameObject root = CreateRoot("Generated application UI");
-            PanelLayer = CreateLayer(root.transform, "Generated panel layer");
+            BaseLayer = CreateLayer(root.transform, "Generated base layer");
             PopupLayer = CreateLayer(root.transform, "Generated popup layer");
 
-            (HomePanel home, Button _) = CreateHomePanel();
-            (GameplayPanel gameplay, Button _, TMP_Text _) = CreateGameplayPanel();
-            (ConfirmQuitPopup quitConfirmation, Button _, Button _) = CreateQuitConfirmationPopup();
-            (OutcomePopup outcome, Button _, TMP_Text _) = CreateOutcomePopup();
+            (HomeScreen home, Button _) = CreateHomeScreen();
+            (GameplayScreen gameplay, Button _, TMP_Text _) = CreateGameplayScreen();
+            (ConfirmQuitScreen quitConfirmation, Button _, Button _) = CreateConfirmQuitScreen();
+            (OutcomeScreen outcome, Button _, TMP_Text _) = CreateOutcomeScreen();
 
             IgnoreAsTemplate(home.gameObject);
             IgnoreAsTemplate(gameplay.gameObject);
@@ -123,7 +123,7 @@ namespace TicTacToeLab.PlayModeTests
             TestSerializedReference.AssignPrefab(appUI, "_gameplayPanelPrefab", gameplay);
             TestSerializedReference.AssignPrefab(appUI, "_quitConfirmationPopupPrefab", quitConfirmation);
             TestSerializedReference.AssignPrefab(appUI, "_outcomePopupPrefab", outcome);
-            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", PanelLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_panelLayer", BaseLayer);
             TestSerializedReference.AssignPrefab(appUI, "_popupLayer", PopupLayer);
             TestSerializedReference.AssignScreenRegistrations(
                 appUI,
@@ -164,15 +164,15 @@ namespace TicTacToeLab.PlayModeTests
             return root;
         }
 
-        private void AttachLifecycleProbe(GameObject windowRoot)
+        private void AttachLifecycleProbe(GameObject screenRoot)
         {
-            LifecycleProbe probe = windowRoot.AddComponent<LifecycleProbe>();
-            TestSerializedReference.AssignPrefab(probe, "_registry", Windows);
+            LifecycleProbe probe = screenRoot.AddComponent<LifecycleProbe>();
+            TestSerializedReference.AssignPrefab(probe, "_registry", Screens);
         }
 
-        private static void IgnoreAsTemplate(GameObject windowRoot)
+        private static void IgnoreAsTemplate(GameObject screenRoot)
         {
-            windowRoot.GetComponent<LifecycleProbe>().IgnoreAsTemplate();
+            screenRoot.GetComponent<LifecycleProbe>().IgnoreAsTemplate();
         }
 
         private static RectTransform CreateLayer(Transform parent, string name)

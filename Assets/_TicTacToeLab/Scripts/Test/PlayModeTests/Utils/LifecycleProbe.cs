@@ -4,7 +4,7 @@ using UnityEngine;
 namespace TicTacToeLab.PlayModeTests
 {
     /// <summary>
-    /// Records the creation, visibility, and deferred destruction of a generated window so isolated checks observe
+    /// Records the creation, visibility, and deferred destruction of a generated screen so isolated checks observe
     /// lifecycle outcomes through retained references instead of searching the hierarchy.
     /// </summary>
     public sealed class LifecycleProbe : MonoBehaviour
@@ -13,7 +13,7 @@ namespace TicTacToeLab.PlayModeTests
 
         public bool IsShown => !WasDestroyed && gameObject.activeInHierarchy;
 
-        [SerializeField] private GeneratedWindowRegistry _registry;
+        [SerializeField] private GeneratedScreenRegistry _registry;
         private bool _isTemplate;
 
         public void IgnoreAsTemplate()

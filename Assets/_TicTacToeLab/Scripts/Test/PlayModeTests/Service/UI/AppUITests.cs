@@ -27,20 +27,20 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator Showing_gameplay_replaces_and_destroys_the_previous_panel()
+        public IEnumerator Showing_gameplay_replaces_and_destroys_the_previous_screen()
         {
             // Arrange
             _sut.ShowHome(() => { });
-            LifecycleProbe replacedPanel = _fixture.Windows.RequireLatestFor<HomePanel>();
+            LifecycleProbe replacedScreen = _fixture.Screens.RequireLatestFor<HomeScreen>();
 
             // Act
             _sut.ShowGameplay(_boardPresenter, () => { });
 
             // Assert
-            Assert.That(_fixture.Windows.RequireLatestFor<GameplayPanel>().IsShown, Is.True, "Showing gameplay should present the current panel.");
+            Assert.That(_fixture.Screens.RequireLatestFor<GameplayScreen>().IsShown, Is.True, "Showing gameplay should present the current screen.");
             yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => replacedPanel.WasDestroyed,
-                "Showing gameplay should destroy the previous panel instance.");
+                () => replacedScreen.WasDestroyed,
+                "Showing gameplay should destroy the previous screen instance.");
         }
 
         [UnityTest]
@@ -48,17 +48,17 @@ namespace TicTacToeLab.PlayModeTests
         {
             // Arrange
             _sut.ShowGameplay(_boardPresenter, () => { });
-            LifecycleProbe gameplay = _fixture.Windows.RequireLatestFor<GameplayPanel>();
+            LifecycleProbe gameplay = _fixture.Screens.RequireLatestFor<GameplayScreen>();
 
             _sut.ShowQuitConfirmation(() => { }, () => { });
-            LifecycleProbe replacedPopup = _fixture.Windows.RequireLatestFor<ConfirmQuitPopup>();
+            LifecycleProbe replacedPopup = _fixture.Screens.RequireLatestFor<ConfirmQuitScreen>();
 
             // Act
             _sut.ShowOutcome(Outcome.XWin, () => { });
 
             // Assert
-            Assert.That(_fixture.Windows.RequireLatestFor<OutcomePopup>().IsShown, Is.True, "Showing the outcome should present the current popup.");
-            Assert.That(gameplay.IsShown, Is.True, "Showing a popup should keep the gameplay panel shown beneath it.");
+            Assert.That(_fixture.Screens.RequireLatestFor<OutcomeScreen>().IsShown, Is.True, "Showing the outcome should present the current popup.");
+            Assert.That(gameplay.IsShown, Is.True, "Showing a popup should keep the gameplay screen shown beneath it.");
             yield return PlayModeWait.IE_WaitUntilOrFail(
                 () => replacedPopup.WasDestroyed,
                 "Replacing the popup should destroy the previous popup instance.");
@@ -69,10 +69,10 @@ namespace TicTacToeLab.PlayModeTests
         {
             // Arrange
             _sut.ShowGameplay(_boardPresenter, () => { });
-            LifecycleProbe gameplay = _fixture.Windows.RequireLatestFor<GameplayPanel>();
+            LifecycleProbe gameplay = _fixture.Screens.RequireLatestFor<GameplayScreen>();
 
             _sut.ShowQuitConfirmation(() => { }, () => { });
-            LifecycleProbe popup = _fixture.Windows.RequireLatestFor<ConfirmQuitPopup>();
+            LifecycleProbe popup = _fixture.Screens.RequireLatestFor<ConfirmQuitScreen>();
 
             // Act
             _sut.CloseQuitConfirmation();
@@ -81,7 +81,7 @@ namespace TicTacToeLab.PlayModeTests
             yield return PlayModeWait.IE_WaitUntilOrFail(
                 () => popup.WasDestroyed,
                 "Closing quit confirmation should destroy its popup instance.");
-            Assert.That(gameplay.IsShown, Is.True, "Closing quit confirmation should keep the current panel shown.");
+            Assert.That(gameplay.IsShown, Is.True, "Closing quit confirmation should keep the current screen shown.");
         }
 
         [UnityTest]
@@ -89,10 +89,10 @@ namespace TicTacToeLab.PlayModeTests
         {
             // Arrange
             _sut.ShowGameplay(_boardPresenter, () => { });
-            LifecycleProbe gameplay = _fixture.Windows.RequireLatestFor<GameplayPanel>();
+            LifecycleProbe gameplay = _fixture.Screens.RequireLatestFor<GameplayScreen>();
 
             _sut.ShowOutcome(Outcome.Draw, () => { });
-            LifecycleProbe popup = _fixture.Windows.RequireLatestFor<OutcomePopup>();
+            LifecycleProbe popup = _fixture.Screens.RequireLatestFor<OutcomeScreen>();
 
             // Act
             _sut.ClosePopup();
@@ -101,7 +101,7 @@ namespace TicTacToeLab.PlayModeTests
             yield return PlayModeWait.IE_WaitUntilOrFail(
                 () => popup.WasDestroyed,
                 "Closing the popup should destroy its popup instance.");
-            Assert.That(gameplay.IsShown, Is.True, "Closing the popup should keep the current panel shown.");
+            Assert.That(gameplay.IsShown, Is.True, "Closing the popup should keep the current screen shown.");
         }
     }
 }

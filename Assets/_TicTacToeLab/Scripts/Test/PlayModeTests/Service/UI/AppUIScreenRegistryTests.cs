@@ -42,11 +42,11 @@ namespace TicTacToeLab.PlayModeTests
             });
 
             // Assert
-            LifecycleProbe presented = _fixture.Windows.RequireLatestFor<GeneratedHomeScreen>();
+            LifecycleProbe presented = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
             Assert.That(presented.IsShown, Is.True, "Showing a registered base screen should present it.");
             Assert.That(
                 presented.transform.parent,
-                Is.SameAs(_fixture.PanelLayer),
+                Is.SameAs(_fixture.BaseLayer),
                 "A base registration should instantiate under the base layer.");
             Assert.That(
                 configuredScreen,
@@ -67,7 +67,7 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             Assert.That(
-                _fixture.Windows.RequireLatestFor<GeneratedHomeScreen>().IsShown,
+                _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>().IsShown,
                 Is.True,
                 "Showing a registered screen without a configuration callback should present it.");
         }
@@ -82,7 +82,7 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(homePrefab, ScreenLayer.Base),
                 new ScreenRegistration(gameplayPrefab, ScreenLayer.Base));
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
-            LifecycleProbe outgoing = _fixture.Windows.RequireLatestFor<GeneratedHomeScreen>();
+            LifecycleProbe outgoing = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
             Assert.That(outgoing.IsShown, Is.True, "The first base screen should be presented before it is replaced.");
 
             // Act
@@ -91,7 +91,7 @@ namespace TicTacToeLab.PlayModeTests
             // Assert
             Assert.That(outgoing.IsShown, Is.False, "Replacing a base screen should deactivate the outgoing screen immediately.");
             Assert.That(
-                _fixture.Windows.RequireLatestFor<GeneratedGameplayScreen>().IsShown,
+                _fixture.Screens.RequireLatestFor<GeneratedGameplayScreen>().IsShown,
                 Is.True,
                 "Replacing a base screen should present the incoming screen.");
             yield return PlayModeWait.IE_WaitUntilOrFail(
@@ -111,13 +111,13 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(quitConfirmationPrefab, ScreenLayer.Popup),
                 new ScreenRegistration(outcomePrefab, ScreenLayer.Popup));
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
-            LifecycleProbe baseScreen = _fixture.Windows.RequireLatestFor<GeneratedHomeScreen>();
+            LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
 
             // Act
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => { }, () => { }));
 
             // Assert
-            LifecycleProbe outgoingPopup = _fixture.Windows.RequireLatestFor<GeneratedConfirmQuitScreen>();
+            LifecycleProbe outgoingPopup = _fixture.Screens.RequireLatestFor<GeneratedConfirmQuitScreen>();
             Assert.That(outgoingPopup.IsShown, Is.True, "Showing a popup should present it.");
             Assert.That(
                 outgoingPopup.transform.parent,
@@ -130,7 +130,7 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             Assert.That(
-                _fixture.Windows.RequireLatestFor<GeneratedOutcomeScreen>().IsShown,
+                _fixture.Screens.RequireLatestFor<GeneratedOutcomeScreen>().IsShown,
                 Is.True,
                 "Replacing a popup should present the incoming popup.");
             Assert.That(baseScreen.IsShown, Is.True, "Replacing a popup should preserve the base screen.");
@@ -153,7 +153,7 @@ namespace TicTacToeLab.PlayModeTests
                 Throws.TypeOf<InvalidOperationException>().With.Message.Contains(nameof(IConfirmQuitScreen)),
                 "The rejected popup failure should identify the popup role.");
             Assert.That(
-                _fixture.Windows.LatestFor<GeneratedConfirmQuitScreen>(),
+                _fixture.Screens.LatestFor<GeneratedConfirmQuitScreen>(),
                 Is.Null,
                 "A rejected popup should not be instantiated.");
         }
@@ -171,8 +171,8 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(quitConfirmationPrefab, ScreenLayer.Popup));
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => { }, () => { }));
-            LifecycleProbe baseScreen = _fixture.Windows.RequireLatestFor<GeneratedHomeScreen>();
-            LifecycleProbe popup = _fixture.Windows.RequireLatestFor<GeneratedConfirmQuitScreen>();
+            LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
+            LifecycleProbe popup = _fixture.Screens.RequireLatestFor<GeneratedConfirmQuitScreen>();
 
             // Act and Assert
             Assert.That(
@@ -180,7 +180,7 @@ namespace TicTacToeLab.PlayModeTests
                 Throws.TypeOf<InvalidOperationException>().With.Message.Contains(nameof(IGameplayScreen)),
                 "The rejected base failure should identify the base role.");
             Assert.That(
-                _fixture.Windows.LatestFor<GeneratedGameplayScreen>(),
+                _fixture.Screens.LatestFor<GeneratedGameplayScreen>(),
                 Is.Null,
                 "A rejected base screen should not be instantiated.");
             Assert.That(baseScreen.IsShown, Is.True, "Rejecting base navigation should keep the active base screen shown.");
@@ -201,7 +201,7 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(quitConfirmationPrefab, ScreenLayer.Popup));
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => { }, () => { }));
-            LifecycleProbe baseScreen = _fixture.Windows.RequireLatestFor<GeneratedHomeScreen>();
+            LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
 
             // Act and Assert
             Assert.That(
@@ -222,8 +222,8 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(outcomePrefab, ScreenLayer.Popup));
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
             sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.XWin, () => { }));
-            LifecycleProbe baseScreen = _fixture.Windows.RequireLatestFor<GeneratedHomeScreen>();
-            LifecycleProbe popup = _fixture.Windows.RequireLatestFor<GeneratedOutcomeScreen>();
+            LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
+            LifecycleProbe popup = _fixture.Screens.RequireLatestFor<GeneratedOutcomeScreen>();
 
             // Act
             sut.Close<IOutcomeScreen>();
@@ -245,7 +245,7 @@ namespace TicTacToeLab.PlayModeTests
             GeneratedHomeScreen homePrefab = _fixture.CreateScreenTemplate<GeneratedHomeScreen>();
             AppUI sut = CreateActiveAppUI(new ScreenRegistration(homePrefab, ScreenLayer.Base));
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
-            LifecycleProbe baseScreen = _fixture.Windows.RequireLatestFor<GeneratedHomeScreen>();
+            LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
 
             // Act
             sut.Close<IHomeScreen>();
@@ -272,8 +272,8 @@ namespace TicTacToeLab.PlayModeTests
             sut.Close<IOutcomeScreen>();
 
             // Assert
-            Assert.That(_fixture.Windows.LatestFor<GeneratedHomeScreen>(), Is.Null, "Closing an inactive role should not create a screen.");
-            Assert.That(_fixture.Windows.LatestFor<GeneratedOutcomeScreen>(), Is.Null, "Closing an inactive role should not create a screen.");
+            Assert.That(_fixture.Screens.LatestFor<GeneratedHomeScreen>(), Is.Null, "Closing an inactive role should not create a screen.");
+            Assert.That(_fixture.Screens.LatestFor<GeneratedOutcomeScreen>(), Is.Null, "Closing an inactive role should not create a screen.");
         }
 
         [UnityTest]
@@ -290,7 +290,7 @@ namespace TicTacToeLab.PlayModeTests
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => { }, () => { }));
             sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.Draw, () => { }));
-            LifecycleProbe currentPopup = _fixture.Windows.RequireLatestFor<GeneratedOutcomeScreen>();
+            LifecycleProbe currentPopup = _fixture.Screens.RequireLatestFor<GeneratedOutcomeScreen>();
 
             // Act
             sut.Close<IConfirmQuitScreen>();
@@ -392,7 +392,7 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(
                 () => sut.Show<IHomeScreen>(screen =>
                 {
-                    partiallyCreated = _fixture.Windows.RequireLatestFor<GeneratedHomeScreen>();
+                    partiallyCreated = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
                     throw new InvalidOperationException("Configuration failed.");
                 }),
                 Throws.TypeOf<InvalidOperationException>().With.Message.EqualTo("Configuration failed."),

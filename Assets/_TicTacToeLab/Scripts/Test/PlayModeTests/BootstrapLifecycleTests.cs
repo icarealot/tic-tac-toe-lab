@@ -66,10 +66,10 @@ namespace TicTacToeLab.PlayModeTests
             _ = _fixture.CreateConfiguredBootstrap();
 
             // Assert
-            LifecycleProbe home = _fixture.AppUI.Windows.RequireLatestFor<HomePanel>();
+            LifecycleProbe home = _fixture.AppUI.Screens.RequireLatestFor<HomeScreen>();
             Assert.That(home.IsShown, Is.True, "Starting the application should present Home.");
             Assert.That(
-                _fixture.AppUI.Windows.LatestFor<GameplayPanel>(),
+                _fixture.AppUI.Screens.LatestFor<GameplayScreen>(),
                 Is.Null,
                 "Starting the application should not present gameplay before the player starts a game.");
         }

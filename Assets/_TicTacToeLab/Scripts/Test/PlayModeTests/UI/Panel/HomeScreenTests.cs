@@ -7,21 +7,21 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class HomePanelTests
+    public sealed class HomeScreenTests
     {
         private GeneratedAppUIFixture _fixture;
-        private HomePanel _sut;
+        private HomeScreen _sut;
         private Button _startButton;
 
         [SetUp]
-        public void CreateGeneratedHomePanel()
+        public void CreateGeneratedHomeScreen()
         {
             _fixture = new GeneratedAppUIFixture();
-            (_sut, _startButton) = _fixture.CreateHomePanel();
+            (_sut, _startButton) = _fixture.CreateHomeScreen();
         }
 
         [UnityTearDown]
-        public IEnumerator DestroyGeneratedHomePanel()
+        public IEnumerator DestroyGeneratedHomeScreen()
         {
             yield return _fixture.IE_DestroyAll();
         }

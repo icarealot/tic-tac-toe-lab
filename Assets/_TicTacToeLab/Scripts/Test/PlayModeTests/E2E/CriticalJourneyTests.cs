@@ -115,9 +115,9 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => FindActiveWindow<HomePanel>() != null,
+                () => FindActiveScreen<HomeScreen>() != null,
                 "The production scene should start with the production Home screen available to the player.");
-            Button startButton = RequireButton(FindActiveWindow<HomePanel>());
+            Button startButton = RequireButton(FindActiveScreen<HomeScreen>());
             Assert.That(startButton.isActiveAndEnabled, Is.True, "The production Home screen's Start button should be available to the player.");
             Assert.That(startButton.interactable, Is.True, "The production Home screen's Start button should be usable by the player.");
 
@@ -126,11 +126,11 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => FindActiveWindow<GameplayPanel>() != null && BoardMarks().Length == 0,
+                () => FindActiveScreen<GameplayScreen>() != null && BoardMarks().Length == 0,
                 "Clicking Start should show gameplay with an empty board.");
-            GameplayPanel gameplayPanel = FindActiveWindow<GameplayPanel>();
+            GameplayScreen gameplayScreen = FindActiveScreen<GameplayScreen>();
             Assert.That(
-                VisibleTexts(gameplayPanel),
+                VisibleTexts(gameplayScreen),
                 Has.Exactly(1).EqualTo(X_TURN_TEXT),
                 "Gameplay should begin on X's turn.");
 
@@ -160,34 +160,34 @@ namespace TicTacToeLab.PlayModeTests
 
             // Act & Assert: the outcome is presented asynchronously over the untouched completed board.
             yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => FindActiveWindow<OutcomePopup>() != null
+                () => FindActiveScreen<OutcomeScreen>() != null
                     && completedBoardMarks.All(mark => mark != null && mark.gameObject.activeInHierarchy),
-                "The outcome popup should appear while every completed-board mark remains observable.");
-            OutcomePopup outcomePopup = FindActiveWindow<OutcomePopup>();
+                "The outcome screen should appear while every completed-board mark remains observable.");
+            OutcomeScreen outcomeScreen = FindActiveScreen<OutcomeScreen>();
             Assert.That(
-                VisibleTexts(outcomePopup),
+                VisibleTexts(outcomeScreen),
                 Has.Exactly(1).EqualTo(X_WIN_TEXT),
-                "The outcome popup should report the X win.");
+                "The outcome screen should report the X win.");
             Assert.That(
                 completedBoardMarks.All(mark => mark != null && mark.gameObject.activeInHierarchy),
                 Is.True,
-                "Every completed-board mark should remain observable while the outcome popup is shown.");
+                "Every completed-board mark should remain observable while the outcome screen is shown.");
             Assert.That(
                 ObservableMarksInRow(WINNING_ROW),
                 Has.Length.EqualTo(BOARD_DIMENSION),
-                "The winning row should remain observable on the production board while the outcome popup is shown.");
+                "The winning row should remain observable on the production board while the outcome screen is shown.");
 
             // Act
-            yield return IE_Click(RequireButton(outcomePopup));
+            yield return IE_Click(RequireButton(outcomeScreen));
 
             // Assert
             yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => FindActiveWindow<HomePanel>() != null
-                    && FindActiveWindow<GameplayPanel>() == null
-                    && FindActiveWindow<OutcomePopup>() == null,
+                () => FindActiveScreen<HomeScreen>() != null
+                    && FindActiveScreen<GameplayScreen>() == null
+                    && FindActiveScreen<OutcomeScreen>() == null,
                 "Clicking Continue should return the player to Home.");
             Assert.That(
-                RequireButton(FindActiveWindow<HomePanel>()).interactable,
+                RequireButton(FindActiveScreen<HomeScreen>()).interactable,
                 Is.True,
                 "The production Home screen should be usable again after the journey returns to it.");
         }
@@ -280,10 +280,10 @@ namespace TicTacToeLab.PlayModeTests
                 .ToArray();
         }
 
-        private T FindActiveWindow<T>() where T : Component
+        private T FindActiveScreen<T>() where T : Component
         {
             return _appUI.GetComponentsInChildren<T>(true)
-                .FirstOrDefault(window => window != null && window.gameObject.activeInHierarchy);
+                .FirstOrDefault(screen => screen != null && screen.gameObject.activeInHierarchy);
         }
 
         private static T RequireSingleAdapter<T>() where T : Component
@@ -296,19 +296,19 @@ namespace TicTacToeLab.PlayModeTests
             return adapters[0];
         }
 
-        private static Button RequireButton(Component window)
+        private static Button RequireButton(Component screen)
         {
-            Button button = window.GetComponentsInChildren<Button>(true).FirstOrDefault();
+            Button button = screen.GetComponentsInChildren<Button>(true).FirstOrDefault();
             Assert.That(
                 button,
                 Is.Not.Null,
-                $"The production {window.GetType().Name} window should provide the control this journey clicks.");
+                $"The production {screen.GetType().Name} screen should provide the control this journey clicks.");
             return button;
         }
 
-        private static string[] VisibleTexts(Component window)
+        private static string[] VisibleTexts(Component screen)
         {
-            return window.GetComponentsInChildren<TMP_Text>(true)
+            return screen.GetComponentsInChildren<TMP_Text>(true)
                 .Where(text => text.isActiveAndEnabled)
                 .Select(text => text.text)
                 .ToArray();

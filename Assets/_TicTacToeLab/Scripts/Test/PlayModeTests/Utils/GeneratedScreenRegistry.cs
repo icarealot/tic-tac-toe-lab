@@ -6,9 +6,9 @@ using UnityEngine;
 namespace TicTacToeLab.PlayModeTests
 {
     /// <summary>
-    /// Retains the lifecycle probes of generated windows so isolated checks observe instances without searching the hierarchy.
+    /// Retains the lifecycle probes of generated screens so isolated checks observe instances without searching the hierarchy.
     /// </summary>
-    public sealed class GeneratedWindowRegistry : MonoBehaviour
+    public sealed class GeneratedScreenRegistry : MonoBehaviour
     {
         private readonly List<LifecycleProbe> _probes = new();
 
@@ -41,7 +41,7 @@ namespace TicTacToeLab.PlayModeTests
             LifecycleProbe probe = LatestFor<T>();
             if (probe == null)
             {
-                throw new InvalidOperationException($"No generated {typeof(T).Name} window was observed.");
+                throw new InvalidOperationException($"No generated {typeof(T).Name} screen was observed.");
             }
 
             return probe;

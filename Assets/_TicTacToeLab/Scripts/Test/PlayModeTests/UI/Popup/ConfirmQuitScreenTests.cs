@@ -7,22 +7,22 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.PlayModeTests
 {
-    public sealed class ConfirmQuitPopupTests
+    public sealed class ConfirmQuitScreenTests
     {
         private GeneratedAppUIFixture _fixture;
-        private ConfirmQuitPopup _sut;
+        private ConfirmQuitScreen _sut;
         private Button _yesButton;
         private Button _noButton;
 
         [SetUp]
-        public void CreateGeneratedQuitConfirmationPopup()
+        public void CreateGeneratedConfirmQuitScreen()
         {
             _fixture = new GeneratedAppUIFixture();
-            (_sut, _yesButton, _noButton) = _fixture.CreateQuitConfirmationPopup();
+            (_sut, _yesButton, _noButton) = _fixture.CreateConfirmQuitScreen();
         }
 
         [UnityTearDown]
-        public IEnumerator DestroyGeneratedQuitConfirmationPopup()
+        public IEnumerator DestroyGeneratedConfirmQuitScreen()
         {
             yield return _fixture.IE_DestroyAll();
         }

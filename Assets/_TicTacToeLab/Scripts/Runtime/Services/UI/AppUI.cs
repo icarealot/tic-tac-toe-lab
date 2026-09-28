@@ -6,10 +6,10 @@ namespace TicTacToeLab.Runtime
 {
     public sealed class AppUI : MonoBehaviour, IAppUI
     {
-        [SerializeField] private HomePanel _homePanelPrefab;
-        [SerializeField] private GameplayPanel _gameplayPanelPrefab;
-        [SerializeField] private ConfirmQuitPopup _quitConfirmationPopupPrefab;
-        [SerializeField] private OutcomePopup _outcomePopupPrefab;
+        [SerializeField] private HomeScreen _homePanelPrefab;
+        [SerializeField] private GameplayScreen _gameplayPanelPrefab;
+        [SerializeField] private ConfirmQuitScreen _quitConfirmationPopupPrefab;
+        [SerializeField] private OutcomeScreen _outcomePopupPrefab;
         [SerializeField] private List<ScreenRegistration> _screenRegistrations = new();
         [SerializeField] private RectTransform _panelLayer;
         [SerializeField] private RectTransform _popupLayer;
@@ -70,7 +70,7 @@ namespace TicTacToeLab.Runtime
         {
             DestroyCurrentPanel();
 
-            HomePanel panel = Instantiate(_homePanelPrefab, _panelLayer);
+            HomeScreen panel = Instantiate(_homePanelPrefab, _panelLayer);
             panel.Setup(onStart);
             _currentPanel = panel;
         }
@@ -79,7 +79,7 @@ namespace TicTacToeLab.Runtime
         {
             DestroyCurrentPanel();
 
-            GameplayPanel panel = Instantiate(_gameplayPanelPrefab, _panelLayer);
+            GameplayScreen panel = Instantiate(_gameplayPanelPrefab, _panelLayer);
             panel.Setup(boardPresenter, onBack);
             _currentPanel = panel;
         }
@@ -88,7 +88,7 @@ namespace TicTacToeLab.Runtime
         {
             DestroyCurrentPopup();
 
-            ConfirmQuitPopup popup = Instantiate(_quitConfirmationPopupPrefab, _popupLayer);
+            ConfirmQuitScreen popup = Instantiate(_quitConfirmationPopupPrefab, _popupLayer);
             popup.Setup(onQuit, onCancel);
             _currentPopup = popup;
         }
@@ -102,7 +102,7 @@ namespace TicTacToeLab.Runtime
         {
             DestroyCurrentPopup();
 
-            OutcomePopup popup = Instantiate(_outcomePopupPrefab, _popupLayer);
+            OutcomeScreen popup = Instantiate(_outcomePopupPrefab, _popupLayer);
             popup.Setup(outcome, onContinue);
             _currentPopup = popup;
         }

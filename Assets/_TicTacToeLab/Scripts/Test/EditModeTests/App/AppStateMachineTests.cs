@@ -265,7 +265,7 @@ namespace TicTacToeLab.EditModeTests
             // Assert
             Assert.That(_appUI.OutcomeScreen.IsVisible, Is.True);
             Assert.That(_appUI.OutcomeScreen.ShownOutcome, Is.EqualTo(expectedOutcome));
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True, "The popup should appear over the still-visible gameplay panel.");
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True, "The popup should appear over the still-visible gameplay screen.");
             Assert.That(BoardState.CaptureMarks(_boardModel), Is.EqualTo(completedMarks));
             Assert.That(_boardView.ShownMarks, Is.EqualTo(renderedMarks));
         }

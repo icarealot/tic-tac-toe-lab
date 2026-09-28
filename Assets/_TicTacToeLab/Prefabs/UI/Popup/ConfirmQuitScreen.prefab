@@ -729,7 +729,7 @@ GameObject:
   - component: {fileID: 6243301282474438968}
   - component: {fileID: 1867508046785442392}
   m_Layer: 0
-  m_Name: ConfirmQuitPopup
+  m_Name: ConfirmQuitScreen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -767,7 +767,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bdca04d3a977a3d44aac446f5da07707, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.ConfirmQuitPopup
+  m_EditorClassIdentifier: TicTacToeLab.Runtime::TicTacToeLab.Runtime.ConfirmQuitScreen
   _yesButton: {fileID: 5086125135330187930}
   _noButton: {fileID: 6638660060778498059}
 --- !u!1 &8664266075473175334
