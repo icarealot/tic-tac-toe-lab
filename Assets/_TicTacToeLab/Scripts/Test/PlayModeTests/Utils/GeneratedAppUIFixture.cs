@@ -125,6 +125,15 @@ namespace TicTacToeLab.PlayModeTests
             TestSerializedReference.AssignPrefab(appUI, "_outcomePopupPrefab", outcome);
             TestSerializedReference.AssignPrefab(appUI, "_panelLayer", PanelLayer);
             TestSerializedReference.AssignPrefab(appUI, "_popupLayer", PopupLayer);
+            TestSerializedReference.AssignScreenRegistrations(
+                appUI,
+                new[]
+                {
+                    new ScreenRegistration(mainMenu, ScreenLayer.Base),
+                    new ScreenRegistration(gameplay, ScreenLayer.Base),
+                    new ScreenRegistration(quitConfirmation, ScreenLayer.Popup),
+                    new ScreenRegistration(outcome, ScreenLayer.Popup),
+                });
             root.SetActive(true);
             return appUI;
         }

@@ -22,8 +22,7 @@ namespace TicTacToeLab.Runtime
         public void Enter()
         {
             _inputService.DisablePlayerPress();
-            _appUI.ClosePopup();
-            _appUI.ShowMainMenu(StartGame);
+            _appUI.Show<IHomeScreen>(screen => screen.Setup(StartGame));
         }
 
         public void Exit()

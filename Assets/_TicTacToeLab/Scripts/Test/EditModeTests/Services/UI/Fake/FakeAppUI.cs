@@ -1,103 +1,183 @@
 using System;
+using System.Collections.Generic;
 using TicTacToeLab.Runtime;
 
 namespace TicTacToeLab.EditModeTests
 {
     public sealed class FakeAppUI : IAppUI
     {
-        public bool IsMainMenuVisible { get; private set; }
-        public bool IsGameplayVisible { get; private set; }
-        public bool IsQuitConfirmationVisible { get; private set; }
-        public bool IsOutcomeVisible { get; private set; }
-        public bool HasPopup => IsQuitConfirmationVisible || IsOutcomeVisible;
+        public FakeHomeScreen HomeScreen { get; } = new();
+        public FakeGameplayScreen GameplayScreen { get; } = new();
+        public FakeConfirmQuitScreen ConfirmQuitScreen { get; } = new();
+        public FakeOutcomeScreen OutcomeScreen { get; } = new();
+        public bool HasPopup => ConfirmQuitScreen.IsVisible || OutcomeScreen.IsVisible;
+        public IReadOnlyList<string> Operations => _operations;
 
-        public int MainMenuPresentationCount { get; private set; }
-        public int OutcomePresentationCount { get; private set; }
-        public Outcome ShownOutcome { get; private set; }
-        public Outcome OutcomeWhenGameplayShown { get; private set; }
+        private const string LEGACY_OPERATION_MESSAGE =
+            "The fake application UI only supports the generic screen contract; purpose-specific operations are not supported.";
 
-        public Action QuitConfirmationOnConfirm { get; private set; }
-        public Action QuitConfirmationOnCancel { get; private set; }
+        private static readonly Dictionary<Type, ScreenLayer> LAYERS_BY_ROLE = new()
+        {
+            { typeof(IHomeScreen), ScreenLayer.Base },
+            { typeof(IGameplayScreen), ScreenLayer.Base },
+            { typeof(IConfirmQuitScreen), ScreenLayer.Popup },
+            { typeof(IOutcomeScreen), ScreenLayer.Popup },
+        };
 
-        private Action _onStart;
-        private Action _onBack;
-        private Action _onContinue;
+        private readonly List<string> _operations = new();
+        private FakeScreen _activeBaseScreen;
+        private FakeScreen _activePopupScreen;
 
         public void Show<TScreen>(Action<TScreen> configure = null) where TScreen : IScreen
         {
+            FakeScreen screen = ScreenFor<TScreen>();
+            ScreenLayer layer = LAYERS_BY_ROLE[typeof(TScreen)];
+            EnsureTransitionAllowed(layer, typeof(TScreen));
+            ReplaceActiveScreen(layer);
+
+            _operations.Add($"Show {typeof(TScreen).Name}");
+            screen.Present();
+            SetActiveScreen(layer, screen);
+            configure?.Invoke((TScreen)(object)screen);
         }
 
         public void Close<TScreen>() where TScreen : IScreen
         {
+            FakeScreen screen = ScreenFor<TScreen>();
+            ScreenLayer layer = LAYERS_BY_ROLE[typeof(TScreen)];
+
+            if (!ReferenceEquals(ActiveScreenFor(layer), screen))
+            {
+                return;
+            }
+
+            if (layer == ScreenLayer.Base && _activePopupScreen != null)
+            {
+                throw new InvalidOperationException(
+                    $"The fake application UI cannot close the base role {typeof(TScreen).Name} while a popup screen is active.");
+            }
+
+            _operations.Add($"Close {typeof(TScreen).Name}");
+            ClearActiveScreen(layer);
+            screen.Dismiss();
         }
 
         public void ShowMainMenu(Action onStart)
         {
-            MainMenuPresentationCount++;
-            IsMainMenuVisible = true;
-            IsGameplayVisible = false;
-            _onStart = onStart;
+            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
         }
 
         public void ShowGameplay(BoardPresenter boardPresenter, Action onBack)
         {
-            IsGameplayVisible = true;
-            IsMainMenuVisible = false;
-            OutcomeWhenGameplayShown = boardPresenter.Outcome;
-            _onBack = onBack;
+            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
         }
 
         public void ShowQuitConfirmation(Action onQuit, Action onCancel)
         {
-            IsQuitConfirmationVisible = true;
-            IsOutcomeVisible = false;
-            QuitConfirmationOnConfirm = onQuit;
-            QuitConfirmationOnCancel = onCancel;
+            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
         }
 
         public void CloseQuitConfirmation()
         {
-            IsQuitConfirmationVisible = false;
+            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
         }
 
         public void ShowOutcome(Outcome outcome, Action onContinue)
         {
-            OutcomePresentationCount++;
-            IsOutcomeVisible = true;
-            IsQuitConfirmationVisible = false;
-            ShownOutcome = outcome;
-            _onContinue = onContinue;
+            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
         }
 
         public void ClosePopup()
         {
-            IsQuitConfirmationVisible = false;
-            IsOutcomeVisible = false;
+            throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
         }
 
-        public void ClickStart()
+        private FakeScreen ScreenFor<TScreen>() where TScreen : IScreen
         {
-            _onStart?.Invoke();
+            if (typeof(TScreen) == typeof(IHomeScreen))
+            {
+                return HomeScreen;
+            }
+
+            if (typeof(TScreen) == typeof(IGameplayScreen))
+            {
+                return GameplayScreen;
+            }
+
+            if (typeof(TScreen) == typeof(IConfirmQuitScreen))
+            {
+                return ConfirmQuitScreen;
+            }
+
+            if (typeof(TScreen) == typeof(IOutcomeScreen))
+            {
+                return OutcomeScreen;
+            }
+
+            throw new InvalidOperationException(
+                $"The fake application UI has no screen double for the role {typeof(TScreen).Name}.");
         }
 
-        public void ClickGameplayBack()
+        private void EnsureTransitionAllowed(ScreenLayer layer, Type role)
         {
-            _onBack?.Invoke();
+            if (layer == ScreenLayer.Popup)
+            {
+                if (_activeBaseScreen == null)
+                {
+                    throw new InvalidOperationException(
+                        $"The fake application UI cannot show the popup role {role.Name} before a base screen is shown.");
+                }
+
+                return;
+            }
+
+            if (_activePopupScreen != null)
+            {
+                throw new InvalidOperationException(
+                    $"The fake application UI cannot show the base role {role.Name} while a popup screen is active.");
+            }
         }
 
-        public void ClickYes()
+        private void ReplaceActiveScreen(ScreenLayer layer)
         {
-            QuitConfirmationOnConfirm?.Invoke();
+            FakeScreen activeScreen = ActiveScreenFor(layer);
+
+            if (activeScreen == null)
+            {
+                return;
+            }
+
+            activeScreen.Dismiss();
+            ClearActiveScreen(layer);
         }
 
-        public void ClickNo()
+        private FakeScreen ActiveScreenFor(ScreenLayer layer)
         {
-            QuitConfirmationOnCancel?.Invoke();
+            return layer == ScreenLayer.Base ? _activeBaseScreen : _activePopupScreen;
         }
 
-        public void ClickContinue()
+        private void SetActiveScreen(ScreenLayer layer, FakeScreen screen)
         {
-            _onContinue?.Invoke();
+            if (layer == ScreenLayer.Base)
+            {
+                _activeBaseScreen = screen;
+            }
+            else
+            {
+                _activePopupScreen = screen;
+            }
+        }
+
+        private void ClearActiveScreen(ScreenLayer layer)
+        {
+            if (layer == ScreenLayer.Base)
+            {
+                _activeBaseScreen = null;
+            }
+            else
+            {
+                _activePopupScreen = null;
+            }
         }
     }
 }

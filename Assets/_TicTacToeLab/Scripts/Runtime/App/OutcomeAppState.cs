@@ -74,7 +74,7 @@ namespace TicTacToeLab.Runtime
 
             _pendingPresentation = null;
             _isPresentationPending = false;
-            _appUI.ShowOutcome(_outcome, AcknowledgeOutcome);
+            _appUI.Show<IOutcomeScreen>(screen => screen.Setup(_outcome, AcknowledgeOutcome));
         }
 
         private void AcknowledgeOutcome()
@@ -84,6 +84,7 @@ namespace TicTacToeLab.Runtime
                 return;
             }
 
+            _appUI.Close<IOutcomeScreen>();
             _stateMachine.TransitionFrom(this, _stateFactory.CreateMainMenuState());
         }
     }

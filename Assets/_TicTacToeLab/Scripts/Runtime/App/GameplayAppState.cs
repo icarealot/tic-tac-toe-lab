@@ -31,7 +31,7 @@ namespace TicTacToeLab.Runtime
             _boardPresenter.Reset();
             _inputService.BackPressed += HandleBack;
             _boardPresenter.GameEnded += HandleGameEnded;
-            _appUI.ShowGameplay(_boardPresenter, HandleBack);
+            _appUI.Show<IGameplayScreen>(screen => screen.Setup(_boardPresenter, HandleBack));
             _inputService.EnablePlayerPress();
         }
 
@@ -75,7 +75,7 @@ namespace TicTacToeLab.Runtime
             QuitConfirmation quitConfirmation = new(this);
             _activeQuitConfirmation = quitConfirmation;
             _inputService.DisablePlayerPress();
-            _appUI.ShowQuitConfirmation(quitConfirmation.Confirm, quitConfirmation.Close);
+            _appUI.Show<IConfirmQuitScreen>(screen => screen.Setup(quitConfirmation.Confirm, quitConfirmation.Close));
         }
 
         private void ConfirmQuit(QuitConfirmation quitConfirmation)
@@ -85,6 +85,8 @@ namespace TicTacToeLab.Runtime
                 return;
             }
 
+            _activeQuitConfirmation = null;
+            _appUI.Close<IConfirmQuitScreen>();
             _stateMachine.TransitionFrom(this, _stateFactory.CreateMainMenuState());
         }
 
@@ -101,7 +103,7 @@ namespace TicTacToeLab.Runtime
         private void CloseActiveQuitConfirmation()
         {
             _activeQuitConfirmation = null;
-            _appUI.CloseQuitConfirmation();
+            _appUI.Close<IConfirmQuitScreen>();
             _inputService.EnablePlayerPress();
         }
 
