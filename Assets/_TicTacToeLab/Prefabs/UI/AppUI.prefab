@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8415508011279165255}
   m_Layer: 0
-  m_Name: PanelLayer
+  m_Name: BaseLayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -191,6 +191,15 @@ MonoBehaviour:
   _gameplayPanelPrefab: {fileID: 3178248131174421384, guid: 52b7452ea7e7b7f45971dce11613d787, type: 3}
   _quitConfirmationPopupPrefab: {fileID: 1867508046785442392, guid: e1247c7099644f241b8ec7be969ce9d6, type: 3}
   _outcomePopupPrefab: {fileID: 2246133851710574205, guid: cabcfd3c7800ca544844d2d9f0efbca4, type: 3}
+  _screenRegistrations:
+  - _prefab: {fileID: 8594677800741898960, guid: 2400edc55245ab9449d894645a2c92bc, type: 3}
+    _layer: 0
+  - _prefab: {fileID: 3178248131174421384, guid: 52b7452ea7e7b7f45971dce11613d787, type: 3}
+    _layer: 0
+  - _prefab: {fileID: 1867508046785442392, guid: e1247c7099644f241b8ec7be969ce9d6, type: 3}
+    _layer: 1
+  - _prefab: {fileID: 2246133851710574205, guid: cabcfd3c7800ca544844d2d9f0efbca4, type: 3}
+    _layer: 1
   _panelLayer: {fileID: 8415508011279165255}
   _popupLayer: {fileID: 5875377722586400769}
 --- !u!1 &8587935210401972457

@@ -38,14 +38,14 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
-        public void Showing_the_production_main_menu_routes_its_start_button_to_the_supplied_action()
+        public void Showing_the_production_home_role_routes_its_start_button_to_the_supplied_action()
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
             int startCount = 0;
-            sut.ShowMainMenu(() => startCount++);
-            MainMenuPanel mainMenu = RequireSingleWindow<MainMenuPanel>(sut);
-            Button startButton = RequireSingleButton(mainMenu);
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => startCount++));
+            MainMenuPanel home = RequireSingleWindow<MainMenuPanel>(sut);
+            Button startButton = RequireButton(home, "Start");
             Assert.That(startButton.isActiveAndEnabled, Is.True, "The production main menu's Start button should be active and enabled.");
             Assert.That(startButton.interactable, Is.True, "The production main menu's Start button should be interactable.");
 
@@ -53,12 +53,12 @@ namespace TicTacToeLab.PlayModeTests
             startButton.onClick.Invoke();
 
             // Assert
-            Assert.That(mainMenu.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production main menu.");
+            Assert.That(home.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production Home screen.");
             Assert.That(startCount, Is.EqualTo(1), "The production main menu's Start button should invoke the supplied action exactly once.");
         }
 
         [Test]
-        public void Showing_production_gameplay_presents_the_current_turn_and_routes_its_back_button()
+        public void Showing_the_production_gameplay_role_replaces_the_base_screen_presents_the_current_turn_and_routes_its_back_button()
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
@@ -66,9 +66,11 @@ namespace TicTacToeLab.PlayModeTests
             // X owns the first turn; this places a mark so the presenter's current turn is not the default one.
             boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
             int backCount = 0;
-            sut.ShowGameplay(boardPresenterHarness.Presenter, () => backCount++);
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            MainMenuPanel home = RequireSingleWindow<MainMenuPanel>(sut);
+            sut.Show<IGameplayScreen>(screen => screen.Setup(boardPresenterHarness.Presenter, () => backCount++));
             GameplayPanel gameplay = RequireSingleWindow<GameplayPanel>(sut);
-            Button backButton = RequireSingleButton(gameplay);
+            Button backButton = RequireButton(gameplay, "Back");
             Assert.That(backButton.isActiveAndEnabled, Is.True, "The production gameplay's Back button should be active and enabled.");
             Assert.That(backButton.interactable, Is.True, "The production gameplay's Back button should be interactable.");
 
@@ -76,64 +78,62 @@ namespace TicTacToeLab.PlayModeTests
             backButton.onClick.Invoke();
 
             // Assert
+            Assert.That(home.gameObject.activeInHierarchy, Is.False, "The production Gameplay registration should replace the active base screen.");
             Assert.That(gameplay.gameObject.activeInHierarchy, Is.True, "The production application UI should show production gameplay.");
             Assert.That(
                 VisibleTexts(gameplay),
-                Has.Exactly(1).EqualTo("O's turn"),
-                "Production gameplay should present the presenter's current turn.");
+                Is.EquivalentTo(new[] { "Back", "O's turn" }),
+                "Production gameplay should present the current turn and its Back control as its complete visible state.");
             Assert.That(backCount, Is.EqualTo(1), "The production gameplay's Back button should invoke the supplied action exactly once.");
         }
 
         [Test]
-        public void Showing_the_production_quit_confirmation_routes_both_buttons_to_the_supplied_actions_exactly_once()
+        public void Showing_the_production_confirm_quit_role_over_a_base_preserves_the_base_and_routes_both_choices_exactly_once()
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
             int quitCount = 0;
             int cancelCount = 0;
-            sut.ShowQuitConfirmation(() => quitCount++, () => cancelCount++);
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            MainMenuPanel home = RequireSingleWindow<MainMenuPanel>(sut);
+            sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => quitCount++, () => cancelCount++));
             ConfirmQuitPopup quitConfirmation = RequireSingleWindow<ConfirmQuitPopup>(sut);
-            Button[] buttons = RequireButtons(quitConfirmation, 2);
-            foreach (Button button in buttons)
+            Button yesButton = RequireButton(quitConfirmation, "Yes");
+            Button noButton = RequireButton(quitConfirmation, "No");
+            foreach (Button button in new[] { yesButton, noButton })
             {
                 Assert.That(button.isActiveAndEnabled, Is.True, "Every production quit confirmation button should be active and enabled.");
                 Assert.That(button.interactable, Is.True, "Every production quit confirmation button should be interactable.");
             }
 
             // Act
-            int[] suppliedCallbacksAfterEachButton = new int[buttons.Length];
-            for (int index = 0; index < buttons.Length; index++)
-            {
-                buttons[index].onClick.Invoke();
-                suppliedCallbacksAfterEachButton[index] = quitCount + cancelCount;
-            }
+            yesButton.onClick.Invoke();
+            int quitCountAfterYes = quitCount;
+            int cancelCountAfterYes = cancelCount;
+            noButton.onClick.Invoke();
 
             // Assert
+            Assert.That(home.gameObject.activeInHierarchy, Is.True, "Showing the production quit confirmation should preserve the base screen.");
             Assert.That(quitConfirmation.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production quit confirmation.");
-            for (int index = 0; index < suppliedCallbacksAfterEachButton.Length; index++)
-            {
-                int callbacksBefore = index == 0 ? 0 : suppliedCallbacksAfterEachButton[index - 1];
-                Assert.That(
-                    suppliedCallbacksAfterEachButton[index],
-                    Is.EqualTo(callbacksBefore + 1),
-                    "Activating each production quit confirmation button should invoke exactly one supplied action.");
-            }
-
-            Assert.That(quitCount, Is.EqualTo(1), "Activating both production quit confirmation buttons should invoke the supplied quit action exactly once.");
-            Assert.That(cancelCount, Is.EqualTo(1), "Activating both production quit confirmation buttons should invoke the supplied cancel action exactly once.");
+            Assert.That(quitCountAfterYes, Is.EqualTo(1), "The production quit confirmation's Yes button should invoke the supplied quit action exactly once.");
+            Assert.That(cancelCountAfterYes, Is.EqualTo(0), "The production quit confirmation's Yes button should not invoke the supplied cancel action.");
+            Assert.That(quitCount, Is.EqualTo(1), "The production quit confirmation's No button should not invoke the supplied quit action.");
+            Assert.That(cancelCount, Is.EqualTo(1), "The production quit confirmation's No button should invoke the supplied cancel action exactly once.");
         }
 
         [TestCase(Outcome.XWin, "X Wins!")]
         [TestCase(Outcome.OWin, "O Wins!")]
         [TestCase(Outcome.Draw, "Draw!")]
-        public void Showing_each_terminal_outcome_presents_it_and_routes_the_production_continue_button(Outcome outcome, string expectedTitle)
+        public void Showing_each_terminal_production_outcome_role_over_a_base_presents_it_and_routes_the_continue_button(Outcome outcome, string expectedTitle)
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
             int continueCount = 0;
-            sut.ShowOutcome(outcome, () => continueCount++);
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            MainMenuPanel home = RequireSingleWindow<MainMenuPanel>(sut);
+            sut.Show<IOutcomeScreen>(screen => screen.Setup(outcome, () => continueCount++));
             OutcomePopup outcomePopup = RequireSingleWindow<OutcomePopup>(sut);
-            Button continueButton = RequireSingleButton(outcomePopup);
+            Button continueButton = RequireButton(outcomePopup, "Continue");
             Assert.That(continueButton.isActiveAndEnabled, Is.True, "The production outcome popup's Continue button should be active and enabled.");
             Assert.That(continueButton.interactable, Is.True, "The production outcome popup's Continue button should be interactable.");
 
@@ -141,11 +141,12 @@ namespace TicTacToeLab.PlayModeTests
             continueButton.onClick.Invoke();
 
             // Assert
+            Assert.That(home.gameObject.activeInHierarchy, Is.True, "Showing the production outcome should preserve the base screen.");
             Assert.That(outcomePopup.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production outcome popup.");
             Assert.That(
                 VisibleTexts(outcomePopup),
-                Has.Exactly(1).EqualTo(expectedTitle),
-                "The production outcome popup should present the terminal outcome it was shown.");
+                Is.EquivalentTo(new[] { "Continue", expectedTitle }),
+                "The production outcome popup should present the terminal outcome and its Continue control as its complete visible state.");
             Assert.That(continueCount, Is.EqualTo(1), "The production outcome popup's Continue button should invoke the supplied action exactly once.");
         }
 
@@ -169,16 +170,22 @@ namespace TicTacToeLab.PlayModeTests
             return windows[0];
         }
 
-        private static Button RequireSingleButton(Component window)
+        private static Button RequireButton(Component window, string label)
         {
-            return RequireButtons(window, 1)[0];
+            Button[] matchingButtons = window.GetComponentsInChildren<Button>(true)
+                .Where(button => LabelText(button) == label)
+                .ToArray();
+            Assert.That(
+                matchingButtons,
+                Has.Length.EqualTo(1),
+                $"The production {window.GetType().Name} window should provide exactly one button labelled '{label}'.");
+            return matchingButtons[0];
         }
 
-        private static Button[] RequireButtons(Component window, int expectedCount)
+        private static string LabelText(Button button)
         {
-            Button[] buttons = window.GetComponentsInChildren<Button>(true);
-            Assert.That(buttons, Has.Length.EqualTo(expectedCount), $"The production {window.GetType().Name} window should provide exactly {expectedCount} buttons.");
-            return buttons;
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            return label == null ? string.Empty : label.text;
         }
 
         private static string[] VisibleTexts(Component window)
