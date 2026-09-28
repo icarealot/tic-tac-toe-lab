@@ -96,7 +96,7 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator The_production_journey_runs_from_the_main_menu_through_an_x_win_and_back()
+        public IEnumerator The_production_journey_runs_from_Home_through_an_x_win_and_back()
         {
             // Arrange
             Assert.That(
@@ -115,11 +115,11 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => FindActiveWindow<MainMenuPanel>() != null,
-                "The production scene should start with the production main menu available to the player.");
-            Button startButton = RequireButton(FindActiveWindow<MainMenuPanel>());
-            Assert.That(startButton.isActiveAndEnabled, Is.True, "The production main menu's Start button should be available to the player.");
-            Assert.That(startButton.interactable, Is.True, "The production main menu's Start button should be usable by the player.");
+                () => FindActiveWindow<HomePanel>() != null,
+                "The production scene should start with the production Home screen available to the player.");
+            Button startButton = RequireButton(FindActiveWindow<HomePanel>());
+            Assert.That(startButton.isActiveAndEnabled, Is.True, "The production Home screen's Start button should be available to the player.");
+            Assert.That(startButton.interactable, Is.True, "The production Home screen's Start button should be usable by the player.");
 
             // Act
             yield return IE_Click(startButton);
@@ -182,14 +182,14 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => FindActiveWindow<MainMenuPanel>() != null
+                () => FindActiveWindow<HomePanel>() != null
                     && FindActiveWindow<GameplayPanel>() == null
                     && FindActiveWindow<OutcomePopup>() == null,
-                "Clicking Continue should return the player to the main menu.");
+                "Clicking Continue should return the player to Home.");
             Assert.That(
-                RequireButton(FindActiveWindow<MainMenuPanel>()).interactable,
+                RequireButton(FindActiveWindow<HomePanel>()).interactable,
                 Is.True,
-                "The production main menu should be usable again after the journey returns to it.");
+                "The production Home screen should be usable again after the journey returns to it.");
         }
 
         private void CaptureJourneyComposition(Scene journeyScene, InputActionAsset[] inputAssetsBeforeJourney)

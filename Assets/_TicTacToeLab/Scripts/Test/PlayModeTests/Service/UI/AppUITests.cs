@@ -30,8 +30,8 @@ namespace TicTacToeLab.PlayModeTests
         public IEnumerator Showing_gameplay_replaces_and_destroys_the_previous_panel()
         {
             // Arrange
-            _sut.ShowMainMenu(() => { });
-            LifecycleProbe replacedPanel = _fixture.Windows.RequireLatestFor<MainMenuPanel>();
+            _sut.ShowHome(() => { });
+            LifecycleProbe replacedPanel = _fixture.Windows.RequireLatestFor<HomePanel>();
 
             // Act
             _sut.ShowGameplay(_boardPresenter, () => { });

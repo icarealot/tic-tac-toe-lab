@@ -85,7 +85,7 @@ namespace TicTacToeLab.Runtime
             }
 
             _appUI.Close<IOutcomeScreen>();
-            _stateMachine.TransitionFrom(this, _stateFactory.CreateMainMenuState());
+            _stateMachine.TransitionFrom(this, _stateFactory.CreateHomeState());
         }
     }
 }

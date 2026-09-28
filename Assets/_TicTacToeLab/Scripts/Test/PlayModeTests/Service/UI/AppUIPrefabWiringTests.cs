@@ -44,17 +44,17 @@ namespace TicTacToeLab.PlayModeTests
             AppUI sut = CreateProductionAppUI();
             int startCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => startCount++));
-            MainMenuPanel home = RequireSingleWindow<MainMenuPanel>(sut);
+            HomePanel home = RequireSingleWindow<HomePanel>(sut);
             Button startButton = RequireButton(home, "Start");
-            Assert.That(startButton.isActiveAndEnabled, Is.True, "The production main menu's Start button should be active and enabled.");
-            Assert.That(startButton.interactable, Is.True, "The production main menu's Start button should be interactable.");
+            Assert.That(startButton.isActiveAndEnabled, Is.True, "The production Home screen's Start button should be active and enabled.");
+            Assert.That(startButton.interactable, Is.True, "The production Home screen's Start button should be interactable.");
 
             // Act
             startButton.onClick.Invoke();
 
             // Assert
             Assert.That(home.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production Home screen.");
-            Assert.That(startCount, Is.EqualTo(1), "The production main menu's Start button should invoke the supplied action exactly once.");
+            Assert.That(startCount, Is.EqualTo(1), "The production Home screen's Start button should invoke the supplied action exactly once.");
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace TicTacToeLab.PlayModeTests
             boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
             int backCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
-            MainMenuPanel home = RequireSingleWindow<MainMenuPanel>(sut);
+            HomePanel home = RequireSingleWindow<HomePanel>(sut);
             sut.Show<IGameplayScreen>(screen => screen.Setup(boardPresenterHarness.Presenter, () => backCount++));
             GameplayPanel gameplay = RequireSingleWindow<GameplayPanel>(sut);
             Button backButton = RequireButton(gameplay, "Back");
@@ -95,7 +95,7 @@ namespace TicTacToeLab.PlayModeTests
             int quitCount = 0;
             int cancelCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
-            MainMenuPanel home = RequireSingleWindow<MainMenuPanel>(sut);
+            HomePanel home = RequireSingleWindow<HomePanel>(sut);
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => quitCount++, () => cancelCount++));
             ConfirmQuitPopup quitConfirmation = RequireSingleWindow<ConfirmQuitPopup>(sut);
             Button yesButton = RequireButton(quitConfirmation, "Yes");
@@ -130,7 +130,7 @@ namespace TicTacToeLab.PlayModeTests
             AppUI sut = CreateProductionAppUI();
             int continueCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
-            MainMenuPanel home = RequireSingleWindow<MainMenuPanel>(sut);
+            HomePanel home = RequireSingleWindow<HomePanel>(sut);
             sut.Show<IOutcomeScreen>(screen => screen.Setup(outcome, () => continueCount++));
             OutcomePopup outcomePopup = RequireSingleWindow<OutcomePopup>(sut);
             Button continueButton = RequireButton(outcomePopup, "Continue");

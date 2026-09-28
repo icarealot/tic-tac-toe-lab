@@ -22,9 +22,9 @@ namespace TicTacToeLab.Runtime
             _inputService = inputService;
         }
 
-        public IAppState CreateMainMenuState()
+        public IAppState CreateHomeState()
         {
-            return new MainMenuAppState(_stateMachine, this, _appUI, _inputService);
+            return new HomeAppState(_stateMachine, this, _appUI, _inputService);
         }
 
         public IAppState CreateGameplayState()

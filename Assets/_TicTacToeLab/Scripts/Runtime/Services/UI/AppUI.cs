@@ -6,7 +6,7 @@ namespace TicTacToeLab.Runtime
 {
     public sealed class AppUI : MonoBehaviour, IAppUI
     {
-        [SerializeField] private MainMenuPanel _mainMenuPanelPrefab;
+        [SerializeField] private HomePanel _homePanelPrefab;
         [SerializeField] private GameplayPanel _gameplayPanelPrefab;
         [SerializeField] private ConfirmQuitPopup _quitConfirmationPopupPrefab;
         [SerializeField] private OutcomePopup _outcomePopupPrefab;
@@ -66,11 +66,11 @@ namespace TicTacToeLab.Runtime
             RemoveScreen(activeScreen, registration.Layer);
         }
 
-        public void ShowMainMenu(Action onStart)
+        public void ShowHome(Action onStart)
         {
             DestroyCurrentPanel();
 
-            MainMenuPanel panel = Instantiate(_mainMenuPanelPrefab, _panelLayer);
+            HomePanel panel = Instantiate(_homePanelPrefab, _panelLayer);
             panel.Setup(onStart);
             _currentPanel = panel;
         }

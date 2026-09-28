@@ -6,7 +6,7 @@ namespace TicTacToeLab.Runtime
     {
         public void Show<TScreen>(Action<TScreen> configure = null) where TScreen : IScreen;
         public void Close<TScreen>() where TScreen : IScreen;
-        public void ShowMainMenu(Action onStart);
+        public void ShowHome(Action onStart);
         public void ShowGameplay(BoardPresenter boardPresenter, Action onBack);
         public void ShowQuitConfirmation(Action onQuit, Action onCancel);
         public void CloseQuitConfirmation();

@@ -25,7 +25,7 @@ namespace TicTacToeLab.Runtime
                 return;
             }
 
-            TransitionFrom(null, _stateFactory.CreateMainMenuState());
+            TransitionFrom(null, _stateFactory.CreateHomeState());
         }
 
         public void Dispose()

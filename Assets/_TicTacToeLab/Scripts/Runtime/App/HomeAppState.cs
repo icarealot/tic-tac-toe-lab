@@ -1,13 +1,13 @@
 namespace TicTacToeLab.Runtime
 {
-    internal sealed class MainMenuAppState : IAppState
+    internal sealed class HomeAppState : IAppState
     {
         private readonly AppStateMachine _stateMachine;
         private readonly AppStateFactory _stateFactory;
         private readonly IAppUI _appUI;
         private readonly IInputService _inputService;
 
-        public MainMenuAppState(
+        public HomeAppState(
             AppStateMachine stateMachine,
             AppStateFactory stateFactory,
             IAppUI appUI,

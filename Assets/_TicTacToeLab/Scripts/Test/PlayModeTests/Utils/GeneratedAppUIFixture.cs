@@ -29,11 +29,11 @@ namespace TicTacToeLab.PlayModeTests
             Windows = registryRoot.AddComponent<GeneratedWindowRegistry>();
         }
 
-        public (MainMenuPanel Panel, Button StartButton) CreateMainMenuPanel()
+        public (HomePanel Panel, Button StartButton) CreateHomePanel()
         {
-            GameObject root = CreateRoot("Generated main menu panel");
+            GameObject root = CreateRoot("Generated Home panel");
             Button startButton = CreateButton(root.transform, "Start button");
-            MainMenuPanel panel = root.AddComponent<MainMenuPanel>();
+            HomePanel panel = root.AddComponent<HomePanel>();
             AttachLifecycleProbe(root);
             TestSerializedReference.AssignPrefab(panel, "_startButton", startButton);
             root.SetActive(true);
@@ -108,18 +108,18 @@ namespace TicTacToeLab.PlayModeTests
             PanelLayer = CreateLayer(root.transform, "Generated panel layer");
             PopupLayer = CreateLayer(root.transform, "Generated popup layer");
 
-            (MainMenuPanel mainMenu, Button _) = CreateMainMenuPanel();
+            (HomePanel home, Button _) = CreateHomePanel();
             (GameplayPanel gameplay, Button _, TMP_Text _) = CreateGameplayPanel();
             (ConfirmQuitPopup quitConfirmation, Button _, Button _) = CreateQuitConfirmationPopup();
             (OutcomePopup outcome, Button _, TMP_Text _) = CreateOutcomePopup();
 
-            IgnoreAsTemplate(mainMenu.gameObject);
+            IgnoreAsTemplate(home.gameObject);
             IgnoreAsTemplate(gameplay.gameObject);
             IgnoreAsTemplate(quitConfirmation.gameObject);
             IgnoreAsTemplate(outcome.gameObject);
 
             AppUI appUI = root.AddComponent<AppUI>();
-            TestSerializedReference.AssignPrefab(appUI, "_mainMenuPanelPrefab", mainMenu);
+            TestSerializedReference.AssignPrefab(appUI, "_homePanelPrefab", home);
             TestSerializedReference.AssignPrefab(appUI, "_gameplayPanelPrefab", gameplay);
             TestSerializedReference.AssignPrefab(appUI, "_quitConfirmationPopupPrefab", quitConfirmation);
             TestSerializedReference.AssignPrefab(appUI, "_outcomePopupPrefab", outcome);
@@ -129,7 +129,7 @@ namespace TicTacToeLab.PlayModeTests
                 appUI,
                 new[]
                 {
-                    new ScreenRegistration(mainMenu, ScreenLayer.Base),
+                    new ScreenRegistration(home, ScreenLayer.Base),
                     new ScreenRegistration(gameplay, ScreenLayer.Base),
                     new ScreenRegistration(quitConfirmation, ScreenLayer.Popup),
                     new ScreenRegistration(outcome, ScreenLayer.Popup),

@@ -62,7 +62,7 @@ namespace TicTacToeLab.EditModeTests
             screen.Dismiss();
         }
 
-        public void ShowMainMenu(Action onStart)
+        public void ShowHome(Action onStart)
         {
             throw new NotSupportedException(LEGACY_OPERATION_MESSAGE);
         }

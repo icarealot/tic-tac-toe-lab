@@ -45,10 +45,10 @@ namespace TicTacToeLab.EditModeTests
             _appUI.HomeScreen.ClickStart();
         }
 
-        // --- Startup and the main menu ---
+        // --- Startup and Home ---
 
         [Test]
-        public void Starting_the_state_machine_shows_the_main_menu_with_board_presses_disabled()
+        public void Starting_the_state_machine_shows_Home_with_board_presses_disabled()
         {
             // Act
             _sut.Start();
@@ -61,11 +61,11 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Back_at_the_main_menu_has_no_effect()
+        public void Back_at_Home_has_no_effect()
         {
             // Arrange
             _sut.Start();
-            int mainMenuPresentationsBefore = _appUI.HomeScreen.PresentationCount;
+            int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
 
             // Act
             _inputService.RaiseBack();
@@ -75,7 +75,7 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
             Assert.That(_appUI.HasPopup, Is.False);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(mainMenuPresentationsBefore));
+            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore));
         }
 
         // --- Starting a game ---
@@ -155,7 +155,7 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Confirming_quit_returns_to_the_main_menu_with_the_game_preserved_and_board_presses_disabled()
+        public void Confirming_quit_returns_Home_with_the_game_preserved_and_board_presses_disabled()
         {
             // Arrange
             StartGameplay();
@@ -174,7 +174,7 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Confirming_quit_closes_confirm_quit_before_showing_the_main_menu()
+        public void Confirming_quit_closes_confirm_quit_before_showing_Home()
         {
             // Arrange
             StartGameplay();
@@ -188,7 +188,7 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(
                 _appUI.Operations.Skip(operationsBefore).ToArray(),
                 Is.EqualTo(new[] { "Close IConfirmQuitScreen", "Show IHomeScreen" }),
-                "Confirming quit should close the confirmation before the main menu can present.");
+                "Confirming quit should close the confirmation before Home can present.");
         }
 
         // --- Board completion and the outcome delay ---
@@ -273,14 +273,14 @@ namespace TicTacToeLab.EditModeTests
         private static IEnumerable<TestCaseData> OutcomeAcknowledgements()
         {
             yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((appUI, _) => appUI.OutcomeScreen.ClickContinue()))
-                .SetName("Continuing_the_outcome_returns_to_the_main_menu_without_resetting_the_board");
+                .SetName("Continuing_the_outcome_returns_Home_without_resetting_the_board");
 
             yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((_, inputService) => inputService.RaiseBack()))
-                .SetName("Going_back_from_the_outcome_returns_to_the_main_menu_without_resetting_the_board");
+                .SetName("Going_back_from_the_outcome_returns_Home_without_resetting_the_board");
         }
 
         [TestCaseSource(nameof(OutcomeAcknowledgements))]
-        public void Acknowledging_the_outcome_returns_to_the_main_menu_without_resetting_the_board(
+        public void Acknowledging_the_outcome_returns_Home_without_resetting_the_board(
             Action<FakeAppUI, FakeInputService> acknowledge)
         {
             // Arrange
@@ -301,7 +301,7 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Acknowledging_the_outcome_closes_it_before_showing_the_main_menu()
+        public void Acknowledging_the_outcome_closes_it_before_showing_Home()
         {
             // Arrange
             StartGameplay();
@@ -316,7 +316,7 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(
                 _appUI.Operations.Skip(operationsBefore).ToArray(),
                 Is.EqualTo(new[] { "Close IOutcomeScreen", "Show IHomeScreen" }),
-                "Acknowledging the outcome should close it before the main menu can present.");
+                "Acknowledging the outcome should close it before Home can present.");
         }
 
         [Test]
@@ -336,13 +336,13 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void Acknowledging_the_outcome_repeatedly_causes_only_one_return_to_the_main_menu()
+        public void Acknowledging_the_outcome_repeatedly_causes_only_one_return_Home()
         {
             // Arrange
             StartGameplay();
             BoardPresses.WinRowZeroForX(_presser);
             _delayScheduler.FirePending();
-            int mainMenuPresentationsBefore = _appUI.HomeScreen.PresentationCount;
+            int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
 
             // Act
             _appUI.OutcomeScreen.ClickContinue();
@@ -350,7 +350,7 @@ namespace TicTacToeLab.EditModeTests
             _inputService.RaiseBack();
 
             // Assert
-            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(mainMenuPresentationsBefore + 1));
+            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore + 1));
             Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
         }
 
@@ -395,19 +395,19 @@ namespace TicTacToeLab.EditModeTests
             // Arrange
             StartGameplay();
             _presser.Press(new CellCoordinate(0, 0));
-            int mainMenuPresentationsBefore = _appUI.HomeScreen.PresentationCount;
+            int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
 
             // Act
             _appUI.HomeScreen.ClickStart();
 
             // Assert
             Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
-            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(mainMenuPresentationsBefore));
+            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore));
             Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 0)), Is.False, "The in-progress board should not be reset.");
         }
 
         [Test]
-        public void A_stale_quit_cancel_callback_after_returning_to_the_menu_does_not_enable_board_presses()
+        public void A_stale_quit_cancel_callback_after_returning_Home_does_not_enable_board_presses()
         {
             // Arrange
             StartGameplay();
@@ -442,7 +442,7 @@ namespace TicTacToeLab.EditModeTests
             _presser.Press(new CellCoordinate(0, 0));
             _inputService.RaiseBack();
             Mark?[,] marksBefore = BoardState.CaptureMarks(_boardModel);
-            int mainMenuPresentationsBefore = _appUI.HomeScreen.PresentationCount;
+            int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
             _sut.Dispose();
 
             // Act
@@ -450,7 +450,7 @@ namespace TicTacToeLab.EditModeTests
 
             // Assert
             Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(mainMenuPresentationsBefore));
+            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
             Assert.That(BoardState.CaptureMarks(_boardModel), Is.EqualTo(marksBefore));
         }

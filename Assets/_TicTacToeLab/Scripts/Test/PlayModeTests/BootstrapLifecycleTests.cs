@@ -60,14 +60,14 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
-        public void A_complete_generated_configuration_starts_at_the_main_menu()
+        public void A_complete_generated_configuration_starts_at_Home()
         {
             // Act
             _ = _fixture.CreateConfiguredBootstrap();
 
             // Assert
-            LifecycleProbe mainMenu = _fixture.AppUI.Windows.RequireLatestFor<MainMenuPanel>();
-            Assert.That(mainMenu.IsShown, Is.True, "Starting the application should present the main menu.");
+            LifecycleProbe home = _fixture.AppUI.Windows.RequireLatestFor<HomePanel>();
+            Assert.That(home.IsShown, Is.True, "Starting the application should present Home.");
             Assert.That(
                 _fixture.AppUI.Windows.LatestFor<GameplayPanel>(),
                 Is.Null,

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace TicTacToeLab.Runtime
 {
-    public sealed class MainMenuPanel : MonoBehaviour, IHomeScreen
+    public sealed class HomePanel : MonoBehaviour, IHomeScreen
     {
         [SerializeField] private Button _startButton;
 

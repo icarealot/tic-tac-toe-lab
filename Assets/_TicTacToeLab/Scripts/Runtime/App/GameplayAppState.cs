@@ -87,7 +87,7 @@ namespace TicTacToeLab.Runtime
 
             _activeQuitConfirmation = null;
             _appUI.Close<IConfirmQuitScreen>();
-            _stateMachine.TransitionFrom(this, _stateFactory.CreateMainMenuState());
+            _stateMachine.TransitionFrom(this, _stateFactory.CreateHomeState());
         }
 
         private void CloseQuitConfirmation(QuitConfirmation quitConfirmation)
