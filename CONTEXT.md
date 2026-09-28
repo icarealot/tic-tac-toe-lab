@@ -82,6 +82,10 @@ _Avoid_: Tie, stalemate, deadlock
 
 ## Interaction
 
+**Home**:
+The application's starting destination, from which the player can start a game.
+_Avoid_: Main menu, main screen
+
 **Press**:
 A completed pointer gesture over the board, resolved arithmetically from its board-local point. A press in spacing, outside the board, on a marked cell, or after a terminal outcome places nothing.
 _Avoid_: Tap, touch, click
@@ -94,6 +98,6 @@ _Avoid_: Press, tap
 A request to leave or dismiss the current player-facing flow, produced by the platform back action, Escape, or an on-screen back button. Its effect depends on whether the player is at the main menu, playing, confirming departure, or viewing an outcome.
 _Avoid_: Escape, return, cancel
 
-**Outcome popup**:
-The popup shown after a completed board has remained visible briefly. It reports an X win, O win, or draw and lets the player return to the main menu.
-_Avoid_: Result popup, game-over popup
+**Outcome screen**:
+The screen shown after a completed board has remained visible briefly. It reports an X win, O win, or draw and lets the player return Home.
+_Avoid_: Outcome popup, result popup, game-over popup
