@@ -83,8 +83,36 @@ _Avoid_: Tie, stalemate, deadlock
 ## Interaction
 
 **Home**:
-The application's starting destination, from which the player can start a game.
+The application's starting destination, from which the player chooses PvP or PvE.
 _Avoid_: Main menu, main screen
+
+**PvP**:
+A game in which two human players take turns placing marks on the same device. Choosing PvP at Home starts the game directly.
+_Avoid_: Multiplayer, competitive mode
+
+**PvE**:
+A game in which one human player plays against a bot. The human always places X, the bot always places O, and therefore the human takes the first turn. Choosing PvE at Home leads to choosing Amateur or Professional difficulty before the game starts.
+_Avoid_: Single-player, human-versus-bot
+
+**Bot**:
+The automated PvE participant. The bot always places O marks.
+_Avoid_: AI player, computer player, enemy
+
+**Bot turn**:
+The interval after the human places X and before the bot places O. The bot waits for a randomly chosen duration from 0.4 through 1.0 seconds before placing its mark. Board presses are ignored during this interval, but Back remains available. Opening the quit confirmation cancels the pending placement; dismissing the confirmation starts a fresh bot-turn delay.
+_Avoid_: AI turn, computer turn, thinking time
+
+**Difficulty**:
+The behavior used by the bot when choosing a cell. A PvE game has either Amateur or Professional difficulty.
+_Avoid_: Level, bot mode
+
+**Amateur**:
+A difficulty at which the bot takes an immediate winning placement when one exists, otherwise blocks an immediate X win when possible, and otherwise chooses among empty cells. When multiple placements satisfy the highest available priority, it chooses randomly among them.
+_Avoid_: Easy, beginner
+
+**Professional**:
+A difficulty at which the bot searches the complete remaining game tree and chooses the best achievable outcome. Among otherwise equal outcomes, it prefers an earlier win and a later loss; among equally optimal placements, it chooses randomly. Professional cannot lose when an outcome avoiding defeat remains possible.
+_Avoid_: Hard, expert
 
 **Press**:
 A completed pointer gesture over the board, resolved arithmetically from its board-local point. A press in spacing, outside the board, on a marked cell, or after a terminal outcome places nothing.
