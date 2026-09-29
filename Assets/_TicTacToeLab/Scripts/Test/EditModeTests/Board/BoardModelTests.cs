@@ -123,6 +123,100 @@ namespace TicTacToeLab.EditModeTests
             }
         }
 
+        // --- Empty coordinates ---
+
+        [Test]
+        public void A_fresh_board_enumerates_every_cell_as_empty()
+        {
+            // Arrange
+            BoardModel sut = new();
+            CellCoordinate[] expected =
+            {
+                new(0, 0), new(0, 1), new(0, 2),
+                new(1, 0), new(1, 1), new(1, 2),
+                new(2, 0), new(2, 1), new(2, 2),
+            };
+
+            // Act
+            List<CellCoordinate> actual = new(sut.EnumerateEmptyCoordinates());
+
+            // Assert
+            Assert.That(actual, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void A_played_board_enumerates_only_its_unmarked_cells()
+        {
+            // Arrange
+            BoardModel sut = new();
+            PlayAll(sut, _leavesRowZeroIncomplete.Placements);
+            CellCoordinate[] expected =
+            {
+                new(0, 2),
+                new(1, 1), new(1, 2),
+                new(2, 0), new(2, 1), new(2, 2),
+            };
+
+            // Act
+            List<CellCoordinate> actual = new(sut.EnumerateEmptyCoordinates());
+
+            // Assert
+            Assert.That(actual, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void A_full_board_enumerates_no_empty_cells()
+        {
+            // Arrange
+            BoardModel sut = new();
+            PlayAll(sut, _fillsToDraw.Placements);
+
+            // Act
+            List<CellCoordinate> actual = new(sut.EnumerateEmptyCoordinates());
+
+            // Assert
+            Assert.That(actual, Is.Empty);
+        }
+
+        // --- Copying marks ---
+
+        [Test]
+        public void Copying_the_marks_returns_the_current_marks()
+        {
+            // Arrange
+            BoardModel sut = new();
+            PlayAll(sut, _leavesRowZeroIncomplete.Placements);
+            Mark?[,] expectedMarks =
+            {
+                { Mark.X, Mark.X, null },
+                { Mark.O, null, null },
+                { null, null, null },
+            };
+
+            // Act
+            Mark?[,] copy = sut.CopyMarks();
+
+            // Assert
+            Assert.That(copy, Is.EqualTo(expectedMarks));
+        }
+
+        [Test]
+        public void Modifying_a_copied_marks_array_does_not_change_the_board()
+        {
+            // Arrange
+            BoardModel sut = new();
+            PlayAll(sut, _leavesRowZeroIncomplete.Placements);
+            Mark?[,] marksBefore = BoardState.CaptureMarks(sut);
+
+            // Act
+            Mark?[,] copy = sut.CopyMarks();
+            copy[2, 2] = Mark.O;
+
+            // Assert
+            Assert.That(BoardState.CaptureMarks(sut), Is.EqualTo(marksBefore));
+            Assert.That(sut.IsEmpty(new CellCoordinate(2, 2)), Is.True, "The board should not adopt a change made only to the copy.");
+        }
+
         // --- Rejected placements ---
 
         [TestCase(3, 0)]

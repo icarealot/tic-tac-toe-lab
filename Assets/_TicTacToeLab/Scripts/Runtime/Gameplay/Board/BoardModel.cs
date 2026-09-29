@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace TicTacToeLab.Runtime
 {
@@ -22,6 +23,27 @@ namespace TicTacToeLab.Runtime
             return _marks[coordinate.Row, coordinate.Column];
         }
 
+        public Mark?[,] CopyMarks()
+        {
+            return (Mark?[,])_marks.Clone();
+        }
+
+        public IEnumerable<CellCoordinate> EnumerateEmptyCoordinates()
+        {
+            for (int row = 0; row < DIMENSION; row++)
+            {
+                for (int column = 0; column < DIMENSION; column++)
+                {
+                    CellCoordinate coordinate = new(row, column);
+
+                    if (IsEmpty(coordinate))
+                    {
+                        yield return coordinate;
+                    }
+                }
+            }
+        }
+
         public void Reset()
         {
             Array.Clear(_marks, 0, _marks.Length);
@@ -38,7 +60,7 @@ namespace TicTacToeLab.Runtime
 
             _marks[coordinate.Row, coordinate.Column] = Turn;
 
-            if (HasWonLine(Turn))
+            if (BoardLines.HasCompleteLine(_marks, Turn))
             {
                 Outcome = Turn == Mark.X ? Outcome.XWin : Outcome.OWin;
             }
@@ -65,66 +87,6 @@ namespace TicTacToeLab.Runtime
             }
 
             return isFull;
-        }
-
-        private bool HasWonLine(Mark mark)
-        {
-            bool hasWonLine = false;
-
-            for (int index = 0; index < DIMENSION; index++)
-            {
-                hasWonLine = hasWonLine || IsRowComplete(index, mark) || IsColumnComplete(index, mark);
-            }
-
-            return hasWonLine || IsMainDiagonalComplete(mark) || IsAntiDiagonalComplete(mark);
-        }
-
-        private bool IsRowComplete(int row, Mark mark)
-        {
-            bool isComplete = true;
-
-            for (int column = 0; column < DIMENSION; column++)
-            {
-                isComplete = isComplete && _marks[row, column] == mark;
-            }
-
-            return isComplete;
-        }
-
-        private bool IsColumnComplete(int column, Mark mark)
-        {
-            bool isComplete = true;
-
-            for (int row = 0; row < DIMENSION; row++)
-            {
-                isComplete = isComplete && _marks[row, column] == mark;
-            }
-
-            return isComplete;
-        }
-
-        private bool IsMainDiagonalComplete(Mark mark)
-        {
-            bool isComplete = true;
-
-            for (int index = 0; index < DIMENSION; index++)
-            {
-                isComplete = isComplete && _marks[index, index] == mark;
-            }
-
-            return isComplete;
-        }
-
-        private bool IsAntiDiagonalComplete(Mark mark)
-        {
-            bool isComplete = true;
-
-            for (int index = 0; index < DIMENSION; index++)
-            {
-                isComplete = isComplete && _marks[index, DIMENSION - 1 - index] == mark;
-            }
-
-            return isComplete;
         }
     }
 }
