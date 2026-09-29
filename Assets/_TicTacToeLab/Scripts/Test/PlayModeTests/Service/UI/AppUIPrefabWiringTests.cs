@@ -38,27 +38,64 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
-        public void Showing_the_production_home_role_routes_its_start_button_to_the_supplied_action()
+        public void Showing_the_production_home_role_exposes_both_PvP_and_PvE_routes()
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
             int startCount = 0;
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => startCount++, () => { }));
+            int pveCount = 0;
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => startCount++, () => pveCount++));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
-            Button startButton = RequireButton(home, "Start");
-            Assert.That(startButton.isActiveAndEnabled, Is.True, "The production Home screen's Start button should be active and enabled.");
-            Assert.That(startButton.interactable, Is.True, "The production Home screen's Start button should be interactable.");
+            Button pvpButton = RequireButton(home, "PvP");
+            Assert.That(pvpButton.isActiveAndEnabled, Is.True, "The production Home screen's PvP button should be active and enabled.");
+            Assert.That(pvpButton.interactable, Is.True, "The production Home screen's PvP button should be interactable.");
             Assert.That(
                 VisibleTexts(home),
-                Is.EquivalentTo(new[] { "Tic Tac Toe", "Start" }),
-                "Until PvE is enabled in production, Home should expose only its existing PvP route.");
+                Is.EquivalentTo(new[] { "Tic Tac Toe", "PvP", "PvE" }),
+                "Production Home should expose both the PvP route and the PvE route.");
 
             // Act
-            startButton.onClick.Invoke();
+            pvpButton.onClick.Invoke();
 
             // Assert
             Assert.That(home.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production Home screen.");
-            Assert.That(startCount, Is.EqualTo(1), "The production Home screen's Start button should invoke the supplied action exactly once.");
+            Assert.That(startCount, Is.EqualTo(1), "The production Home screen's PvP button should invoke the supplied action exactly once.");
+
+            Button pveButton = RequireButton(home, "PvE");
+            pveButton.onClick.Invoke();
+
+            // Assert
+            Assert.That(pveCount, Is.EqualTo(1), "The production Home screen's PvE button should invoke the supplied action exactly once.");
+        }
+
+        [Test]
+        public void Showing_the_production_bot_selection_role_replaces_Home_and_routes_both_difficulties_and_back()
+        {
+            // Arrange
+            AppUI sut = CreateProductionAppUI();
+            int amateurCount = 0;
+            int professionalCount = 0;
+            int backCount = 0;
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
+            HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
+
+            // Act
+            sut.Show<IBotSelectionScreen>(screen => screen.Setup(() => amateurCount++, () => professionalCount++, () => backCount++));
+            BotSelectionScreen botSelection = RequireSingleScreen<BotSelectionScreen>(sut);
+
+            // Assert
+            Assert.That(home.gameObject.activeInHierarchy, Is.False, "Showing bot selection should replace the production Home base screen.");
+            Assert.That(botSelection.gameObject.activeInHierarchy, Is.True, "Showing bot selection should present the production base screen.");
+
+            // Act
+            RequireButton(botSelection, "Amateur").onClick.Invoke();
+            RequireButton(botSelection, "Professional").onClick.Invoke();
+            RequireButton(botSelection, "Back").onClick.Invoke();
+
+            // Assert
+            Assert.That(amateurCount, Is.EqualTo(1));
+            Assert.That(professionalCount, Is.EqualTo(1));
+            Assert.That(backCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -135,7 +172,7 @@ namespace TicTacToeLab.PlayModeTests
             int continueCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
-            sut.Show<IOutcomeScreen>(screen => screen.Setup(outcome, () => continueCount++));
+            sut.Show<IOutcomeScreen>(screen => screen.Setup(outcome, new GameSetup(GameMode.Pvp, null), () => continueCount++));
             OutcomeScreen outcomeScreen = RequireSingleScreen<OutcomeScreen>(sut);
             Button continueButton = RequireButton(outcomeScreen, "Continue");
             Assert.That(continueButton.isActiveAndEnabled, Is.True, "The production Outcome screen's Continue button should be active and enabled.");

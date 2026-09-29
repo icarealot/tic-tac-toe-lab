@@ -4,6 +4,6 @@ namespace TicTacToeLab.Runtime
 {
     public interface IOutcomeScreen : IScreen
     {
-        public void Setup(Outcome outcome, Action onContinue);
+        public void Setup(Outcome outcome, GameSetup setup, Action onContinue);
     }
 }

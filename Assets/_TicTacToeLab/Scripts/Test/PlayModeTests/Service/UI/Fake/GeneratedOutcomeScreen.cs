@@ -7,7 +7,7 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class GeneratedOutcomeScreen : MonoBehaviour, IOutcomeScreen
     {
-        public void Setup(Outcome outcome, Action onContinue)
+        public void Setup(Outcome outcome, GameSetup setup, Action onContinue)
         {
         }
     }

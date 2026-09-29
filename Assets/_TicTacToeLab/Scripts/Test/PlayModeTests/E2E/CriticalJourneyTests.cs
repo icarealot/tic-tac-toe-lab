@@ -117,17 +117,17 @@ namespace TicTacToeLab.PlayModeTests
             yield return PlayModeWait.IE_WaitUntilOrFail(
                 () => FindActiveScreen<HomeScreen>() != null,
                 "The production scene should start with the production Home screen available to the player.");
-            Button startButton = RequireButton(FindActiveScreen<HomeScreen>());
-            Assert.That(startButton.isActiveAndEnabled, Is.True, "The production Home screen's Start button should be available to the player.");
-            Assert.That(startButton.interactable, Is.True, "The production Home screen's Start button should be usable by the player.");
+            Button pvpButton = RequireButton(FindActiveScreen<HomeScreen>(), "PvP");
+            Assert.That(pvpButton.isActiveAndEnabled, Is.True, "The production Home screen's PvP button should be available to the player.");
+            Assert.That(pvpButton.interactable, Is.True, "The production Home screen's PvP button should be usable by the player.");
 
             // Act
-            yield return IE_Click(startButton);
+            yield return IE_Click(pvpButton);
 
             // Assert
             yield return PlayModeWait.IE_WaitUntilOrFail(
                 () => FindActiveScreen<GameplayScreen>() != null && BoardMarks().Length == 0,
-                "Clicking Start should show gameplay with an empty board.");
+                "Clicking PvP should show gameplay with an empty board.");
             GameplayScreen gameplayScreen = FindActiveScreen<GameplayScreen>();
             Assert.That(
                 VisibleTexts(gameplayScreen),
@@ -178,7 +178,7 @@ namespace TicTacToeLab.PlayModeTests
                 "The winning row should remain observable on the production board while the outcome screen is shown.");
 
             // Act
-            yield return IE_Click(RequireButton(outcomeScreen));
+            yield return IE_Click(RequireButton(outcomeScreen, "Continue"));
 
             // Assert
             yield return PlayModeWait.IE_WaitUntilOrFail(
@@ -187,7 +187,7 @@ namespace TicTacToeLab.PlayModeTests
                     && FindActiveScreen<OutcomeScreen>() == null,
                 "Clicking Continue should return the player to Home.");
             Assert.That(
-                RequireButton(FindActiveScreen<HomeScreen>()).interactable,
+                RequireButton(FindActiveScreen<HomeScreen>(), "PvP").interactable,
                 Is.True,
                 "The production Home screen should be usable again after the journey returns to it.");
         }
@@ -296,14 +296,22 @@ namespace TicTacToeLab.PlayModeTests
             return adapters[0];
         }
 
-        private static Button RequireButton(Component screen)
+        private static Button RequireButton(Component screen, string expectedLabel)
         {
-            Button button = screen.GetComponentsInChildren<Button>(true).FirstOrDefault();
+            Button[] matchingButtons = screen.GetComponentsInChildren<Button>(true)
+                .Where(button => LabelText(button) == expectedLabel)
+                .ToArray();
             Assert.That(
-                button,
-                Is.Not.Null,
-                $"The production {screen.GetType().Name} screen should provide the control this journey clicks.");
-            return button;
+                matchingButtons,
+                Has.Length.EqualTo(1),
+                $"The production {screen.GetType().Name} screen should provide exactly one button labelled '{expectedLabel}'.");
+            return matchingButtons[0];
+        }
+
+        private static string LabelText(Button button)
+        {
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            return label == null ? string.Empty : label.text;
         }
 
         private static string[] VisibleTexts(Component screen)

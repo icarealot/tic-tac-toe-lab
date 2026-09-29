@@ -12,6 +12,7 @@ namespace TicTacToeLab.Runtime
         private readonly IDelayScheduler _delayScheduler;
         private readonly IInputService _inputService;
         private readonly Outcome _outcome;
+        private readonly GameSetup _setup;
 
         private bool _isActive;
         private bool _isPresentationPending;
@@ -23,7 +24,8 @@ namespace TicTacToeLab.Runtime
             IAppUI appUI,
             IDelayScheduler delayScheduler,
             IInputService inputService,
-            Outcome outcome)
+            Outcome outcome,
+            GameSetup setup)
         {
             _stateMachine = stateMachine;
             _stateFactory = stateFactory;
@@ -31,6 +33,7 @@ namespace TicTacToeLab.Runtime
             _delayScheduler = delayScheduler;
             _inputService = inputService;
             _outcome = outcome;
+            _setup = setup;
         }
 
         public void Enter()
@@ -74,7 +77,7 @@ namespace TicTacToeLab.Runtime
 
             _pendingPresentation = null;
             _isPresentationPending = false;
-            _appUI.Show<IOutcomeScreen>(screen => screen.Setup(_outcome, AcknowledgeOutcome));
+            _appUI.Show<IOutcomeScreen>(screen => screen.Setup(_outcome, _setup, AcknowledgeOutcome));
         }
 
         private void AcknowledgeOutcome()

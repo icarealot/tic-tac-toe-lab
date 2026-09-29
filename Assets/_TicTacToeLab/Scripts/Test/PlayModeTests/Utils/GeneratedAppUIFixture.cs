@@ -126,11 +126,13 @@ namespace TicTacToeLab.PlayModeTests
             PopupLayer = CreateLayer(root.transform, "Generated popup layer");
 
             (HomeScreen home, Button _, Button _) = CreateHomeScreen();
+            (BotSelectionScreen botSelection, Button _, Button _, Button _) = CreateBotSelectionScreen();
             (GameplayScreen gameplay, Button _, TMP_Text _) = CreateGameplayScreen();
             (ConfirmQuitScreen quitConfirmation, Button _, Button _) = CreateConfirmQuitScreen();
             (OutcomeScreen outcome, Button _, TMP_Text _) = CreateOutcomeScreen();
 
             IgnoreAsTemplate(home.gameObject);
+            IgnoreAsTemplate(botSelection.gameObject);
             IgnoreAsTemplate(gameplay.gameObject);
             IgnoreAsTemplate(quitConfirmation.gameObject);
             IgnoreAsTemplate(outcome.gameObject);
@@ -143,6 +145,7 @@ namespace TicTacToeLab.PlayModeTests
                 new[]
                 {
                     new ScreenRegistration(home, ScreenLayer.Base),
+                    new ScreenRegistration(botSelection, ScreenLayer.Base),
                     new ScreenRegistration(gameplay, ScreenLayer.Base),
                     new ScreenRegistration(quitConfirmation, ScreenLayer.Popup),
                     new ScreenRegistration(outcome, ScreenLayer.Popup),

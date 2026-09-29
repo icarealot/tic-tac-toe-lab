@@ -478,6 +478,26 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
+        public void A_terminal_PvE_X_placement_preserves_the_selected_setup_for_the_outcome()
+        {
+            // Arrange
+            StartPveGameplay(BotDifficulty.Professional);
+            GameSetup selectedSetup = _appUI.GameplayScreen.ShownSetup;
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 0));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 0));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 1));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 1));
+
+            // Act
+            _ = _boardPresenter.TryPlaceMark(new CellCoordinate(0, 2));
+            _delayScheduler.FirePending();
+
+            // Assert
+            Assert.That(_appUI.OutcomeScreen.ShownSetup, Is.SameAs(selectedSetup));
+            Assert.That(_appUI.OutcomeScreen.ShownOutcome, Is.EqualTo(Outcome.XWin));
+        }
+
+        [Test]
         public void A_terminal_PvE_X_placement_starts_only_the_existing_outcome_delay()
         {
             // Arrange

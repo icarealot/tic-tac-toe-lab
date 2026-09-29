@@ -152,7 +152,7 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(baseScreen.IsShown, Is.True, "Showing a popup should preserve the base screen.");
 
             // Act
-            sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.XWin, () => { }));
+            sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.XWin, new GameSetup(GameMode.Pvp, null), () => { }));
 
             // Assert
             Assert.That(
@@ -247,7 +247,7 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(homePrefab, ScreenLayer.Base),
                 new ScreenRegistration(outcomePrefab, ScreenLayer.Popup));
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
-            sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.XWin, () => { }));
+            sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.XWin, new GameSetup(GameMode.Pvp, null), () => { }));
             LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
             LifecycleProbe popup = _fixture.Screens.RequireLatestFor<GeneratedOutcomeScreen>();
 
@@ -315,7 +315,7 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(outcomePrefab, ScreenLayer.Popup));
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => { }, () => { }));
-            sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.Draw, () => { }));
+            sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.Draw, new GameSetup(GameMode.Pvp, null), () => { }));
             LifecycleProbe currentPopup = _fixture.Screens.RequireLatestFor<GeneratedOutcomeScreen>();
 
             // Act

@@ -34,10 +34,22 @@ namespace TicTacToeLab.PlayModeTests
         public void The_screen_reports_the_terminal_outcome_as_its_title(Outcome outcome, string expectedTitle)
         {
             // Act
-            _sut.Setup(outcome, () => { });
+            _sut.Setup(outcome, new GameSetup(GameMode.Pvp, null), () => { });
 
             // Assert
             Assert.That(_titleText.text, Is.EqualTo(expectedTitle), "The screen should report the outcome it was shown.");
+        }
+
+        [TestCase(Outcome.XWin, "You Win!")]
+        [TestCase(Outcome.OWin, "Bot Wins!")]
+        [TestCase(Outcome.Draw, "Draw!")]
+        public void A_PvE_setup_uses_the_mode_specific_terminal_title(Outcome outcome, string expectedTitle)
+        {
+            // Act
+            _sut.Setup(outcome, new GameSetup(GameMode.Pve, BotDifficulty.Professional), () => { });
+
+            // Assert
+            Assert.That(_titleText.text, Is.EqualTo(expectedTitle));
         }
 
         [Test]
@@ -45,7 +57,7 @@ namespace TicTacToeLab.PlayModeTests
         {
             // Arrange
             int continueCount = 0;
-            _sut.Setup(Outcome.XWin, () => continueCount++);
+            _sut.Setup(Outcome.XWin, new GameSetup(GameMode.Pvp, null), () => continueCount++);
 
             // Act
             _continueButton.onClick.Invoke();

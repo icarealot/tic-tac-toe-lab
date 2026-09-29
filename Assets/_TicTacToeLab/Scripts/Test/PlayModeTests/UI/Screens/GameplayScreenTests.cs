@@ -46,6 +46,25 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
+        public void PvE_gameplay_reports_the_human_and_bot_turns()
+        {
+            // Arrange
+            _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pve, BotDifficulty.Amateur), () => { });
+
+            // Act
+            _boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
+
+            // Assert
+            Assert.That(_turnText.text, Is.EqualTo("Bot is thinking… (O)"));
+
+            // Act
+            _boardPresenterHarness.RaisePress(new CellCoordinate(0, 1));
+
+            // Assert
+            Assert.That(_turnText.text, Is.EqualTo("Your turn (X)"));
+        }
+
+        [Test]
         public void Gameplay_follows_the_presenters_turn_change_notifications()
         {
             // Arrange

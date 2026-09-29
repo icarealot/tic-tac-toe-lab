@@ -12,6 +12,7 @@ namespace TicTacToeLab.Runtime
 
         private Action _onBack;
         private BoardPresenter _boardPresenter;
+        private GameSetup _setup;
 
         private void Awake()
         {
@@ -21,6 +22,7 @@ namespace TicTacToeLab.Runtime
         public void Setup(BoardPresenter boardPresenter, GameSetup setup, Action onBack)
         {
             _onBack = onBack;
+            _setup = setup;
             _boardPresenter = boardPresenter;
             _boardPresenter.TurnChanged += OnTurnChanged;
             OnTurnChanged(_boardPresenter.Turn);
@@ -33,11 +35,6 @@ namespace TicTacToeLab.Runtime
                 _backButton.onClick.RemoveListener(OnBackClicked);
             }
 
-            DetachTurnSource();
-        }
-
-        private void DetachTurnSource()
-        {
             if (_boardPresenter != null)
             {
                 _boardPresenter.TurnChanged -= OnTurnChanged;
@@ -52,7 +49,17 @@ namespace TicTacToeLab.Runtime
 
         private void OnTurnChanged(Mark turn)
         {
-            _turnText.SetText($"{turn}'s turn");
+            _turnText.SetText(TurnTextFor(turn));
+        }
+
+        private string TurnTextFor(Mark turn)
+        {
+            if (_setup.Mode == GameMode.Pve)
+            {
+                return turn == Mark.X ? "Your turn (X)" : "Bot is thinking… (O)";
+            }
+
+            return $"{turn}'s turn";
         }
     }
 }

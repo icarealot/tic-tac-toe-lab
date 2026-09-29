@@ -55,9 +55,9 @@ namespace TicTacToeLab.Runtime
                 _randomChoiceSource);
         }
 
-        public IAppState CreateOutcomeState(Outcome outcome)
+        public IAppState CreateOutcomeState(Outcome outcome, GameSetup setup)
         {
-            return new OutcomeAppState(_stateMachine, this, _appUI, _delayScheduler, _inputService, outcome);
+            return new OutcomeAppState(_stateMachine, this, _appUI, _delayScheduler, _inputService, outcome, setup);
         }
 
         private IBot CreateBot(BotDifficulty botDifficulty)

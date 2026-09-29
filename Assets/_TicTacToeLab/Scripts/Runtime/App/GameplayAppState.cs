@@ -108,7 +108,7 @@ namespace TicTacToeLab.Runtime
             }
 
             Outcome outcome = _boardPresenter.Outcome;
-            _stateMachine.TransitionFrom(this, _stateFactory.CreateOutcomeState(outcome));
+            _stateMachine.TransitionFrom(this, _stateFactory.CreateOutcomeState(outcome, _setup));
         }
 
         private void HandleTurnChanged(Mark turn)
