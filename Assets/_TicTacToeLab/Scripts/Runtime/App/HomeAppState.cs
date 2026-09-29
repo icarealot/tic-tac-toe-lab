@@ -22,16 +22,21 @@ namespace TicTacToeLab.Runtime
         public void Enter()
         {
             _inputService.DisablePlayerPress();
-            _appUI.Show<IHomeScreen>(screen => screen.Setup(StartGame));
+            _appUI.Show<IHomeScreen>(screen => screen.Setup(StartPvp, StartPve));
         }
 
         public void Exit()
         {
         }
 
-        private void StartGame()
+        private void StartPvp()
         {
-            _stateMachine.TransitionFrom(this, _stateFactory.CreateGameplayState());
+            _stateMachine.TransitionFrom(this, _stateFactory.CreateGameplayState(new GameSetup(GameMode.Pvp, null)));
+        }
+
+        private void StartPve()
+        {
+            _stateMachine.TransitionFrom(this, _stateFactory.CreateBotSelectionState());
         }
     }
 }

@@ -39,7 +39,7 @@ namespace TicTacToeLab.PlayModeTests
             _boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
 
             // Act
-            _sut.Setup(_boardPresenterHarness.Presenter, () => { });
+            _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pvp, null), () => { });
 
             // Assert
             Assert.That(_turnText.text, Is.EqualTo("O's turn"), "Gameplay should show the presenter's current turn.");
@@ -49,7 +49,7 @@ namespace TicTacToeLab.PlayModeTests
         public void Gameplay_follows_the_presenters_turn_change_notifications()
         {
             // Arrange
-            _sut.Setup(_boardPresenterHarness.Presenter, () => { });
+            _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pvp, null), () => { });
 
             // Act
             _boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
@@ -63,7 +63,7 @@ namespace TicTacToeLab.PlayModeTests
         {
             // Arrange
             int backCount = 0;
-            _sut.Setup(_boardPresenterHarness.Presenter, () => backCount++);
+            _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pvp, null), () => backCount++);
 
             // Act
             _backButton.onClick.Invoke();
@@ -76,7 +76,7 @@ namespace TicTacToeLab.PlayModeTests
         public IEnumerator Gameplay_detaches_from_the_presenter_when_destroyed()
         {
             // Arrange
-            _sut.Setup(_boardPresenterHarness.Presenter, () => { });
+            _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pvp, null), () => { });
             string turnBeforeDestruction = _turnText.text;
             Object.Destroy(_sut);
             yield return PlayModeWait.IE_WaitUntilOrFail(

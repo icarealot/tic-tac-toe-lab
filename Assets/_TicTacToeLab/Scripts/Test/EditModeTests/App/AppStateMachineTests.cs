@@ -42,7 +42,13 @@ namespace TicTacToeLab.EditModeTests
         private void StartGameplay()
         {
             _sut.Start();
-            _appUI.HomeScreen.ClickStart();
+            _appUI.HomeScreen.ClickPvp();
+        }
+
+        private void StartBotSelection()
+        {
+            _sut.Start();
+            _appUI.HomeScreen.ClickPve();
         }
 
         // --- Startup and Home ---
@@ -93,7 +99,7 @@ namespace TicTacToeLab.EditModeTests
 
             // Act
             _sut.Start();
-            _appUI.HomeScreen.ClickStart();
+            _appUI.HomeScreen.ClickPvp();
 
             // Assert
             Assert.That(BoardState.IsEmpty(_boardModel), Is.True);
@@ -101,6 +107,205 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_appUI.GameplayScreen.BoardOutcomeWhenPresented, Is.EqualTo(Outcome.InProgress));
             Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        // --- Home choices and bot selection ---
+
+        [Test]
+        public void Starting_the_state_machine_offers_both_PvP_and_PvE_at_Home()
+        {
+            // Act
+            _sut.Start();
+
+            // Assert
+            Assert.That(_appUI.HomeScreen.OnPvp, Is.Not.Null, "Home should offer the PvP choice.");
+            Assert.That(_appUI.HomeScreen.OnPve, Is.Not.Null, "Home should offer the PvE choice.");
+        }
+
+        [Test]
+        public void Selecting_PvP_starts_gameplay_with_the_PvP_setup()
+        {
+            // Arrange
+            _sut.Start();
+
+            // Act
+            _appUI.HomeScreen.ClickPvp();
+
+            // Assert
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
+            Assert.That(_appUI.BotSelectionScreen.IsVisible, Is.False);
+            Assert.That(_appUI.GameplayScreen.ShownSetup.Mode, Is.EqualTo(GameMode.Pvp));
+            Assert.That(_appUI.GameplayScreen.ShownSetup.BotDifficulty, Is.Null);
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        [Test]
+        public void Selecting_PvE_opens_bot_selection_instead_of_gameplay()
+        {
+            // Arrange
+            _sut.Start();
+
+            // Act
+            _appUI.HomeScreen.ClickPve();
+
+            // Assert
+            Assert.That(_appUI.BotSelectionScreen.IsVisible, Is.True);
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
+        }
+
+        [TestCase(BotDifficulty.Amateur)]
+        [TestCase(BotDifficulty.Professional)]
+        public void Selecting_a_bot_difficulty_starts_gameplay_with_that_PvE_setup_unchanged(BotDifficulty botDifficulty)
+        {
+            // Arrange
+            StartBotSelection();
+
+            // Act
+            if (botDifficulty == BotDifficulty.Amateur)
+            {
+                _appUI.BotSelectionScreen.ClickAmateur();
+            }
+            else
+            {
+                _appUI.BotSelectionScreen.ClickProfessional();
+            }
+
+            // Assert
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
+            Assert.That(_appUI.BotSelectionScreen.IsVisible, Is.False);
+            Assert.That(_appUI.GameplayScreen.ShownSetup.Mode, Is.EqualTo(GameMode.Pve));
+            Assert.That(_appUI.GameplayScreen.ShownSetup.BotDifficulty, Is.EqualTo(botDifficulty));
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        private static IEnumerable<TestCaseData> BotSelectionBackRequests()
+        {
+            yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((appUI, _) => appUI.BotSelectionScreen.ClickBack()))
+                .SetName("Clicking_Back_at_bot_selection_returns_Home_without_confirmation");
+
+            yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((_, inputService) => inputService.RaiseBack()))
+                .SetName("Raising_application_Back_at_bot_selection_returns_Home_without_confirmation");
+        }
+
+        [TestCaseSource(nameof(BotSelectionBackRequests))]
+        public void Back_at_bot_selection_returns_Home_without_confirmation(
+            Action<FakeAppUI, FakeInputService> requestBack)
+        {
+            // Arrange
+            StartBotSelection();
+
+            // Act
+            requestBack(_appUI, _inputService);
+
+            // Assert
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
+            Assert.That(_appUI.BotSelectionScreen.IsVisible, Is.False);
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
+            Assert.That(_appUI.HasPopup, Is.False);
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
+        }
+
+        [Test]
+        public void Repeating_a_bot_difficulty_choice_starts_gameplay_once()
+        {
+            // Arrange
+            StartBotSelection();
+            int gameplayPresentationsBefore = _appUI.GameplayScreen.PresentationCount;
+
+            // Act
+            _appUI.BotSelectionScreen.ClickAmateur();
+            _appUI.BotSelectionScreen.ClickProfessional();
+
+            // Assert
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(gameplayPresentationsBefore + 1));
+            Assert.That(_appUI.GameplayScreen.ShownSetup.BotDifficulty, Is.EqualTo(BotDifficulty.Amateur));
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
+        }
+
+        [Test]
+        public void Repeating_back_at_bot_selection_returns_Home_once()
+        {
+            // Arrange
+            StartBotSelection();
+            int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
+
+            // Act
+            _appUI.BotSelectionScreen.ClickBack();
+            _inputService.RaiseBack();
+            _appUI.BotSelectionScreen.ClickBack();
+
+            // Assert
+            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore + 1));
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
+        }
+
+        [Test]
+        public void Returning_Home_from_bot_selection_detaches_from_back_requests()
+        {
+            // Arrange
+            StartBotSelection();
+
+            // Act
+            _inputService.RaiseBack();
+
+            // Assert
+            Assert.That(_inputService.HasBackSubscribers, Is.False);
+        }
+
+        [Test]
+        public void A_stale_bot_difficulty_choice_after_returning_Home_does_not_start_gameplay()
+        {
+            // Arrange
+            StartBotSelection();
+            Action staleAmateur = _appUI.BotSelectionScreen.OnAmateur;
+            _appUI.BotSelectionScreen.ClickBack();
+
+            // Act
+            staleAmateur();
+
+            // Assert
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
+        }
+
+        [Test]
+        public void A_stale_bot_selection_back_callback_after_starting_a_game_does_not_return_Home()
+        {
+            // Arrange
+            StartBotSelection();
+            Action staleBack = _appUI.BotSelectionScreen.OnBack;
+            _appUI.BotSelectionScreen.ClickAmateur();
+
+            // Act
+            staleBack();
+
+            // Assert
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
+            Assert.That(_appUI.HasPopup, Is.False);
+        }
+
+        [Test]
+        public void Disposing_at_bot_selection_detaches_back_and_keeps_every_callback_inert()
+        {
+            // Arrange
+            StartBotSelection();
+            Action staleAmateur = _appUI.BotSelectionScreen.OnAmateur;
+            Action staleBack = _appUI.BotSelectionScreen.OnBack;
+
+            // Act
+            _sut.Dispose();
+            staleAmateur();
+            staleBack();
+            _inputService.RaiseBack();
+
+            // Assert
+            Assert.That(_inputService.HasBackSubscribers, Is.False);
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
         }
 
         // --- Quit confirmation ---
@@ -390,7 +595,7 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void A_stale_start_callback_during_gameplay_does_not_restart_the_game()
+        public void A_stale_home_choice_during_gameplay_does_not_restart_the_game()
         {
             // Arrange
             StartGameplay();
@@ -398,7 +603,8 @@ namespace TicTacToeLab.EditModeTests
             int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
 
             // Act
-            _appUI.HomeScreen.ClickStart();
+            _appUI.HomeScreen.ClickPvp();
+            _appUI.HomeScreen.ClickPve();
 
             // Assert
             Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);

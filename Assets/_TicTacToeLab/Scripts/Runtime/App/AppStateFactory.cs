@@ -27,9 +27,14 @@ namespace TicTacToeLab.Runtime
             return new HomeAppState(_stateMachine, this, _appUI, _inputService);
         }
 
-        public IAppState CreateGameplayState()
+        public IAppState CreateBotSelectionState()
         {
-            return new GameplayAppState(_stateMachine, this, _boardPresenter, _appUI, _inputService);
+            return new BotSelectionAppState(_stateMachine, this, _appUI, _inputService);
+        }
+
+        public IAppState CreateGameplayState(GameSetup setup)
+        {
+            return new GameplayAppState(_stateMachine, this, _boardPresenter, _appUI, _inputService, setup);
         }
 
         public IAppState CreateOutcomeState(Outcome outcome)

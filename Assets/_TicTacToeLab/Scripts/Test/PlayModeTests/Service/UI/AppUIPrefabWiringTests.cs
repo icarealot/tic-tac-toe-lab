@@ -43,11 +43,15 @@ namespace TicTacToeLab.PlayModeTests
             // Arrange
             AppUI sut = CreateProductionAppUI();
             int startCount = 0;
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => startCount++));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => startCount++, () => { }));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
             Button startButton = RequireButton(home, "Start");
             Assert.That(startButton.isActiveAndEnabled, Is.True, "The production Home screen's Start button should be active and enabled.");
             Assert.That(startButton.interactable, Is.True, "The production Home screen's Start button should be interactable.");
+            Assert.That(
+                VisibleTexts(home),
+                Is.EquivalentTo(new[] { "Tic Tac Toe", "Start" }),
+                "Until PvE is enabled in production, Home should expose only its existing PvP route.");
 
             // Act
             startButton.onClick.Invoke();
@@ -66,9 +70,9 @@ namespace TicTacToeLab.PlayModeTests
             // X owns the first turn; this places a mark so the presenter's current turn is not the default one.
             boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
             int backCount = 0;
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
-            sut.Show<IGameplayScreen>(screen => screen.Setup(boardPresenterHarness.Presenter, () => backCount++));
+            sut.Show<IGameplayScreen>(screen => screen.Setup(boardPresenterHarness.Presenter, new GameSetup(GameMode.Pvp, null), () => backCount++));
             GameplayScreen gameplay = RequireSingleScreen<GameplayScreen>(sut);
             Button backButton = RequireButton(gameplay, "Back");
             Assert.That(backButton.isActiveAndEnabled, Is.True, "The production gameplay's Back button should be active and enabled.");
@@ -94,7 +98,7 @@ namespace TicTacToeLab.PlayModeTests
             AppUI sut = CreateProductionAppUI();
             int quitCount = 0;
             int cancelCount = 0;
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => quitCount++, () => cancelCount++));
             ConfirmQuitScreen quitConfirmation = RequireSingleScreen<ConfirmQuitScreen>(sut);
@@ -129,7 +133,7 @@ namespace TicTacToeLab.PlayModeTests
             // Arrange
             AppUI sut = CreateProductionAppUI();
             int continueCount = 0;
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
             sut.Show<IOutcomeScreen>(screen => screen.Setup(outcome, () => continueCount++));
             OutcomeScreen outcomeScreen = RequireSingleScreen<OutcomeScreen>(sut);

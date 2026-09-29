@@ -18,7 +18,7 @@ namespace TicTacToeLab.Runtime
             _backButton.onClick.AddListener(OnBackClicked);
         }
 
-        public void Setup(BoardPresenter boardPresenter, Action onBack)
+        public void Setup(BoardPresenter boardPresenter, GameSetup setup, Action onBack)
         {
             _onBack = onBack;
             _boardPresenter = boardPresenter;

@@ -29,15 +29,32 @@ namespace TicTacToeLab.PlayModeTests
             Screens = registryRoot.AddComponent<GeneratedScreenRegistry>();
         }
 
-        public (HomeScreen Screen, Button StartButton) CreateHomeScreen()
+        public (HomeScreen Screen, Button PvpButton, Button PveButton) CreateHomeScreen()
         {
             GameObject root = CreateRoot("Generated Home screen");
-            Button startButton = CreateButton(root.transform, "Start button");
+            Button pvpButton = CreateButton(root.transform, "PvP button");
+            Button pveButton = CreateButton(root.transform, "PvE button");
             HomeScreen screen = root.AddComponent<HomeScreen>();
             AttachLifecycleProbe(root);
-            TestSerializedReference.AssignPrefab(screen, "_startButton", startButton);
+            TestSerializedReference.AssignPrefab(screen, "_startButton", pvpButton);
+            TestSerializedReference.AssignPrefab(screen, "_pveButton", pveButton);
             root.SetActive(true);
-            return (screen, startButton);
+            return (screen, pvpButton, pveButton);
+        }
+
+        public (BotSelectionScreen Screen, Button AmateurButton, Button ProfessionalButton, Button BackButton) CreateBotSelectionScreen()
+        {
+            GameObject root = CreateRoot("Generated bot selection screen");
+            Button amateurButton = CreateLabeledButton(root.transform, "Amateur button", "Amateur");
+            Button professionalButton = CreateLabeledButton(root.transform, "Professional button", "Professional");
+            Button backButton = CreateLabeledButton(root.transform, "Back button", "Back");
+            BotSelectionScreen screen = root.AddComponent<BotSelectionScreen>();
+            AttachLifecycleProbe(root);
+            TestSerializedReference.AssignPrefab(screen, "_amateurButton", amateurButton);
+            TestSerializedReference.AssignPrefab(screen, "_professionalButton", professionalButton);
+            TestSerializedReference.AssignPrefab(screen, "_backButton", backButton);
+            root.SetActive(true);
+            return (screen, amateurButton, professionalButton, backButton);
         }
 
         public (GameplayScreen Screen, Button BackButton, TMP_Text TurnText) CreateGameplayScreen()
@@ -108,7 +125,7 @@ namespace TicTacToeLab.PlayModeTests
             BaseLayer = CreateLayer(root.transform, "Generated base layer");
             PopupLayer = CreateLayer(root.transform, "Generated popup layer");
 
-            (HomeScreen home, Button _) = CreateHomeScreen();
+            (HomeScreen home, Button _, Button _) = CreateHomeScreen();
             (GameplayScreen gameplay, Button _, TMP_Text _) = CreateGameplayScreen();
             (ConfirmQuitScreen quitConfirmation, Button _, Button _) = CreateConfirmQuitScreen();
             (OutcomeScreen outcome, Button _, TMP_Text _) = CreateOutcomeScreen();
@@ -183,6 +200,14 @@ namespace TicTacToeLab.PlayModeTests
             GameObject buttonRoot = new(name, typeof(RectTransform));
             buttonRoot.transform.SetParent(parent, worldPositionStays: false);
             return buttonRoot.AddComponent<Button>();
+        }
+
+        private static Button CreateLabeledButton(Transform parent, string name, string label)
+        {
+            Button button = CreateButton(parent, name);
+            TMP_Text text = CreateText(button.transform, label);
+            text.SetText(label);
+            return button;
         }
 
         private static TMP_Text CreateText(Transform parent, string name)

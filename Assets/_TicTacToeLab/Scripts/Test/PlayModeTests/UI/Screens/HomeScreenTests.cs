@@ -11,13 +11,14 @@ namespace TicTacToeLab.PlayModeTests
     {
         private GeneratedAppUIFixture _fixture;
         private HomeScreen _sut;
-        private Button _startButton;
+        private Button _pvpButton;
+        private Button _pveButton;
 
         [SetUp]
         public void CreateGeneratedHomeScreen()
         {
             _fixture = new GeneratedAppUIFixture();
-            (_sut, _startButton) = _fixture.CreateHomeScreen();
+            (_sut, _pvpButton, _pveButton) = _fixture.CreateHomeScreen();
         }
 
         [UnityTearDown]
@@ -27,17 +28,35 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
-        public void Starting_routes_exactly_once_to_the_supplied_action()
+        public void Selecting_PvP_routes_exactly_once_to_the_supplied_action()
         {
             // Arrange
-            int startCount = 0;
-            _sut.Setup(() => startCount++);
+            int pvpCount = 0;
+            int pveCount = 0;
+            _sut.Setup(() => pvpCount++, () => pveCount++);
 
             // Act
-            _startButton.onClick.Invoke();
+            _pvpButton.onClick.Invoke();
 
             // Assert
-            Assert.That(startCount, Is.EqualTo(1), "The Start button should route to the supplied start action exactly once.");
+            Assert.That(pvpCount, Is.EqualTo(1), "The PvP button should invoke its supplied action exactly once.");
+            Assert.That(pveCount, Is.EqualTo(0), "Selecting PvP should not invoke the PvE action.");
+        }
+
+        [Test]
+        public void Selecting_PvE_routes_exactly_once_to_the_supplied_action()
+        {
+            // Arrange
+            int pvpCount = 0;
+            int pveCount = 0;
+            _sut.Setup(() => pvpCount++, () => pveCount++);
+
+            // Act
+            _pveButton.onClick.Invoke();
+
+            // Assert
+            Assert.That(pveCount, Is.EqualTo(1), "The PvE button should invoke its supplied action exactly once.");
+            Assert.That(pvpCount, Is.EqualTo(0), "Selecting PvE should not invoke the PvP action.");
         }
     }
 }

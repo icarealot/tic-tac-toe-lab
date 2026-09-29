@@ -81,12 +81,12 @@ namespace TicTacToeLab.PlayModeTests
             AppUI sut = CreateActiveAppUI(
                 new ScreenRegistration(homePrefab, ScreenLayer.Base),
                 new ScreenRegistration(gameplayPrefab, ScreenLayer.Base));
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             LifecycleProbe outgoing = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
             Assert.That(outgoing.IsShown, Is.True, "The first base screen should be presented before it is replaced.");
 
             // Act
-            sut.Show<IGameplayScreen>(screen => screen.Setup(null, () => { }));
+            sut.Show<IGameplayScreen>(screen => screen.Setup(null, new GameSetup(GameMode.Pvp, null), () => { }));
 
             // Assert
             Assert.That(outgoing.IsShown, Is.False, "Replacing a base screen should deactivate the outgoing screen immediately.");
@@ -100,6 +100,32 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [UnityTest]
+        public IEnumerator Showing_the_generated_bot_selection_base_screen_replaces_the_generated_home_screen()
+        {
+            // Arrange
+            GeneratedHomeScreen homePrefab = _fixture.CreateScreenTemplate<GeneratedHomeScreen>();
+            GeneratedBotSelectionScreen botSelectionPrefab = _fixture.CreateScreenTemplate<GeneratedBotSelectionScreen>();
+            AppUI sut = CreateActiveAppUI(
+                new ScreenRegistration(homePrefab, ScreenLayer.Base),
+                new ScreenRegistration(botSelectionPrefab, ScreenLayer.Base));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
+            LifecycleProbe outgoing = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
+
+            // Act
+            sut.Show<IBotSelectionScreen>(screen => screen.Setup(() => { }, () => { }, () => { }));
+
+            // Assert
+            Assert.That(outgoing.IsShown, Is.False, "Showing bot selection should deactivate the outgoing Home base screen.");
+            Assert.That(
+                _fixture.Screens.RequireLatestFor<GeneratedBotSelectionScreen>().IsShown,
+                Is.True,
+                "Showing bot selection should present the registered base screen.");
+            yield return PlayModeWait.IE_WaitUntilOrFail(
+                () => outgoing.WasDestroyed,
+                "Replacing Home with bot selection should destroy the outgoing base screen.");
+        }
+
+        [UnityTest]
         public IEnumerator Showing_a_popup_preserves_the_base_screen_and_replacing_the_popup_deactivates_and_destroys_the_outgoing_popup()
         {
             // Arrange
@@ -110,7 +136,7 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(homePrefab, ScreenLayer.Base),
                 new ScreenRegistration(quitConfirmationPrefab, ScreenLayer.Popup),
                 new ScreenRegistration(outcomePrefab, ScreenLayer.Popup));
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
 
             // Act
@@ -169,14 +195,14 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(homePrefab, ScreenLayer.Base),
                 new ScreenRegistration(gameplayPrefab, ScreenLayer.Base),
                 new ScreenRegistration(quitConfirmationPrefab, ScreenLayer.Popup));
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => { }, () => { }));
             LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
             LifecycleProbe popup = _fixture.Screens.RequireLatestFor<GeneratedConfirmQuitScreen>();
 
             // Act and Assert
             Assert.That(
-                () => sut.Show<IGameplayScreen>(screen => screen.Setup(null, () => { })),
+                () => sut.Show<IGameplayScreen>(screen => screen.Setup(null, new GameSetup(GameMode.Pvp, null), () => { })),
                 Throws.TypeOf<InvalidOperationException>().With.Message.Contains(nameof(IGameplayScreen)),
                 "The rejected base failure should identify the base role.");
             Assert.That(
@@ -199,7 +225,7 @@ namespace TicTacToeLab.PlayModeTests
             AppUI sut = CreateActiveAppUI(
                 new ScreenRegistration(homePrefab, ScreenLayer.Base),
                 new ScreenRegistration(quitConfirmationPrefab, ScreenLayer.Popup));
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => { }, () => { }));
             LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
 
@@ -220,7 +246,7 @@ namespace TicTacToeLab.PlayModeTests
             AppUI sut = CreateActiveAppUI(
                 new ScreenRegistration(homePrefab, ScreenLayer.Base),
                 new ScreenRegistration(outcomePrefab, ScreenLayer.Popup));
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.XWin, () => { }));
             LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
             LifecycleProbe popup = _fixture.Screens.RequireLatestFor<GeneratedOutcomeScreen>();
@@ -244,7 +270,7 @@ namespace TicTacToeLab.PlayModeTests
             // Arrange
             GeneratedHomeScreen homePrefab = _fixture.CreateScreenTemplate<GeneratedHomeScreen>();
             AppUI sut = CreateActiveAppUI(new ScreenRegistration(homePrefab, ScreenLayer.Base));
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             LifecycleProbe baseScreen = _fixture.Screens.RequireLatestFor<GeneratedHomeScreen>();
 
             // Act
@@ -287,7 +313,7 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(homePrefab, ScreenLayer.Base),
                 new ScreenRegistration(quitConfirmationPrefab, ScreenLayer.Popup),
                 new ScreenRegistration(outcomePrefab, ScreenLayer.Popup));
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => { }, () => { }));
             sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.Draw, () => { }));
             LifecycleProbe currentPopup = _fixture.Screens.RequireLatestFor<GeneratedOutcomeScreen>();

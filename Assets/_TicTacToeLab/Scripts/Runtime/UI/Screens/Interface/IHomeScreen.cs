@@ -4,6 +4,6 @@ namespace TicTacToeLab.Runtime
 {
     public interface IHomeScreen : IScreen
     {
-        public void Setup(Action onStart);
+        public void Setup(Action onPvp, Action onPve);
     }
 }

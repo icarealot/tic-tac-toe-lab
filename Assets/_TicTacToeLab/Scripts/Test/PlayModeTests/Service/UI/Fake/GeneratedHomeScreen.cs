@@ -7,7 +7,7 @@ namespace TicTacToeLab.PlayModeTests
 {
     public sealed class GeneratedHomeScreen : MonoBehaviour, IHomeScreen
     {
-        public void Setup(Action onStart)
+        public void Setup(Action onPvp, Action onPve)
         {
         }
     }

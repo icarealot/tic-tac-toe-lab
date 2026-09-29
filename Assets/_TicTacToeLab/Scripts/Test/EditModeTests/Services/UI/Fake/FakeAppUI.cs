@@ -7,6 +7,7 @@ namespace TicTacToeLab.EditModeTests
     public sealed class FakeAppUI : IAppUI
     {
         public FakeHomeScreen HomeScreen { get; } = new();
+        public FakeBotSelectionScreen BotSelectionScreen { get; } = new();
         public FakeGameplayScreen GameplayScreen { get; } = new();
         public FakeConfirmQuitScreen ConfirmQuitScreen { get; } = new();
         public FakeOutcomeScreen OutcomeScreen { get; } = new();
@@ -16,6 +17,7 @@ namespace TicTacToeLab.EditModeTests
         private static readonly Dictionary<Type, ScreenLayer> LAYERS_BY_ROLE = new()
         {
             { typeof(IHomeScreen), ScreenLayer.Base },
+            { typeof(IBotSelectionScreen), ScreenLayer.Base },
             { typeof(IGameplayScreen), ScreenLayer.Base },
             { typeof(IConfirmQuitScreen), ScreenLayer.Popup },
             { typeof(IOutcomeScreen), ScreenLayer.Popup },
@@ -64,6 +66,11 @@ namespace TicTacToeLab.EditModeTests
             if (typeof(TScreen) == typeof(IHomeScreen))
             {
                 return HomeScreen;
+            }
+
+            if (typeof(TScreen) == typeof(IBotSelectionScreen))
+            {
+                return BotSelectionScreen;
             }
 
             if (typeof(TScreen) == typeof(IGameplayScreen))

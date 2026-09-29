@@ -7,6 +7,7 @@ namespace TicTacToeLab.Runtime
         private readonly BoardPresenter _boardPresenter;
         private readonly IAppUI _appUI;
         private readonly IInputService _inputService;
+        private readonly GameSetup _setup;
 
         private bool _isActive;
         private QuitConfirmation _activeQuitConfirmation;
@@ -16,13 +17,15 @@ namespace TicTacToeLab.Runtime
             AppStateFactory stateFactory,
             BoardPresenter boardPresenter,
             IAppUI appUI,
-            IInputService inputService)
+            IInputService inputService,
+            GameSetup setup)
         {
             _stateMachine = stateMachine;
             _stateFactory = stateFactory;
             _boardPresenter = boardPresenter;
             _appUI = appUI;
             _inputService = inputService;
+            _setup = setup;
         }
 
         public void Enter()
@@ -31,7 +34,7 @@ namespace TicTacToeLab.Runtime
             _boardPresenter.Reset();
             _inputService.BackPressed += HandleBack;
             _boardPresenter.GameEnded += HandleGameEnded;
-            _appUI.Show<IGameplayScreen>(screen => screen.Setup(_boardPresenter, HandleBack));
+            _appUI.Show<IGameplayScreen>(screen => screen.Setup(_boardPresenter, _setup, HandleBack));
             _inputService.EnablePlayerPress();
         }
 
