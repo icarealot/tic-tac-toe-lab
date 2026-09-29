@@ -5,19 +5,19 @@
       "source": "Unity-Technologies/skills",
       "sourceType": "github",
       "skillPath": "skills/ui-imgui/SKILL.md",
-      "computedHash": "18b8eb1cf71028d42fd6a0863f88cfc4e7ee522d3e2e0ac2b61f2065f408f701"
+      "computedHash": "8a90d3e7cef62a1af60558c90eb186e3f50f13bc746193ad6fa9757b6d969b28"
     },
     "ui-ugui": {
       "source": "Unity-Technologies/skills",
       "sourceType": "github",
       "skillPath": "skills/ui-ugui/SKILL.md",
-      "computedHash": "a4d308dcd121fa214a1b28325c3e23030a010c095565a23a48dd38cf05bead26"
+      "computedHash": "38d02555a21352f6f71f2d248c3eb01eb628f6a1676047e17ece57b43b556f1a"
     },
     "unity-cli": {
       "source": "Unity-Technologies/skills",
       "sourceType": "github",
       "skillPath": "skills/unity-cli/SKILL.md",
-      "computedHash": "7b842a2c08301161c42154d95939ba6501f2f75e4817e3b196cb52d540e53d68"
+      "computedHash": "c873e64c30836852d5f08a3df866a004bf3ed95df2443752add4733818010407"
     },
     "unity-code-review": {
       "source": "icarealot/dotfiles",
@@ -47,7 +47,7 @@
       "source": "icarealot/dotfiles",
       "sourceType": "github",
       "skillPath": "ai/skills/unity/unity-to-tasks/SKILL.md",
-      "computedHash": "be04205afccb45c513eb640f85c6b567bcbb01efc2aa8459c2b8078b21c8a0cb"
+      "computedHash": "43046858b745611cec7de27bbeb6a6f45b6f304bdf71f12408a867d3ab2d3a75"
     }
   }
 }
