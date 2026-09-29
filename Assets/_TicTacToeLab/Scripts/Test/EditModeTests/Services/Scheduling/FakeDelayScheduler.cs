@@ -22,6 +22,11 @@ namespace TicTacToeLab.EditModeTests
             return new Cancellation(this);
         }
 
+        public Action CapturePendingCallback()
+        {
+            return _pendingCallback;
+        }
+
         public void FirePending()
         {
             if (_pendingCallback == null)

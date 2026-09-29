@@ -544,6 +544,211 @@ namespace TicTacToeLab.EditModeTests
         // --- Quit confirmation ---
 
         [Test]
+        public void Back_remains_available_during_a_pending_PvE_bot_turn_and_cancels_work_before_showing_confirmation()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(0, 0));
+            Action staleBotCallback = _delayScheduler.CapturePendingCallback();
+
+            // Act
+            _inputService.RaiseBack();
+
+            // Assert
+            Assert.That(staleBotCallback, Is.Not.Null);
+            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.True);
+            Assert.That(_delayScheduler.WasCancelled, Is.True);
+            Assert.That(_delayScheduler.HasPendingWork, Is.False);
+
+            // Act
+            staleBotCallback();
+
+            // Assert
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
+            {
+                (new CellCoordinate(0, 0), Mark.X),
+            }));
+            Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 1)), Is.True);
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Dismissing_quit_confirmation_during_a_pending_PvE_bot_turn_starts_a_fresh_delay_and_keeps_the_old_callback_inert()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(0, 0));
+            Action staleBotCallback = _delayScheduler.CapturePendingCallback();
+            _inputService.RaiseBack();
+            _randomChoiceSource.Index = 6;
+
+            // Act
+            _appUI.ConfirmQuitScreen.ClickCancel();
+
+            // Assert
+            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.False);
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(2));
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(1f));
+            Assert.That(_delayScheduler.HasPendingWork, Is.True);
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
+
+            // Act
+            staleBotCallback();
+
+            // Assert
+            Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 1)), Is.True);
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(2));
+            Assert.That(_delayScheduler.HasPendingWork, Is.True);
+
+            // Act
+            _delayScheduler.FirePending();
+
+            // Assert
+            Assert.That(_boardView.ShownMarks, Has.Count.EqualTo(2));
+            Assert.That(_boardView.ShownMarks[^1].Mark, Is.EqualTo(Mark.O));
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        [Test]
+        public void Confirming_quit_during_a_pending_PvE_bot_turn_returns_Home_without_an_O_placement()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(0, 0));
+            Action staleBotCallback = _delayScheduler.CapturePendingCallback();
+            _inputService.RaiseBack();
+
+            // Act
+            _appUI.ConfirmQuitScreen.ClickConfirm();
+
+            // Assert
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
+            Assert.That(_appUI.HasPopup, Is.False);
+            Assert.That(_delayScheduler.HasPendingWork, Is.False);
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
+            {
+                (new CellCoordinate(0, 0), Mark.X),
+            }));
+
+            // Act
+            staleBotCallback();
+
+            // Assert
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
+            {
+                (new CellCoordinate(0, 0), Mark.X),
+            }));
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
+        }
+
+        [Test]
+        public void Disposing_during_a_pending_PvE_bot_turn_cancels_work_and_keeps_the_captured_callback_inert()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(0, 0));
+            Action staleBotCallback = _delayScheduler.CapturePendingCallback();
+            int turnChangedCount = 0;
+            int gameEndedCount = 0;
+            _boardPresenter.TurnChanged += _ => turnChangedCount++;
+            _boardPresenter.GameEnded += () => gameEndedCount++;
+
+            // Act
+            _sut.Dispose();
+
+            // Assert
+            Assert.That(_delayScheduler.WasCancelled, Is.True);
+            Assert.That(_delayScheduler.HasPendingWork, Is.False);
+            Assert.That(_inputService.HasBackSubscribers, Is.False);
+
+            // Act
+            staleBotCallback();
+
+            // Assert
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
+            {
+                (new CellCoordinate(0, 0), Mark.X),
+            }));
+            Assert.That(turnChangedCount, Is.EqualTo(0));
+            Assert.That(gameEndedCount, Is.EqualTo(0));
+            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
+        }
+
+        [Test]
+        public void A_canceled_bot_callback_cannot_affect_a_later_PvE_game()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(0, 0));
+            Action staleBotCallback = _delayScheduler.CapturePendingCallback();
+            _inputService.RaiseBack();
+            _appUI.ConfirmQuitScreen.ClickConfirm();
+            StartPveGameplay();
+
+            // Act
+            staleBotCallback();
+
+            // Assert
+            Assert.That(BoardState.IsEmpty(_boardModel), Is.True);
+            Assert.That(_boardView.ShownMarks, Is.Empty);
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
+        }
+
+        [Test]
+        public void An_current_bot_callback_does_nothing_when_the_turn_is_no_longer_O()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(0, 0));
+            Action capturedBotCallback = _delayScheduler.CapturePendingCallback();
+            _ = _boardPresenter.TryPlaceMark(new CellCoordinate(0, 1));
+
+            // Act
+            capturedBotCallback();
+
+            // Assert
+            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
+            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
+            {
+                (new CellCoordinate(0, 0), Mark.X),
+                (new CellCoordinate(0, 1), Mark.O),
+            }));
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
+            Assert.That(_delayScheduler.HasPendingWork, Is.False);
+        }
+
+        [Test]
+        public void An_current_bot_callback_does_nothing_after_the_outcome_is_no_longer_in_progress()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(0, 0));
+            Action capturedBotCallback = _delayScheduler.CapturePendingCallback();
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 0));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(2, 0));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 1));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(2, 1));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 2));
+
+            // Act
+            capturedBotCallback();
+
+            // Assert
+            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.OWin));
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
+            {
+                (new CellCoordinate(0, 0), Mark.X),
+            }));
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
+            Assert.That(_delayScheduler.HasPendingWork, Is.False);
+        }
+
+        [Test]
         public void Gameplay_back_opens_quit_confirmation_and_blocks_board_presses()
         {
             // Arrange
@@ -590,6 +795,35 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.False);
             Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        private static IEnumerable<TestCaseData> PveQuitConfirmationDismissals()
+        {
+            yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((appUI, _) => appUI.ConfirmQuitScreen.ClickCancel()))
+                .SetName("Dismissing_PvE_X_turn_quit_confirmation_with_cancel_restores_X_interaction_without_bot_work");
+
+            yield return new TestCaseData((Action<FakeAppUI, FakeInputService>)((_, inputService) => inputService.RaiseBack()))
+                .SetName("Dismissing_PvE_X_turn_quit_confirmation_with_back_restores_X_interaction_without_bot_work");
+        }
+
+        [TestCaseSource(nameof(PveQuitConfirmationDismissals))]
+        public void Dismissing_quit_confirmation_during_a_PvE_X_turn_restores_X_interaction_without_scheduling_bot_work(
+            Action<FakeAppUI, FakeInputService> dismiss)
+        {
+            // Arrange
+            StartPveGameplay();
+            _inputService.RaiseBack();
+            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.True);
+
+            // Act
+            dismiss(_appUI, _inputService);
+
+            // Assert
+            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.False);
+            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(0));
+            Assert.That(_randomChoiceSource.CallCount, Is.EqualTo(0));
         }
 
         [Test]

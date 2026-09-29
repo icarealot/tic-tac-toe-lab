@@ -1,3 +1,5 @@
+using System;
+
 namespace TicTacToeLab.Runtime
 {
     internal sealed class GameplayAppState : IAppState
@@ -26,7 +28,8 @@ namespace TicTacToeLab.Runtime
         private readonly IRandomChoiceSource _randomChoiceSource;
 
         private bool _isActive;
-        private bool _botPlacementPending;
+        private IDisposable _pendingBotPlacementCancellation;
+        private Action _pendingBotPlacementCallback;
         private QuitConfirmation _activeQuitConfirmation;
 
         public GameplayAppState(
@@ -70,6 +73,7 @@ namespace TicTacToeLab.Runtime
         public void Exit()
         {
             _isActive = false;
+            CancelPendingBotPlacement();
             _activeQuitConfirmation = null;
             _inputService.BackPressed -= HandleBack;
             _boardPresenter.GameEnded -= HandleGameEnded;
@@ -125,21 +129,28 @@ namespace TicTacToeLab.Runtime
 
         private void ScheduleBotPlacement()
         {
-            if (_botPlacementPending)
+            if (_pendingBotPlacementCallback != null)
             {
                 return;
             }
 
-            _botPlacementPending = true;
             _inputService.DisablePlayerPress();
             int delayIndex = _randomChoiceSource.NextIndex(_botTurnDelaysSeconds.Length);
             float delaySeconds = _botTurnDelaysSeconds[delayIndex];
-            _ = _delayScheduler.Schedule(delaySeconds, PlaceBotMark);
+            Action botPlacementCallback = null;
+            botPlacementCallback = () => PlaceBotMark(botPlacementCallback);
+            _pendingBotPlacementCallback = botPlacementCallback;
+            _pendingBotPlacementCancellation = _delayScheduler.Schedule(delaySeconds, botPlacementCallback);
         }
 
-        private void PlaceBotMark()
+        private void PlaceBotMark(Action botPlacementCallback)
         {
-            _botPlacementPending = false;
+            if (!ReferenceEquals(_pendingBotPlacementCallback, botPlacementCallback))
+            {
+                return;
+            }
+
+            CancelPendingBotPlacement();
 
             if (!_isActive
                 || _setup.Mode != GameMode.Pve
@@ -154,8 +165,21 @@ namespace TicTacToeLab.Runtime
             _ = _boardPresenter.TryPlaceMark(coordinate);
         }
 
+        private void CancelPendingBotPlacement()
+        {
+            _pendingBotPlacementCallback = null;
+            IDisposable cancellation = _pendingBotPlacementCancellation;
+            _pendingBotPlacementCancellation = null;
+
+            if (cancellation != null)
+            {
+                cancellation.Dispose();
+            }
+        }
+
         private void OpenQuitConfirmation()
         {
+            CancelPendingBotPlacement();
             QuitConfirmation quitConfirmation = new(this);
             _activeQuitConfirmation = quitConfirmation;
             _inputService.DisablePlayerPress();
@@ -188,7 +212,21 @@ namespace TicTacToeLab.Runtime
         {
             _activeQuitConfirmation = null;
             _appUI.Close<IConfirmQuitScreen>();
+
+            if (IsBotTurn())
+            {
+                ScheduleBotPlacement();
+                return;
+            }
+
             _inputService.EnablePlayerPress();
+        }
+
+        private bool IsBotTurn()
+        {
+            return _setup.Mode == GameMode.Pve
+                && _boardPresenter.Outcome == Outcome.InProgress
+                && _boardPresenter.Turn == Mark.O;
         }
 
         private bool IsActiveQuitConfirmation(QuitConfirmation quitConfirmation)
