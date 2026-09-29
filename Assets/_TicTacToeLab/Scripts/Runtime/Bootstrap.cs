@@ -38,7 +38,12 @@ namespace TicTacToeLab.Runtime
 
             _boardView.Construct(boardModel.Dimension, boardLayout.GetCellPlacements());
             _boardPresenter = new BoardPresenter(boardModel, boardLayout, _boardView, _inputService, cameraService);
-            _appStateMachine = new AppStateMachine(_boardPresenter, _appUI, _delayScheduler, _inputService);
+            _appStateMachine = new AppStateMachine(
+                _boardPresenter,
+                _appUI,
+                _delayScheduler,
+                _inputService,
+                new UnityRandomChoiceSource());
             _appStateMachine.Start();
         }
 

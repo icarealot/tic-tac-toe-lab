@@ -15,6 +15,7 @@ namespace TicTacToeLab.EditModeTests
         private FakeInputService _inputService;
         private FakeAppUI _appUI;
         private FakeDelayScheduler _delayScheduler;
+        private FakeRandomChoiceSource _randomChoiceSource;
         private BoardPresser _presser;
         private AppStateMachine _sut;
 
@@ -27,10 +28,11 @@ namespace TicTacToeLab.EditModeTests
             _inputService = new FakeInputService();
             _appUI = new FakeAppUI();
             _delayScheduler = new FakeDelayScheduler();
+            _randomChoiceSource = new FakeRandomChoiceSource();
 
             _boardPresenter = BoardPresenterBuilder.Build(_boardModel, _boardLayout, _boardView, _inputService);
             _presser = new BoardPresser(_inputService, _boardLayout);
-            _sut = new AppStateMachine(_boardPresenter, _appUI, _delayScheduler, _inputService);
+            _sut = new AppStateMachine(_boardPresenter, _appUI, _delayScheduler, _inputService, _randomChoiceSource);
         }
 
         [TearDown]
@@ -49,6 +51,20 @@ namespace TicTacToeLab.EditModeTests
         {
             _sut.Start();
             _appUI.HomeScreen.ClickPve();
+        }
+
+        private void StartPveGameplay(BotDifficulty botDifficulty = BotDifficulty.Amateur)
+        {
+            StartBotSelection();
+
+            if (botDifficulty == BotDifficulty.Amateur)
+            {
+                _appUI.BotSelectionScreen.ClickAmateur();
+            }
+            else
+            {
+                _appUI.BotSelectionScreen.ClickProfessional();
+            }
         }
 
         // --- Startup and Home ---
@@ -109,6 +125,25 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
         }
 
+        [Test]
+        public void Starting_a_PvE_game_resets_to_an_empty_board_with_X_to_move_and_an_in_progress_outcome()
+        {
+            // Arrange
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 0));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 0));
+            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
+
+            // Act
+            StartPveGameplay(BotDifficulty.Professional);
+
+            // Assert
+            Assert.That(BoardState.IsEmpty(_boardModel), Is.True);
+            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
+            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(_appUI.GameplayScreen.BoardOutcomeWhenPresented, Is.EqualTo(Outcome.InProgress));
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+        }
+
         // --- Home choices and bot selection ---
 
         [Test]
@@ -136,6 +171,27 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_appUI.BotSelectionScreen.IsVisible, Is.False);
             Assert.That(_appUI.GameplayScreen.ShownSetup.Mode, Is.EqualTo(GameMode.Pvp));
             Assert.That(_appUI.GameplayScreen.ShownSetup.BotDifficulty, Is.Null);
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        [Test]
+        public void PvP_uses_alternating_human_placements_without_bot_work()
+        {
+            // Arrange
+            StartGameplay();
+
+            // Act
+            _presser.Press(new CellCoordinate(0, 0));
+            _presser.Press(new CellCoordinate(0, 1));
+
+            // Assert
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
+            {
+                (new CellCoordinate(0, 0), Mark.X),
+                (new CellCoordinate(0, 1), Mark.O),
+            }));
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(0));
+            Assert.That(_randomChoiceSource.CallCount, Is.EqualTo(0));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
         }
 
@@ -306,6 +362,183 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_inputService.HasBackSubscribers, Is.False);
             Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
             Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
+        }
+
+        // --- PvE turn cycle ---
+
+        [Test]
+        public void A_successful_nonterminal_PvE_X_placement_schedules_one_bot_turn_within_the_agreed_delay()
+        {
+            // Arrange
+            StartPveGameplay();
+
+            // Act
+            _presser.Press(new CellCoordinate(0, 0));
+
+            // Assert
+            Assert.That(_boardModel.GetMark(new CellCoordinate(0, 0)), Is.EqualTo(Mark.X));
+            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.O));
+            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.InRange(0.4f, 1f));
+            Assert.That(_delayScheduler.HasPendingWork, Is.True);
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
+        }
+
+        [Test]
+        public void Firing_the_pending_PvE_bot_turn_places_and_renders_one_O_then_restores_X_interaction()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(0, 0));
+
+            // Act
+            _delayScheduler.FirePending();
+
+            // Assert
+            Assert.That(_boardModel.GetMark(new CellCoordinate(0, 1)), Is.EqualTo(Mark.O));
+            Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
+            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
+            {
+                (new CellCoordinate(0, 0), Mark.X),
+                (new CellCoordinate(0, 1), Mark.O),
+            }));
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(_delayScheduler.HasPendingWork, Is.False);
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
+        }
+
+        [TestCase(0, 0.4f)]
+        [TestCase(6, 1f)]
+        public void A_PvE_bot_delay_includes_the_agreed_bounds(int randomIndex, float expectedDelaySeconds)
+        {
+            // Arrange
+            StartPveGameplay();
+            _randomChoiceSource.Index = randomIndex;
+
+            // Act
+            _presser.Press(new CellCoordinate(0, 0));
+
+            // Assert
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(expectedDelaySeconds));
+        }
+
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        public void Every_other_controlled_PvE_bot_delay_stays_within_the_agreed_range(int randomIndex)
+        {
+            // Arrange
+            StartPveGameplay();
+            _randomChoiceSource.Index = randomIndex;
+
+            // Act
+            _presser.Press(new CellCoordinate(0, 0));
+
+            // Assert
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.InRange(0.4f, 1f));
+        }
+
+        [Test]
+        public void A_rejected_PvE_board_press_schedules_no_bot_turn()
+        {
+            // Arrange
+            StartPveGameplay();
+
+            // Act
+            _inputService.RaisePress(new UnityEngine.Vector2(3f, 3f));
+
+            // Assert
+            Assert.That(BoardState.IsEmpty(_boardModel), Is.True);
+            Assert.That(_boardView.ShownMarks, Is.Empty);
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(0));
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        [Test]
+        public void Board_presses_are_ignored_while_a_PvE_bot_turn_is_pending()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(0, 0));
+
+            // Act
+            _presser.Press(new CellCoordinate(0, 1));
+
+            // Assert
+            Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 1)), Is.True);
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
+            {
+                (new CellCoordinate(0, 0), Mark.X),
+            }));
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void A_terminal_PvE_X_placement_starts_only_the_existing_outcome_delay()
+        {
+            // Arrange
+            StartPveGameplay();
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 0));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 0));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 1));
+            _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 1));
+
+            // Act
+            _ = _boardPresenter.TryPlaceMark(new CellCoordinate(0, 2));
+
+            // Assert
+            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.XWin));
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(1f));
+            Assert.That(_delayScheduler.HasPendingWork, Is.True);
+            Assert.That(_appUI.OutcomeScreen.IsVisible, Is.False);
+        }
+
+        [Test]
+        public void Professional_PvE_uses_its_strategy_for_the_delayed_O_placement()
+        {
+            // Arrange
+            StartPveGameplay(BotDifficulty.Professional);
+            _presser.Press(new CellCoordinate(2, 2));
+
+            // Act
+            _delayScheduler.FirePending();
+
+            // Assert
+            Assert.That(_boardModel.GetMark(new CellCoordinate(1, 1)), Is.EqualTo(Mark.O));
+            Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 0)), Is.True);
+            Assert.That(_boardView.ShownMarks[^1], Is.EqualTo((new CellCoordinate(1, 1), Mark.O)));
+        }
+
+        [Test]
+        public void A_terminal_PvE_O_placement_ends_the_bot_delay_before_starting_a_separate_outcome_delay()
+        {
+            // Arrange
+            StartPveGameplay();
+            _presser.Press(new CellCoordinate(1, 0));
+            _delayScheduler.FirePending();
+            _presser.Press(new CellCoordinate(2, 0));
+            _delayScheduler.FirePending();
+            _presser.Press(new CellCoordinate(2, 1));
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(3));
+
+            // Act
+            _delayScheduler.FirePending();
+
+            // Assert
+            Assert.That(_boardModel.GetMark(new CellCoordinate(0, 2)), Is.EqualTo(Mark.O));
+            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.OWin));
+            Assert.That(_boardView.ShownMarks[^1], Is.EqualTo((new CellCoordinate(0, 2), Mark.O)));
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(4));
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(1f));
+            Assert.That(_delayScheduler.HasPendingWork, Is.True);
+            Assert.That(_appUI.OutcomeScreen.IsVisible, Is.False);
         }
 
         // --- Quit confirmation ---

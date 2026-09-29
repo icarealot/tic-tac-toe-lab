@@ -13,9 +13,16 @@ namespace TicTacToeLab.Runtime
             BoardPresenter boardPresenter,
             IAppUI appUI,
             IDelayScheduler delayScheduler,
-            IInputService inputService)
+            IInputService inputService,
+            IRandomChoiceSource randomChoiceSource)
         {
-            _stateFactory = new AppStateFactory(this, boardPresenter, appUI, delayScheduler, inputService);
+            _stateFactory = new AppStateFactory(
+                this,
+                boardPresenter,
+                appUI,
+                delayScheduler,
+                inputService,
+                randomChoiceSource);
         }
 
         public void Start()

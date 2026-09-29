@@ -1,3 +1,5 @@
+using System;
+
 namespace TicTacToeLab.Runtime
 {
     internal sealed class AppStateFactory
@@ -7,19 +9,22 @@ namespace TicTacToeLab.Runtime
         private readonly IAppUI _appUI;
         private readonly IDelayScheduler _delayScheduler;
         private readonly IInputService _inputService;
+        private readonly IRandomChoiceSource _randomChoiceSource;
 
         public AppStateFactory(
             AppStateMachine stateMachine,
             BoardPresenter boardPresenter,
             IAppUI appUI,
             IDelayScheduler delayScheduler,
-            IInputService inputService)
+            IInputService inputService,
+            IRandomChoiceSource randomChoiceSource)
         {
             _stateMachine = stateMachine;
             _boardPresenter = boardPresenter;
             _appUI = appUI;
             _delayScheduler = delayScheduler;
             _inputService = inputService;
+            _randomChoiceSource = randomChoiceSource;
         }
 
         public IAppState CreateHomeState()
@@ -34,12 +39,35 @@ namespace TicTacToeLab.Runtime
 
         public IAppState CreateGameplayState(GameSetup setup)
         {
-            return new GameplayAppState(_stateMachine, this, _boardPresenter, _appUI, _inputService, setup);
+            IBot bot = setup.Mode == GameMode.Pve
+                ? CreateBot(setup.BotDifficulty.Value)
+                : null;
+
+            return new GameplayAppState(
+                _stateMachine,
+                this,
+                _boardPresenter,
+                _appUI,
+                _delayScheduler,
+                _inputService,
+                setup,
+                bot,
+                _randomChoiceSource);
         }
 
         public IAppState CreateOutcomeState(Outcome outcome)
         {
             return new OutcomeAppState(_stateMachine, this, _appUI, _delayScheduler, _inputService, outcome);
+        }
+
+        private IBot CreateBot(BotDifficulty botDifficulty)
+        {
+            return botDifficulty switch
+            {
+                BotDifficulty.Amateur => new AmateurBot(_randomChoiceSource),
+                BotDifficulty.Professional => new ProfessionalBot(_randomChoiceSource),
+                _ => throw new ArgumentOutOfRangeException(nameof(botDifficulty), botDifficulty, "The gameplay state requires a supported bot difficulty."),
+            };
         }
     }
 }

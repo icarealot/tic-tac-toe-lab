@@ -44,6 +44,31 @@ namespace TicTacToeLab.Runtime
             _boardView.Clear();
         }
 
+        public CellCoordinate SelectBotPlacement(IBot bot)
+        {
+            return bot.SelectPlacement(_boardModel);
+        }
+
+        public bool TryPlaceMark(CellCoordinate coordinate)
+        {
+            Mark mark = _boardModel.Turn;
+            if (!_boardModel.TryPlaceMark(coordinate))
+            {
+                return false;
+            }
+
+            _boardView.ShowMark(coordinate, mark);
+
+            if (_boardModel.Outcome == Outcome.InProgress)
+            {
+                TurnChanged?.Invoke(_boardModel.Turn);
+                return true;
+            }
+
+            GameEnded?.Invoke();
+            return true;
+        }
+
         private void OnPressed(Vector2 screenPoint)
         {
             Vector3 worldPoint = _cameraService.ScreenToWorldPoint(screenPoint);
@@ -54,21 +79,7 @@ namespace TicTacToeLab.Runtime
                 return;
             }
 
-            Mark mark = _boardModel.Turn;
-            if (!_boardModel.TryPlaceMark(coordinate))
-            {
-                return;
-            }
-
-            _boardView.ShowMark(coordinate, mark);
-
-            if (_boardModel.Outcome == Outcome.InProgress)
-            {
-                TurnChanged?.Invoke(_boardModel.Turn);
-                return;
-            }
-
-            GameEnded?.Invoke();
+            _ = TryPlaceMark(coordinate);
         }
     }
 }

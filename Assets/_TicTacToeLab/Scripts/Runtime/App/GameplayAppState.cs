@@ -2,14 +2,31 @@ namespace TicTacToeLab.Runtime
 {
     internal sealed class GameplayAppState : IAppState
     {
+        private const float BOT_TURN_MINIMUM_DELAY_SECONDS = 0.4f;
+        private const float BOT_TURN_MAXIMUM_DELAY_SECONDS = 1f;
+        private static readonly float[] _botTurnDelaysSeconds =
+        {
+            BOT_TURN_MINIMUM_DELAY_SECONDS,
+            0.5f,
+            0.6f,
+            0.7f,
+            0.8f,
+            0.9f,
+            BOT_TURN_MAXIMUM_DELAY_SECONDS,
+        };
+
         private readonly AppStateMachine _stateMachine;
         private readonly AppStateFactory _stateFactory;
         private readonly BoardPresenter _boardPresenter;
         private readonly IAppUI _appUI;
+        private readonly IDelayScheduler _delayScheduler;
         private readonly IInputService _inputService;
         private readonly GameSetup _setup;
+        private readonly IBot _bot;
+        private readonly IRandomChoiceSource _randomChoiceSource;
 
         private bool _isActive;
+        private bool _botPlacementPending;
         private QuitConfirmation _activeQuitConfirmation;
 
         public GameplayAppState(
@@ -17,15 +34,21 @@ namespace TicTacToeLab.Runtime
             AppStateFactory stateFactory,
             BoardPresenter boardPresenter,
             IAppUI appUI,
+            IDelayScheduler delayScheduler,
             IInputService inputService,
-            GameSetup setup)
+            GameSetup setup,
+            IBot bot,
+            IRandomChoiceSource randomChoiceSource)
         {
             _stateMachine = stateMachine;
             _stateFactory = stateFactory;
             _boardPresenter = boardPresenter;
             _appUI = appUI;
+            _delayScheduler = delayScheduler;
             _inputService = inputService;
             _setup = setup;
+            _bot = bot;
+            _randomChoiceSource = randomChoiceSource;
         }
 
         public void Enter()
@@ -34,6 +57,12 @@ namespace TicTacToeLab.Runtime
             _boardPresenter.Reset();
             _inputService.BackPressed += HandleBack;
             _boardPresenter.GameEnded += HandleGameEnded;
+
+            if (_bot != null)
+            {
+                _boardPresenter.TurnChanged += HandleTurnChanged;
+            }
+
             _appUI.Show<IGameplayScreen>(screen => screen.Setup(_boardPresenter, _setup, HandleBack));
             _inputService.EnablePlayerPress();
         }
@@ -44,6 +73,11 @@ namespace TicTacToeLab.Runtime
             _activeQuitConfirmation = null;
             _inputService.BackPressed -= HandleBack;
             _boardPresenter.GameEnded -= HandleGameEnded;
+
+            if (_bot != null)
+            {
+                _boardPresenter.TurnChanged -= HandleTurnChanged;
+            }
         }
 
         private void HandleBack()
@@ -71,6 +105,53 @@ namespace TicTacToeLab.Runtime
 
             Outcome outcome = _boardPresenter.Outcome;
             _stateMachine.TransitionFrom(this, _stateFactory.CreateOutcomeState(outcome));
+        }
+
+        private void HandleTurnChanged(Mark turn)
+        {
+            if (!_isActive || _setup.Mode != GameMode.Pve)
+            {
+                return;
+            }
+
+            if (turn == Mark.O)
+            {
+                ScheduleBotPlacement();
+                return;
+            }
+
+            _inputService.EnablePlayerPress();
+        }
+
+        private void ScheduleBotPlacement()
+        {
+            if (_botPlacementPending)
+            {
+                return;
+            }
+
+            _botPlacementPending = true;
+            _inputService.DisablePlayerPress();
+            int delayIndex = _randomChoiceSource.NextIndex(_botTurnDelaysSeconds.Length);
+            float delaySeconds = _botTurnDelaysSeconds[delayIndex];
+            _ = _delayScheduler.Schedule(delaySeconds, PlaceBotMark);
+        }
+
+        private void PlaceBotMark()
+        {
+            _botPlacementPending = false;
+
+            if (!_isActive
+                || _setup.Mode != GameMode.Pve
+                || _bot == null
+                || _boardPresenter.Outcome != Outcome.InProgress
+                || _boardPresenter.Turn != Mark.O)
+            {
+                return;
+            }
+
+            CellCoordinate coordinate = _boardPresenter.SelectBotPlacement(_bot);
+            _ = _boardPresenter.TryPlaceMark(coordinate);
         }
 
         private void OpenQuitConfirmation()

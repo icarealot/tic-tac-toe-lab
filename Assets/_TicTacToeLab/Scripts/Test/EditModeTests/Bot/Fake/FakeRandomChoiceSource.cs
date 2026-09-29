@@ -7,10 +7,12 @@ namespace TicTacToeLab.EditModeTests
     {
         public int Index { get; set; }
         public int LastCandidateCount { get; private set; }
+        public int CallCount { get; private set; }
 
         public int NextIndex(int candidateCount)
         {
             LastCandidateCount = candidateCount;
+            CallCount++;
             return Math.Clamp(Index, 0, candidateCount - 1);
         }
     }
