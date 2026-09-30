@@ -1,10 +1,8 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
-using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace TicTacToeLab.PlayModeTests
@@ -333,9 +331,11 @@ namespace TicTacToeLab.PlayModeTests
             // Arrange
             AppUI sut = _fixture.CreateInactiveAppUI(new ScreenRegistration(null, ScreenLayer.Base));
 
-            // Act
-            LogAssert.Expect(LogType.Exception, new Regex("registration must reference a screen component prefab"));
-            sut.gameObject.SetActive(true);
+            // Act and Assert
+            Assert.That(
+                () => sut.Awake(),
+                Throws.TypeOf<InvalidOperationException>().With.Message.Contains("registration must reference a screen component prefab"),
+                "A screen registration without a prefab should identify the missing prefab.");
         }
 
         [Test]
@@ -345,11 +345,11 @@ namespace TicTacToeLab.PlayModeTests
             GeneratedRolelessScreen rolelessPrefab = _fixture.CreateScreenTemplate<GeneratedRolelessScreen>();
             AppUI sut = _fixture.CreateInactiveAppUI(new ScreenRegistration(rolelessPrefab, ScreenLayer.Base));
 
-            // Act
-            LogAssert.Expect(
-                LogType.Exception,
-                new Regex("GeneratedRolelessScreen implements no screen role interface"));
-            sut.gameObject.SetActive(true);
+            // Act and Assert
+            Assert.That(
+                () => sut.Awake(),
+                Throws.TypeOf<InvalidOperationException>().With.Message.Contains("GeneratedRolelessScreen implements no screen role interface"),
+                "A screen registration without a role should identify the roleless prefab.");
         }
 
         [Test]
@@ -359,11 +359,11 @@ namespace TicTacToeLab.PlayModeTests
             GeneratedMultiRoleScreen multiRolePrefab = _fixture.CreateScreenTemplate<GeneratedMultiRoleScreen>();
             AppUI sut = _fixture.CreateInactiveAppUI(new ScreenRegistration(multiRolePrefab, ScreenLayer.Base));
 
-            // Act
-            LogAssert.Expect(
-                LogType.Exception,
-                new Regex("GeneratedMultiRoleScreen implements more than one screen role interface"));
-            sut.gameObject.SetActive(true);
+            // Act and Assert
+            Assert.That(
+                () => sut.Awake(),
+                Throws.TypeOf<InvalidOperationException>().With.Message.Contains("GeneratedMultiRoleScreen implements more than one screen role interface"),
+                "A screen registration with multiple roles should identify the multi-role prefab.");
         }
 
         [Test]
@@ -375,9 +375,11 @@ namespace TicTacToeLab.PlayModeTests
                 new ScreenRegistration(homePrefab, ScreenLayer.Base),
                 new ScreenRegistration(homePrefab, ScreenLayer.Popup));
 
-            // Act
-            LogAssert.Expect(LogType.Exception, new Regex("IHomeScreen is registered more than once"));
-            sut.gameObject.SetActive(true);
+            // Act and Assert
+            Assert.That(
+                () => sut.Awake(),
+                Throws.TypeOf<InvalidOperationException>().With.Message.Contains("IHomeScreen is registered more than once"),
+                "A duplicate screen role registration should identify the duplicate role.");
         }
 
         [Test]

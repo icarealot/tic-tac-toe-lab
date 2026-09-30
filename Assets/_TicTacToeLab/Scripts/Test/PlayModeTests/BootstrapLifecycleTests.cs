@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections;
 using System.Linq;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -14,7 +14,6 @@ namespace TicTacToeLab.PlayModeTests
     {
         private const int ADAPTER_ROOT_COUNT = 4;
         private const string MISSING_ADAPTER_FIELD = "_delaySchedulerPrefab";
-        private const string MISSING_ADAPTER_DIAGNOSTIC_PATTERN = "^Bootstrap cannot start because the .+ adapter prefab is not assigned\\.$";
 
         private GeneratedBootstrapFixture _fixture;
 
@@ -48,7 +47,7 @@ namespace TicTacToeLab.PlayModeTests
                 "A complete generated configuration should create one root for each long-lived adapter.");
 
             // Act
-            Object.Destroy(sut.gameObject);
+            UnityEngine.Object.Destroy(sut.gameObject);
 
             // Assert
             yield return PlayModeWait.IE_WaitUntilOrFail(
@@ -87,9 +86,11 @@ namespace TicTacToeLab.PlayModeTests
                 Is.False,
                 "The failure fixture should begin inactive so its configuration can change before Awake runs.");
 
-            // Act
-            LogAssert.Expect(LogType.Error, new Regex(MISSING_ADAPTER_DIAGNOSTIC_PATTERN));
-            sut.gameObject.SetActive(true);
+            // Act and Assert
+            Assert.That(
+                () => sut.Awake(),
+                Throws.TypeOf<InvalidOperationException>().With.Message.Contains("DelayScheduler adapter prefab is not assigned"),
+                "Missing adapter configuration should identify the delay scheduler role.");
 
             // Assert
             Assert.That(

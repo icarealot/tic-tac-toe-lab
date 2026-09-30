@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace TicTacToeLab.Runtime
@@ -19,10 +20,7 @@ namespace TicTacToeLab.Runtime
 
         public void Awake()
         {
-            if (!ValidateAdapterPrefabs())
-            {
-                return;
-            }
+            ValidateAdapterPrefabs();
 
             Application.targetFrameRate = 60;
 
@@ -54,28 +52,21 @@ namespace TicTacToeLab.Runtime
             DestroyOwnedRoots();
         }
 
-        private bool ValidateAdapterPrefabs()
+        private void ValidateAdapterPrefabs()
         {
-            bool hasCameraPrefab = IsPrefabAssigned(_cameraPrefab, "MainCamera");
-            bool hasBoardViewPrefab = IsPrefabAssigned(_boardViewPrefab, "BoardView");
-            bool hasAppUIPrefab = IsPrefabAssigned(_appUIPrefab, "AppUI");
-            bool hasDelaySchedulerPrefab = IsPrefabAssigned(_delaySchedulerPrefab, "DelayScheduler");
-
-            return hasCameraPrefab
-                && hasBoardViewPrefab
-                && hasAppUIPrefab
-                && hasDelaySchedulerPrefab;
+            RequirePrefabAssigned(_cameraPrefab, "MainCamera");
+            RequirePrefabAssigned(_boardViewPrefab, "BoardView");
+            RequirePrefabAssigned(_appUIPrefab, "AppUI");
+            RequirePrefabAssigned(_delaySchedulerPrefab, "DelayScheduler");
         }
 
-        private static bool IsPrefabAssigned(Component adapterPrefab, string adapterRole)
+        private static void RequirePrefabAssigned(Component adapterPrefab, string adapterRole)
         {
-            if (adapterPrefab != null)
+            if (adapterPrefab == null)
             {
-                return true;
+                throw new InvalidOperationException(
+                    $"Bootstrap cannot start because the {adapterRole} adapter prefab is not assigned.");
             }
-
-            Debug.LogError($"Bootstrap cannot start because the {adapterRole} adapter prefab is not assigned.");
-            return false;
         }
 
         private static T InstantiateRoot<T>(T adapterPrefab) where T : Component

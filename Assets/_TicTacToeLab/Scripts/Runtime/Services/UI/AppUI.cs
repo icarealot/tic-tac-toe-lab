@@ -14,7 +14,7 @@ namespace TicTacToeLab.Runtime
         private MonoBehaviour _activeBaseScreen;
         private MonoBehaviour _activePopupScreen;
 
-        private void Awake()
+        public void Awake()
         {
             BuildScreenRegistry();
         }
