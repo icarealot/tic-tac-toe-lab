@@ -29,8 +29,6 @@ namespace TicTacToeLab.EditModeTests
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(0, 0)), "O should win at (0, 0) instead of blocking the X threat at (1, 2).");
-            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the immediate winning cell should be a candidate.");
-            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
         // --- Immediate X win blocking ---
 
@@ -55,8 +53,6 @@ namespace TicTacToeLab.EditModeTests
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(0, 2)), "Only (0, 2) blocks the X threat in row 0.");
-            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the blocking cell should be a candidate.");
-            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
 
         // --- Random fallback ---

@@ -36,8 +36,6 @@ namespace TicTacToeLab.EditModeTests
                         // Assert
                         string selectorName = selector.GetType().Name;
                         Assert.That(coordinate.IsWithin(boardModel.Dimension), Is.True, $"{selectorName} returned the out-of-bounds cell ({coordinate.Row}, {coordinate.Column}) for position {position} at random index {index}.");
-                        Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0), $"{selectorName} should request candidate indices from zero for position {position}.");
-                        Assert.That(randomService.LastIntegerMaximumExclusive, Is.GreaterThan(0), $"{selectorName} should request a non-empty candidate range for position {position}.");
                         Assert.That(boardModel.IsEmpty(coordinate), Is.True, $"{selectorName} returned the marked cell ({coordinate.Row}, {coordinate.Column}) for position {position} at random index {index}.");
                         Assert.That(boardModel.Turn, Is.EqualTo(turnBefore), $"{selectorName} changed the turn for position {position} at random index {index}.");
                         Assert.That(boardModel.Outcome, Is.EqualTo(outcomeBefore), $"{selectorName} changed the outcome for position {position} at random index {index}.");

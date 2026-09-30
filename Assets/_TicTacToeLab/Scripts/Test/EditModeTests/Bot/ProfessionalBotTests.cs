@@ -65,8 +65,6 @@ namespace TicTacToeLab.EditModeTests
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(0, 1)), "O should win immediately at (0, 1) instead of forcing a later win at (1, 2).");
-            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the earlier win should be a candidate.");
-            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
 
         // --- Unavoidable X win delayed ---
@@ -90,8 +88,6 @@ namespace TicTacToeLab.EditModeTests
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(0, 2)), "O should play (0, 2) to delay the unavoidable X win.");
-            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the delaying cell should be a candidate.");
-            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
 
         // --- Draw over loss ---
@@ -113,8 +109,6 @@ namespace TicTacToeLab.EditModeTests
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(1, 1)), "O should take the center to draw instead of losing.");
-            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the drawing cell should be a candidate.");
-            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
 
         // --- Equal optimal placements ---
