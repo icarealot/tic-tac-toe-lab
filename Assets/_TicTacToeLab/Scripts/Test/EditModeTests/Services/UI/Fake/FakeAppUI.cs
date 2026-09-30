@@ -13,6 +13,7 @@ namespace TicTacToeLab.EditModeTests
         public FakeOutcomeScreen OutcomeScreen { get; } = new();
         public bool HasPopup => ConfirmQuitScreen.IsVisible || OutcomeScreen.IsVisible;
         public IReadOnlyList<string> Operations => _operations;
+        public Action<string> OperationObserver { get; set; }
 
         private static readonly Dictionary<Type, ScreenLayer> LAYERS_BY_ROLE = new()
         {
@@ -34,7 +35,9 @@ namespace TicTacToeLab.EditModeTests
             EnsureTransitionAllowed(layer, typeof(TScreen));
             ReplaceActiveScreen(layer);
 
-            _operations.Add($"Show {typeof(TScreen).Name}");
+            string operation = $"Show {typeof(TScreen).Name}";
+            _operations.Add(operation);
+            OperationObserver?.Invoke(operation);
             screen.Present();
             SetActiveScreen(layer, screen);
             configure?.Invoke((TScreen)(object)screen);
@@ -56,7 +59,9 @@ namespace TicTacToeLab.EditModeTests
                     $"The fake application UI cannot close the base role {typeof(TScreen).Name} while a popup screen is active.");
             }
 
-            _operations.Add($"Close {typeof(TScreen).Name}");
+            string operation = $"Close {typeof(TScreen).Name}";
+            _operations.Add(operation);
+            OperationObserver?.Invoke(operation);
             ClearActiveScreen(layer);
             screen.Dismiss();
         }

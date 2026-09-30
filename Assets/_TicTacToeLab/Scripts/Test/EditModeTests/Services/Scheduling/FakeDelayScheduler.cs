@@ -9,6 +9,7 @@ namespace TicTacToeLab.EditModeTests
         public int ScheduleCount { get; private set; }
         public bool HasPendingWork => _pendingCallback != null;
         public bool WasCancelled { get; private set; }
+        public Action<string> OperationObserver { get; set; }
 
         private Action _pendingCallback;
         private Action _lastDeliveredCallback;
@@ -19,6 +20,7 @@ namespace TicTacToeLab.EditModeTests
             RequestedDelaySeconds = delaySeconds;
             ScheduleCount++;
             WasCancelled = false;
+            OperationObserver?.Invoke("Schedule delayed work");
             return new Cancellation(this);
         }
 
@@ -54,6 +56,7 @@ namespace TicTacToeLab.EditModeTests
 
             _pendingCallback = null;
             WasCancelled = true;
+            OperationObserver?.Invoke("Cancel pending work");
         }
 
         private sealed class Cancellation : IDisposable

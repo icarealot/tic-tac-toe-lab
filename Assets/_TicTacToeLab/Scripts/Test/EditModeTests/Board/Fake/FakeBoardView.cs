@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -8,6 +9,7 @@ namespace TicTacToeLab.EditModeTests
     {
         public IReadOnlyList<(CellCoordinate Coordinate, Mark Mark)> ShownMarks => _shownMarks;
         public bool WasCleared { get; private set; }
+        public Action<string> OperationObserver { get; set; }
 
         private readonly List<(CellCoordinate Coordinate, Mark Mark)> _shownMarks = new();
 
@@ -26,6 +28,7 @@ namespace TicTacToeLab.EditModeTests
         {
             _shownMarks.Clear();
             WasCleared = true;
+            OperationObserver?.Invoke("Reset board");
         }
     }
 }

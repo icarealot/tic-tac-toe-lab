@@ -39,25 +39,34 @@ namespace TicTacToeLab.Runtime
 
         public IAppState CreateGameplayState(GameSetup setup)
         {
-            IBot bot = setup.Mode == GameMode.Pve
-                ? CreateBot(setup.BotDifficulty.Value)
-                : null;
-
             return new GameplayAppState(
                 _stateMachine,
                 this,
                 _boardPresenter,
                 _appUI,
-                _delayScheduler,
                 _inputService,
                 setup,
-                bot,
-                _randomService);
+                CreateTurnController(setup));
         }
 
         public IAppState CreateOutcomeState(Outcome outcome, GameSetup setup)
         {
             return new OutcomeAppState(_stateMachine, this, _appUI, _delayScheduler, _inputService, outcome, setup);
+        }
+
+        private IGameplayTurnController CreateTurnController(GameSetup setup)
+        {
+            return setup.Mode switch
+            {
+                GameMode.Pvp => new PvpTurnController(_inputService),
+                GameMode.Pve => new PveTurnController(
+                    _boardPresenter,
+                    _inputService,
+                    _delayScheduler,
+                    _randomService,
+                    CreateBot(setup.BotDifficulty.Value)),
+                _ => throw new ArgumentOutOfRangeException(nameof(setup.Mode), setup.Mode, "The gameplay state requires a supported game mode."),
+            };
         }
 
         private IBot CreateBot(BotDifficulty botDifficulty)
