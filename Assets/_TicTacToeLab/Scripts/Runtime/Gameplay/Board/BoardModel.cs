@@ -79,14 +79,15 @@ namespace TicTacToeLab.Runtime
 
         private bool IsFull()
         {
-            bool isFull = true;
-
             foreach (Mark? mark in _marks)
             {
-                isFull = isFull && mark != null;
+                if (mark == null)
+                {
+                    return false;
+                }
             }
 
-            return isFull;
+            return true;
         }
     }
 }
