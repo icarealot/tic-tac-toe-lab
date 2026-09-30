@@ -1,6 +1,6 @@
 # Tic Tac Toe Lab
 
-A Unity testing laboratory built around a small tic-tac-toe game. This glossary defines the game and player-interaction language used throughout the project.
+A glossary of the game and player-interaction language used throughout Tic Tac Toe Lab.
 
 ## Board
 
@@ -87,11 +87,11 @@ The application's starting destination, from which the player chooses PvP or PvE
 _Avoid_: Main menu, main screen
 
 **PvP**:
-A game in which two human players take turns placing marks on the same device. Choosing PvP at Home starts the game directly.
+A game in which two human players take turns placing marks on the same device.
 _Avoid_: Multiplayer, competitive mode
 
 **PvE**:
-A game in which one human player plays against a bot. The human always places X, the bot always places O, and therefore the human takes the first turn. Choosing PvE at Home leads to choosing Amateur or Professional difficulty before the game starts.
+A game in which one human player plays against a bot. The human always places X, the bot always places O, and therefore the human takes the first turn.
 _Avoid_: Single-player, human-versus-bot
 
 **Bot**:
@@ -99,7 +99,7 @@ The automated PvE participant. The bot always places O marks.
 _Avoid_: AI player, computer player, enemy
 
 **Bot turn**:
-The interval after the human places X and before the bot places O. The bot waits for a randomly chosen duration from 0.4 through 1.0 seconds before placing its mark. Board presses are ignored during this interval, but Back remains available. Opening the quit confirmation cancels the pending placement; dismissing the confirmation starts a fresh bot-turn delay.
+The interval after the human places X and before the bot places O. The bot waits for a brief, randomly chosen duration before placing its mark.
 _Avoid_: AI turn, computer turn, thinking time
 
 **Difficulty**:
@@ -111,21 +111,21 @@ A difficulty at which the bot takes an immediate winning placement when one exis
 _Avoid_: Easy, beginner
 
 **Professional**:
-A difficulty at which the bot searches the complete remaining game tree and chooses the best achievable outcome. Among otherwise equal outcomes, it prefers an earlier win and a later loss; among equally optimal placements, it chooses randomly. Professional cannot lose when an outcome avoiding defeat remains possible.
+A difficulty at which the bot chooses a placement leading to the best achievable outcome. Among otherwise equal outcomes, it prefers an earlier win and a later loss; among equally optimal placements, it chooses randomly. Professional cannot lose when an outcome avoiding defeat remains possible.
 _Avoid_: Hard, expert
 
 **Press**:
-A completed pointer gesture over the board, resolved arithmetically from its board-local point. A press in spacing, outside the board, on a marked cell, or after a terminal outcome places nothing.
+A completed pointer gesture over the board that may place a mark in the targeted cell.
 _Avoid_: Tap, touch, click
 
 **Click**:
-Activation of a user-interface button through Unity's event system. A click is distinct from a board press.
+Activation of a user-interface button. A click is distinct from a board press.
 _Avoid_: Press, tap
 
 **Back**:
-A request to leave or dismiss the current player-facing flow, produced by the platform back action, Escape, or an on-screen back button. Its effect depends on whether the player is at Home, playing, confirming departure, or viewing an outcome.
+A request to leave or dismiss the current player-facing flow.
 _Avoid_: Escape, return, cancel
 
 **Outcome screen**:
-The screen shown after a completed board has remained visible briefly. It reports an X win, O win, or draw and lets the player return Home.
+The screen that reports an X win, O win, or draw and lets the player return Home.
 _Avoid_: Outcome popup, result popup, game-over popup
