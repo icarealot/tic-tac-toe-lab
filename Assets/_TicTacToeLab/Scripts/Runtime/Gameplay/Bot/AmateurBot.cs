@@ -4,11 +4,11 @@ namespace TicTacToeLab.Runtime
 {
     public sealed class AmateurBot : IBot
     {
-        private readonly IRandomChoiceSource _randomChoiceSource;
+        private readonly IRandomService _randomService;
 
-        public AmateurBot(IRandomChoiceSource randomChoiceSource)
+        public AmateurBot(IRandomService randomService)
         {
-            _randomChoiceSource = randomChoiceSource;
+            _randomService = randomService;
         }
 
         public CellCoordinate SelectPlacement(BoardModel boardModel)
@@ -27,7 +27,7 @@ namespace TicTacToeLab.Runtime
                 candidates = emptyCoordinates;
             }
 
-            return candidates[_randomChoiceSource.NextIndex(candidates.Count)];
+            return candidates[_randomService.Range(0, candidates.Count)];
         }
 
         private static List<CellCoordinate> CollectCompletingCoordinates(Mark?[,] marks, List<CellCoordinate> emptyCoordinates, Mark mark)

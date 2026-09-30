@@ -15,7 +15,7 @@ namespace TicTacToeLab.EditModeTests
         private FakeInputService _inputService;
         private FakeAppUI _appUI;
         private FakeDelayScheduler _delayScheduler;
-        private FakeRandomChoiceSource _randomChoiceSource;
+        private FakeRandomService _randomService;
         private BoardPresser _presser;
         private AppStateMachine _sut;
 
@@ -28,11 +28,11 @@ namespace TicTacToeLab.EditModeTests
             _inputService = new FakeInputService();
             _appUI = new FakeAppUI();
             _delayScheduler = new FakeDelayScheduler();
-            _randomChoiceSource = new FakeRandomChoiceSource();
+            _randomService = new FakeRandomService();
 
             _boardPresenter = BoardPresenterBuilder.Build(_boardModel, _boardLayout, _boardView, _inputService);
             _presser = new BoardPresser(_inputService, _boardLayout);
-            _sut = new AppStateMachine(_boardPresenter, _appUI, _delayScheduler, _inputService, _randomChoiceSource);
+            _sut = new AppStateMachine(_boardPresenter, _appUI, _delayScheduler, _inputService, _randomService);
         }
 
         [TearDown]
@@ -191,7 +191,8 @@ namespace TicTacToeLab.EditModeTests
                 (new CellCoordinate(0, 1), Mark.O),
             }));
             Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(0));
-            Assert.That(_randomChoiceSource.CallCount, Is.EqualTo(0));
+            Assert.That(_randomService.IntegerCallCount, Is.EqualTo(0));
+            Assert.That(_randomService.FloatingPointCallCount, Is.EqualTo(0));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
         }
 
@@ -371,6 +372,7 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             StartPveGameplay();
+            _randomService.FloatingPointResult = 0.7f;
 
             // Act
             _presser.Press(new CellCoordinate(0, 0));
@@ -380,7 +382,10 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_boardModel.Turn, Is.EqualTo(Mark.O));
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.InProgress));
             Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
-            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.InRange(0.4f, 1f));
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(0.7f));
+            Assert.That(_randomService.FloatingPointCallCount, Is.EqualTo(1));
+            Assert.That(_randomService.LastFloatingPointMinimumInclusive, Is.EqualTo(0.4f));
+            Assert.That(_randomService.LastFloatingPointMaximumInclusive, Is.EqualTo(1f));
             Assert.That(_delayScheduler.HasPendingWork, Is.True);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
         }
@@ -409,37 +414,55 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
         }
 
-        [TestCase(0, 0.4f)]
-        [TestCase(6, 1f)]
-        public void A_PvE_bot_delay_includes_the_agreed_bounds(int randomIndex, float expectedDelaySeconds)
+        [TestCase(0.4f)]
+        [TestCase(1f)]
+        [TestCase(0.7f)]
+        public void A_PvE_bot_delay_uses_the_controlled_value_and_agreed_inclusive_bounds(float configuredDelaySeconds)
         {
             // Arrange
             StartPveGameplay();
-            _randomChoiceSource.Index = randomIndex;
+            _randomService.FloatingPointResult = configuredDelaySeconds;
 
             // Act
             _presser.Press(new CellCoordinate(0, 0));
 
             // Assert
-            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(expectedDelaySeconds));
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(configuredDelaySeconds));
+            Assert.That(_randomService.FloatingPointCallCount, Is.EqualTo(1));
+            Assert.That(_randomService.LastFloatingPointMinimumInclusive, Is.EqualTo(0.4f));
+            Assert.That(_randomService.LastFloatingPointMaximumInclusive, Is.EqualTo(1f));
         }
 
-        [TestCase(1)]
-        [TestCase(2)]
-        [TestCase(3)]
-        [TestCase(4)]
-        [TestCase(5)]
-        public void Every_other_controlled_PvE_bot_delay_stays_within_the_agreed_range(int randomIndex)
+        [Test]
+        public void Consecutive_ordinary_PvE_bot_turns_sample_and_schedule_independently()
         {
             // Arrange
             StartPveGameplay();
-            _randomChoiceSource.Index = randomIndex;
+            _randomService.FloatingPointResult = 0.4f;
 
             // Act
             _presser.Press(new CellCoordinate(0, 0));
 
             // Assert
-            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.InRange(0.4f, 1f));
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(0.4f));
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
+            Assert.That(_randomService.FloatingPointCallCount, Is.EqualTo(1));
+            Assert.That(_randomService.LastFloatingPointMinimumInclusive, Is.EqualTo(0.4f));
+            Assert.That(_randomService.LastFloatingPointMaximumInclusive, Is.EqualTo(1f));
+
+            // Arrange
+            _delayScheduler.FirePending();
+            _randomService.FloatingPointResult = 0.9f;
+
+            // Act
+            _presser.Press(new CellCoordinate(1, 1));
+
+            // Assert
+            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(0.9f));
+            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(2));
+            Assert.That(_randomService.FloatingPointCallCount, Is.EqualTo(2));
+            Assert.That(_randomService.LastFloatingPointMinimumInclusive, Is.EqualTo(0.4f));
+            Assert.That(_randomService.LastFloatingPointMaximumInclusive, Is.EqualTo(1f));
         }
 
         [Test]
@@ -597,10 +620,11 @@ namespace TicTacToeLab.EditModeTests
         {
             // Arrange
             StartPveGameplay();
+            _randomService.FloatingPointResult = 0.4f;
             _presser.Press(new CellCoordinate(0, 0));
             Action staleBotCallback = _delayScheduler.CapturePendingCallback();
             _inputService.RaiseBack();
-            _randomChoiceSource.Index = 6;
+            _randomService.FloatingPointResult = 1f;
 
             // Act
             _appUI.ConfirmQuitScreen.ClickCancel();
@@ -609,6 +633,9 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.False);
             Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(2));
             Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(1f));
+            Assert.That(_randomService.FloatingPointCallCount, Is.EqualTo(2));
+            Assert.That(_randomService.LastFloatingPointMinimumInclusive, Is.EqualTo(0.4f));
+            Assert.That(_randomService.LastFloatingPointMaximumInclusive, Is.EqualTo(1f));
             Assert.That(_delayScheduler.HasPendingWork, Is.True);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
 
@@ -843,7 +870,8 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
             Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(0));
-            Assert.That(_randomChoiceSource.CallCount, Is.EqualTo(0));
+            Assert.That(_randomService.IntegerCallCount, Is.EqualTo(0));
+            Assert.That(_randomService.FloatingPointCallCount, Is.EqualTo(0));
         }
 
         [Test]

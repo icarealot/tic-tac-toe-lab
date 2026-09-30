@@ -9,11 +9,11 @@ namespace TicTacToeLab.Runtime
         private const int LOSS_SCORE = -1000;
         private const int DRAW_SCORE = 0;
 
-        private readonly IRandomChoiceSource _randomChoiceSource;
+        private readonly IRandomService _randomService;
 
-        public ProfessionalBot(IRandomChoiceSource randomChoiceSource)
+        public ProfessionalBot(IRandomService randomService)
         {
-            _randomChoiceSource = randomChoiceSource;
+            _randomService = randomService;
         }
 
         public CellCoordinate SelectPlacement(BoardModel boardModel)
@@ -42,7 +42,7 @@ namespace TicTacToeLab.Runtime
                 }
             }
 
-            return bestCoordinates[_randomChoiceSource.NextIndex(bestCoordinates.Count)];
+            return bestCoordinates[_randomService.Range(0, bestCoordinates.Count)];
         }
 
         private static int SearchBestScore(Mark?[,] marks, Mark turn, int depth)

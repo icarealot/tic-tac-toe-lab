@@ -44,7 +44,7 @@ namespace TicTacToeLab.PlayModeTests
                 _appUI,
                 _delayScheduler,
                 _inputService,
-                new FirstChoiceRandomSource());
+                new FirstChoiceRandomService());
             _sut.Start();
         }
 
@@ -280,11 +280,16 @@ namespace TicTacToeLab.PlayModeTests
             }
         }
 
-        private sealed class FirstChoiceRandomSource : IRandomChoiceSource
+        private sealed class FirstChoiceRandomService : IRandomService
         {
-            public int NextIndex(int candidateCount)
+            public int Range(int minimumInclusive, int maximumExclusive)
             {
-                return 0;
+                return minimumInclusive;
+            }
+
+            public float Range(float minimumInclusive, float maximumInclusive)
+            {
+                return minimumInclusive;
             }
         }
     }

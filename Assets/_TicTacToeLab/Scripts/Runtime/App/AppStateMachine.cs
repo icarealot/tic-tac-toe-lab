@@ -14,7 +14,7 @@ namespace TicTacToeLab.Runtime
             IAppUI appUI,
             IDelayScheduler delayScheduler,
             IInputService inputService,
-            IRandomChoiceSource randomChoiceSource)
+            IRandomService randomService)
         {
             _stateFactory = new AppStateFactory(
                 this,
@@ -22,7 +22,7 @@ namespace TicTacToeLab.Runtime
                 appUI,
                 delayScheduler,
                 inputService,
-                randomChoiceSource);
+                randomService);
         }
 
         public void Start()

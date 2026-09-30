@@ -21,15 +21,16 @@ namespace TicTacToeLab.EditModeTests
                 new CellCoordinate(1, 1), // X
                 new CellCoordinate(0, 2), // O
                 new CellCoordinate(2, 2)); // X
-            FakeRandomChoiceSource randomChoiceSource = new();
-            AmateurBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            AmateurBot sut = new(randomService);
 
             // Act
             CellCoordinate coordinate = sut.SelectPlacement(boardModel);
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(0, 0)), "O should win at (0, 0) instead of blocking the X threat at (1, 2).");
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(1), "Only the immediate winning cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the immediate winning cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
         // --- Immediate X win blocking ---
 
@@ -46,15 +47,16 @@ namespace TicTacToeLab.EditModeTests
                 new CellCoordinate(0, 1), // X
                 new CellCoordinate(2, 0), // O
                 new CellCoordinate(1, 2)); // X
-            FakeRandomChoiceSource randomChoiceSource = new();
-            AmateurBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            AmateurBot sut = new(randomService);
 
             // Act
             CellCoordinate coordinate = sut.SelectPlacement(boardModel);
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(0, 2)), "Only (0, 2) blocks the X threat in row 0.");
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(1), "Only the blocking cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the blocking cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
 
         // --- Random fallback ---
@@ -79,19 +81,20 @@ namespace TicTacToeLab.EditModeTests
                 new(2, 0),
                 new(2, 1),
             };
-            FakeRandomChoiceSource randomChoiceSource = new();
-            AmateurBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            AmateurBot sut = new(randomService);
             HashSet<CellCoordinate> chosenCoordinates = new();
 
             // Act
             for (int index = 0; index < emptyCoordinates.Length; index++)
             {
-                randomChoiceSource.Index = index;
+                randomService.IntegerResult = index;
                 _ = chosenCoordinates.Add(sut.SelectPlacement(boardModel));
             }
 
             // Assert
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(emptyCoordinates.Length), "Every empty cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(emptyCoordinates.Length), "Every empty cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
             Assert.That(chosenCoordinates, Is.EquivalentTo(emptyCoordinates), "Each controlled random index should select a different empty cell.");
         }
 
@@ -117,19 +120,20 @@ namespace TicTacToeLab.EditModeTests
                 new(0, 2),
                 new(2, 2),
             };
-            FakeRandomChoiceSource randomChoiceSource = new();
-            AmateurBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            AmateurBot sut = new(randomService);
             HashSet<CellCoordinate> chosenCoordinates = new();
 
             // Act
             for (int index = 0; index < 8; index++)
             {
-                randomChoiceSource.Index = index;
+                randomService.IntegerResult = index;
                 _ = chosenCoordinates.Add(sut.SelectPlacement(boardModel));
             }
 
             // Assert
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(winningCoordinates.Length), "Only the two immediate O wins should be candidates.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(winningCoordinates.Length), "Only the two immediate O wins should be candidates.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
             Assert.That(chosenCoordinates, Is.EquivalentTo(winningCoordinates), "Only the two immediate O wins should be selected.");
         }
 
@@ -151,19 +155,20 @@ namespace TicTacToeLab.EditModeTests
                 new(0, 2),
                 new(2, 0),
             };
-            FakeRandomChoiceSource randomChoiceSource = new();
-            AmateurBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            AmateurBot sut = new(randomService);
             HashSet<CellCoordinate> chosenCoordinates = new();
 
             // Act
             for (int index = 0; index < 8; index++)
             {
-                randomChoiceSource.Index = index;
+                randomService.IntegerResult = index;
                 _ = chosenCoordinates.Add(sut.SelectPlacement(boardModel));
             }
 
             // Assert
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(blockingCoordinates.Length), "Only the two blocking cells should be candidates.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(blockingCoordinates.Length), "Only the two blocking cells should be candidates.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
             Assert.That(chosenCoordinates, Is.EquivalentTo(blockingCoordinates), "Only the two blocking cells should be selected, never an unrelated empty cell.");
         }
     }

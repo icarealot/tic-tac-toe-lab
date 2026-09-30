@@ -25,19 +25,20 @@ namespace TicTacToeLab.EditModeTests
                 new(0, 0),
                 new(1, 0),
             };
-            FakeRandomChoiceSource randomChoiceSource = new();
-            ProfessionalBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            ProfessionalBot sut = new(randomService);
             HashSet<CellCoordinate> chosenCoordinates = new();
 
             // Act
             for (int index = 0; index < 8; index++)
             {
-                randomChoiceSource.Index = index;
+                randomService.IntegerResult = index;
                 _ = chosenCoordinates.Add(sut.SelectPlacement(boardModel));
             }
 
             // Assert
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(forcedWinCoordinates.Length), "Only the two forced wins should be candidates.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(forcedWinCoordinates.Length), "Only the two forced wins should be candidates.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
             Assert.That(chosenCoordinates, Is.EquivalentTo(forcedWinCoordinates), "O should choose a forced win over the drawing and losing alternatives.");
         }
 
@@ -56,15 +57,16 @@ namespace TicTacToeLab.EditModeTests
                 new CellCoordinate(2, 0), // X
                 new CellCoordinate(1, 1), // O
                 new CellCoordinate(0, 2)); // X
-            FakeRandomChoiceSource randomChoiceSource = new();
-            ProfessionalBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            ProfessionalBot sut = new(randomService);
 
             // Act
             CellCoordinate coordinate = sut.SelectPlacement(boardModel);
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(0, 1)), "O should win immediately at (0, 1) instead of forcing a later win at (1, 2).");
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(1), "Only the earlier win should be a candidate.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the earlier win should be a candidate.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
 
         // --- Unavoidable X win delayed ---
@@ -80,15 +82,16 @@ namespace TicTacToeLab.EditModeTests
                 new CellCoordinate(2, 2), // X
                 new CellCoordinate(2, 1), // O
                 new CellCoordinate(1, 2)); // X
-            FakeRandomChoiceSource randomChoiceSource = new();
-            ProfessionalBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            ProfessionalBot sut = new(randomService);
 
             // Act
             CellCoordinate coordinate = sut.SelectPlacement(boardModel);
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(0, 2)), "O should play (0, 2) to delay the unavoidable X win.");
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(1), "Only the delaying cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the delaying cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
 
         // --- Draw over loss ---
@@ -102,15 +105,16 @@ namespace TicTacToeLab.EditModeTests
             // . . X
             BoardModel boardModel = BotBoards.Arrange(
                 new CellCoordinate(2, 2)); // X
-            FakeRandomChoiceSource randomChoiceSource = new();
-            ProfessionalBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            ProfessionalBot sut = new(randomService);
 
             // Act
             CellCoordinate coordinate = sut.SelectPlacement(boardModel);
 
             // Assert
             Assert.That(coordinate, Is.EqualTo(new CellCoordinate(1, 1)), "O should take the center to draw instead of losing.");
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(1), "Only the drawing cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(1), "Only the drawing cell should be a candidate.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
         }
 
         // --- Equal optimal placements ---
@@ -135,19 +139,20 @@ namespace TicTacToeLab.EditModeTests
                 new(1, 0),
                 new(1, 2),
             };
-            FakeRandomChoiceSource randomChoiceSource = new();
-            ProfessionalBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            ProfessionalBot sut = new(randomService);
             HashSet<CellCoordinate> chosenCoordinates = new();
 
             // Act
             for (int index = 0; index < drawingCoordinates.Length; index++)
             {
-                randomChoiceSource.Index = index;
+                randomService.IntegerResult = index;
                 _ = chosenCoordinates.Add(sut.SelectPlacement(boardModel));
             }
 
             // Assert
-            Assert.That(randomChoiceSource.LastCandidateCount, Is.EqualTo(drawingCoordinates.Length), "Every drawing placement should be an equally optimal candidate.");
+            Assert.That(randomService.LastIntegerMaximumExclusive, Is.EqualTo(drawingCoordinates.Length), "Every drawing placement should be an equally optimal candidate.");
+            Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0));
             Assert.That(chosenCoordinates, Is.EquivalentTo(drawingCoordinates), "Draws should not be ranked by how quickly they end.");
         }
 
@@ -157,13 +162,13 @@ namespace TicTacToeLab.EditModeTests
         public void X_cannot_win_from_an_empty_board_against_Professional_including_every_optimal_O_choice()
         {
             // Arrange
-            FakeRandomChoiceSource randomChoiceSource = new();
-            ProfessionalBot sut = new(randomChoiceSource);
+            FakeRandomService randomService = new();
+            ProfessionalBot sut = new(randomService);
             HashSet<string> exploredPositions = new();
             List<string> xWinPaths = new();
 
             // Act
-            ExploreXTurn(sut, randomChoiceSource, exploredPositions, xWinPaths, Array.Empty<CellCoordinate>());
+            ExploreXTurn(sut, randomService, exploredPositions, xWinPaths, Array.Empty<CellCoordinate>());
 
             // Assert
             string firstXWinPath = xWinPaths.Count > 0 ? xWinPaths[0] : string.Empty;
@@ -172,7 +177,7 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(exploredPositions.Count, Is.GreaterThanOrEqualTo(10), "The traversal should have examined the root and every position reached by X's first move.");
         }
 
-        private static void ExploreXTurn(ProfessionalBot sut, FakeRandomChoiceSource randomChoiceSource, HashSet<string> exploredPositions, List<string> xWinPaths, CellCoordinate[] path)
+        private static void ExploreXTurn(ProfessionalBot sut, FakeRandomService randomService, HashSet<string> exploredPositions, List<string> xWinPaths, CellCoordinate[] path)
         {
             BoardModel boardModel = BotBoards.Arrange(path);
 
@@ -208,13 +213,13 @@ namespace TicTacToeLab.EditModeTests
 
                     if (childBoard.Outcome == Outcome.InProgress)
                     {
-                        ExploreOTurn(sut, randomChoiceSource, exploredPositions, xWinPaths, childPath);
+                        ExploreOTurn(sut, randomService, exploredPositions, xWinPaths, childPath);
                     }
                 }
             }
         }
 
-        private static void ExploreOTurn(ProfessionalBot sut, FakeRandomChoiceSource randomChoiceSource, HashSet<string> exploredPositions, List<string> xWinPaths, CellCoordinate[] path)
+        private static void ExploreOTurn(ProfessionalBot sut, FakeRandomService randomService, HashSet<string> exploredPositions, List<string> xWinPaths, CellCoordinate[] path)
         {
             BoardModel boardModel = BotBoards.Arrange(path);
 
@@ -223,19 +228,19 @@ namespace TicTacToeLab.EditModeTests
                 return;
             }
 
-            foreach (CellCoordinate choice in EnumerateOptimalChoices(sut, randomChoiceSource, boardModel))
+            foreach (CellCoordinate choice in EnumerateOptimalChoices(sut, randomService, boardModel))
             {
-                ExploreXTurn(sut, randomChoiceSource, exploredPositions, xWinPaths, BotBoards.Append(path, choice));
+                ExploreXTurn(sut, randomService, exploredPositions, xWinPaths, BotBoards.Append(path, choice));
             }
         }
 
-        private static List<CellCoordinate> EnumerateOptimalChoices(ProfessionalBot sut, FakeRandomChoiceSource randomChoiceSource, BoardModel boardModel)
+        private static List<CellCoordinate> EnumerateOptimalChoices(ProfessionalBot sut, FakeRandomService randomService, BoardModel boardModel)
         {
             List<CellCoordinate> choices = new();
 
             for (int index = 0; index < boardModel.Dimension * boardModel.Dimension; index++)
             {
-                randomChoiceSource.Index = index;
+                randomService.IntegerResult = index;
                 CellCoordinate choice = sut.SelectPlacement(boardModel);
 
                 if (!choices.Contains(choice))

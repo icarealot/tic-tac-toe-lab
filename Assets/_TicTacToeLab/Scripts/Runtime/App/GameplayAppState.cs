@@ -6,16 +6,6 @@ namespace TicTacToeLab.Runtime
     {
         private const float BOT_TURN_MINIMUM_DELAY_SECONDS = 0.4f;
         private const float BOT_TURN_MAXIMUM_DELAY_SECONDS = 1f;
-        private static readonly float[] _botTurnDelaysSeconds =
-        {
-            BOT_TURN_MINIMUM_DELAY_SECONDS,
-            0.5f,
-            0.6f,
-            0.7f,
-            0.8f,
-            0.9f,
-            BOT_TURN_MAXIMUM_DELAY_SECONDS,
-        };
 
         private readonly AppStateMachine _stateMachine;
         private readonly AppStateFactory _stateFactory;
@@ -25,7 +15,7 @@ namespace TicTacToeLab.Runtime
         private readonly IInputService _inputService;
         private readonly GameSetup _setup;
         private readonly IBot _bot;
-        private readonly IRandomChoiceSource _randomChoiceSource;
+        private readonly IRandomService _randomService;
 
         private bool _isActive;
         private IDisposable _pendingBotPlacementCancellation;
@@ -41,7 +31,7 @@ namespace TicTacToeLab.Runtime
             IInputService inputService,
             GameSetup setup,
             IBot bot,
-            IRandomChoiceSource randomChoiceSource)
+            IRandomService randomService)
         {
             _stateMachine = stateMachine;
             _stateFactory = stateFactory;
@@ -51,7 +41,7 @@ namespace TicTacToeLab.Runtime
             _inputService = inputService;
             _setup = setup;
             _bot = bot;
-            _randomChoiceSource = randomChoiceSource;
+            _randomService = randomService;
         }
 
         public void Enter()
@@ -135,8 +125,9 @@ namespace TicTacToeLab.Runtime
             }
 
             _inputService.DisablePlayerPress();
-            int delayIndex = _randomChoiceSource.NextIndex(_botTurnDelaysSeconds.Length);
-            float delaySeconds = _botTurnDelaysSeconds[delayIndex];
+            float delaySeconds = _randomService.Range(
+                BOT_TURN_MINIMUM_DELAY_SECONDS,
+                BOT_TURN_MAXIMUM_DELAY_SECONDS);
             Action botPlacementCallback = null;
             botPlacementCallback = () => PlaceBotMark(botPlacementCallback);
             _pendingBotPlacementCallback = botPlacementCallback;

@@ -9,11 +9,11 @@ namespace TicTacToeLab.EditModeTests
         public void Every_reachable_O_turn_position_returns_an_in_bounds_empty_cell_without_mutating_the_board()
         {
             // Arrange
-            FakeRandomChoiceSource randomChoiceSource = new();
+            FakeRandomService randomService = new();
             IBot[] selectors =
             {
-                new AmateurBot(randomChoiceSource),
-                new ProfessionalBot(randomChoiceSource),
+                new AmateurBot(randomService),
+                new ProfessionalBot(randomService),
             };
 
             foreach (BoardModel boardModel in ReachableBoards.InProgressOToMove())
@@ -28,7 +28,7 @@ namespace TicTacToeLab.EditModeTests
 
                     for (int index = 0; index < boardModel.Dimension * boardModel.Dimension; index++)
                     {
-                        randomChoiceSource.Index = index;
+                        randomService.IntegerResult = index;
 
                         // Act
                         CellCoordinate coordinate = selector.SelectPlacement(boardModel);
@@ -36,6 +36,8 @@ namespace TicTacToeLab.EditModeTests
                         // Assert
                         string selectorName = selector.GetType().Name;
                         Assert.That(coordinate.IsWithin(boardModel.Dimension), Is.True, $"{selectorName} returned the out-of-bounds cell ({coordinate.Row}, {coordinate.Column}) for position {position} at random index {index}.");
+                        Assert.That(randomService.LastIntegerMinimumInclusive, Is.EqualTo(0), $"{selectorName} should request candidate indices from zero for position {position}.");
+                        Assert.That(randomService.LastIntegerMaximumExclusive, Is.GreaterThan(0), $"{selectorName} should request a non-empty candidate range for position {position}.");
                         Assert.That(boardModel.IsEmpty(coordinate), Is.True, $"{selectorName} returned the marked cell ({coordinate.Row}, {coordinate.Column}) for position {position} at random index {index}.");
                         Assert.That(boardModel.Turn, Is.EqualTo(turnBefore), $"{selectorName} changed the turn for position {position} at random index {index}.");
                         Assert.That(boardModel.Outcome, Is.EqualTo(outcomeBefore), $"{selectorName} changed the outcome for position {position} at random index {index}.");

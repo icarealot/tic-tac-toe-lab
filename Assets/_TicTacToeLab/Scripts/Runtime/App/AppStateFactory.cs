@@ -9,7 +9,7 @@ namespace TicTacToeLab.Runtime
         private readonly IAppUI _appUI;
         private readonly IDelayScheduler _delayScheduler;
         private readonly IInputService _inputService;
-        private readonly IRandomChoiceSource _randomChoiceSource;
+        private readonly IRandomService _randomService;
 
         public AppStateFactory(
             AppStateMachine stateMachine,
@@ -17,14 +17,14 @@ namespace TicTacToeLab.Runtime
             IAppUI appUI,
             IDelayScheduler delayScheduler,
             IInputService inputService,
-            IRandomChoiceSource randomChoiceSource)
+            IRandomService randomService)
         {
             _stateMachine = stateMachine;
             _boardPresenter = boardPresenter;
             _appUI = appUI;
             _delayScheduler = delayScheduler;
             _inputService = inputService;
-            _randomChoiceSource = randomChoiceSource;
+            _randomService = randomService;
         }
 
         public IAppState CreateHomeState()
@@ -52,7 +52,7 @@ namespace TicTacToeLab.Runtime
                 _inputService,
                 setup,
                 bot,
-                _randomChoiceSource);
+                _randomService);
         }
 
         public IAppState CreateOutcomeState(Outcome outcome, GameSetup setup)
@@ -64,8 +64,8 @@ namespace TicTacToeLab.Runtime
         {
             return botDifficulty switch
             {
-                BotDifficulty.Amateur => new AmateurBot(_randomChoiceSource),
-                BotDifficulty.Professional => new ProfessionalBot(_randomChoiceSource),
+                BotDifficulty.Amateur => new AmateurBot(_randomService),
+                BotDifficulty.Professional => new ProfessionalBot(_randomService),
                 _ => throw new ArgumentOutOfRangeException(nameof(botDifficulty), botDifficulty, "The gameplay state requires a supported bot difficulty."),
             };
         }
