@@ -1,6 +1,6 @@
 # Coding Standards
 
-Make the smallest sufficient change. Preserve required behavior, clarity, and domain integrity with the least maintenance surface.
+Make the smallest sufficient change. Preserve required behavior, clarity, and domain integrity with the least maintenance surface. More code introduces more potential bugs; solve problems with as little code as possible, including tests.
 
 ## Production code
 
@@ -17,14 +17,6 @@ Make the smallest sufficient change. Preserve required behavior, clarity, and do
 - Never use null propagation or coalescing (`?.`, `??`, or `??=`) on Unity objects such as `MonoBehaviour`, `ScriptableObject`, and `Component`.
 - Serialize button fields. Add `onClick` listeners in `Awake()`, remove them in `OnDestroy()`, and keep prefab `On Click ()` lists empty.
 - Use TextMesh Pro's `SetText(...)` instead of assigning through `text`.
-
-## Test code
-
-- Name a local primary subject `sut` and a fixture-held subject `_sut`. Tests without one honest subject are exempt.
-- Use `Assert.That` and name tests as observable behavior with underscores between words.
-- Arrange state in each test and keep Arrange, Act, and Assert distinct.
-- Use fixture setup and teardown only for shared lifecycle ownership and reliable cleanup.
-- Parameterize cases or extract helpers only to remove meaningful duplication.
 
 ## Member order
 
