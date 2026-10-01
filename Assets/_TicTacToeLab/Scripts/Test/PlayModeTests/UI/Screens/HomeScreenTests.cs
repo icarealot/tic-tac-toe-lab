@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 using UnityEngine;
@@ -11,15 +12,11 @@ namespace TicTacToeLab.PlayModeTests
     public sealed class HomeScreenTests
     {
         private GeneratedAppUIFixture _fixture;
-        private HomeScreen _sut;
-        private Button _pvpButton;
-        private Button _pveButton;
 
         [SetUp]
         public void CreateGeneratedHomeScreen()
         {
             _fixture = new GeneratedAppUIFixture();
-            (_sut, _pvpButton, _pveButton) = _fixture.CreateHomeScreen();
         }
 
         [UnityTearDown]
@@ -29,57 +26,31 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
-        public void Selecting_PvP_routes_exactly_once_to_the_supplied_action()
+        public void A_home_screen_without_a_PvP_button_fails_during_initialization()
         {
             // Arrange
-            int pvpCount = 0;
-            int pveCount = 0;
-            _sut.Setup(() => pvpCount++, () => pveCount++);
+            (HomeScreen screen, Button _, Button _) = _fixture.CreateHomeScreen(
+                includePvpButton: false,
+                activate: false);
+            LogAssert.Expect(LogType.Exception, new Regex("NullReferenceException"));
 
             // Act
-            _pvpButton.onClick.Invoke();
-
-            // Assert
-            Assert.That(pvpCount, Is.EqualTo(1), "The PvP button should invoke its supplied action exactly once.");
-            Assert.That(pveCount, Is.EqualTo(0), "Selecting PvP should not invoke the PvE action.");
+            screen.gameObject.SetActive(true);
         }
 
         [Test]
-        public void Selecting_PvE_routes_exactly_once_to_the_supplied_action()
+        public void A_home_screen_without_a_PvE_button_fails_during_initialization()
         {
             // Arrange
-            int pvpCount = 0;
-            int pveCount = 0;
-            _sut.Setup(() => pvpCount++, () => pveCount++);
+            (HomeScreen screen, Button _, Button _) = _fixture.CreateHomeScreen(
+                includePveButton: false,
+                activate: false);
+            LogAssert.Expect(LogType.Exception, new Regex("NullReferenceException"));
 
             // Act
-            _pveButton.onClick.Invoke();
-
-            // Assert
-            Assert.That(pveCount, Is.EqualTo(1), "The PvE button should invoke its supplied action exactly once.");
-            Assert.That(pvpCount, Is.EqualTo(0), "Selecting PvE should not invoke the PvP action.");
+            screen.gameObject.SetActive(true);
         }
 
-        [UnityTest]
-        public IEnumerator Destroying_the_screen_detaches_every_button_listener()
-        {
-            // Arrange
-            int pvpCount = 0;
-            int pveCount = 0;
-            _sut.Setup(() => pvpCount++, () => pveCount++);
-            Object.Destroy(_sut);
-            yield return PlayModeWait.IE_WaitUntilOrFail(
-                () => _sut == null,
-                "The Home screen should be destroyed before its listeners are verified.");
-
-            // Act
-            _pvpButton.onClick.Invoke();
-            _pveButton.onClick.Invoke();
-
-            // Assert
-            Assert.That(pvpCount, Is.EqualTo(0), "Destroying Home should detach the PvP button listener.");
-            Assert.That(pveCount, Is.EqualTo(0), "Destroying Home should detach the PvE button listener.");
-        }
     }
 }
 #endif

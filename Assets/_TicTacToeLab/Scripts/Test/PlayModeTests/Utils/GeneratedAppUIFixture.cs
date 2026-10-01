@@ -29,16 +29,23 @@ namespace TicTacToeLab.PlayModeTests
             Screens = registryRoot.AddComponent<GeneratedScreenRegistry>();
         }
 
-        public (HomeScreen Screen, Button PvpButton, Button PveButton) CreateHomeScreen()
+        public (HomeScreen Screen, Button PvpButton, Button PveButton) CreateHomeScreen(
+            bool includePvpButton = true,
+            bool includePveButton = true,
+            bool activate = true)
         {
             GameObject root = CreateRoot("Generated Home screen");
-            Button pvpButton = CreateButton(root.transform, "PvP button");
-            Button pveButton = CreateButton(root.transform, "PvE button");
+            Button pvpButton = includePvpButton ? CreateButton(root.transform, "PvP button") : null;
+            Button pveButton = includePveButton ? CreateButton(root.transform, "PvE button") : null;
             HomeScreen screen = root.AddComponent<HomeScreen>();
             AttachLifecycleProbe(root);
-            TestSerializedReference.AssignPrefab(screen, "_startButton", pvpButton);
+            TestSerializedReference.AssignPrefab(screen, "_pvpButton", pvpButton);
             TestSerializedReference.AssignPrefab(screen, "_pveButton", pveButton);
-            root.SetActive(true);
+            if (activate)
+            {
+                root.SetActive(true);
+            }
+
             return (screen, pvpButton, pveButton);
         }
 

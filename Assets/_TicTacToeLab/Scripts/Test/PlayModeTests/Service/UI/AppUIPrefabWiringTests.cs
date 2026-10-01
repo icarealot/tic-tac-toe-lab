@@ -50,6 +50,17 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(pvpButton.isActiveAndEnabled, Is.True, "The production Home screen's PvP button should be active and enabled.");
             Assert.That(pvpButton.interactable, Is.True, "The production Home screen's PvP button should be interactable.");
             Assert.That(
+                pvpButton.onClick.GetPersistentEventCount(),
+                Is.EqualTo(0),
+                "The production Home screen's PvP button should have no persistent listeners.");
+            Button pveButton = RequireButton(home, "PvE");
+            Assert.That(pveButton.isActiveAndEnabled, Is.True, "The production Home screen's PvE button should be active and enabled.");
+            Assert.That(pveButton.interactable, Is.True, "The production Home screen's PvE button should be interactable.");
+            Assert.That(
+                pveButton.onClick.GetPersistentEventCount(),
+                Is.EqualTo(0),
+                "The production Home screen's PvE button should have no persistent listeners.");
+            Assert.That(
                 VisibleTexts(home),
                 Is.EquivalentTo(new[] { "Tic Tac Toe", "PvP", "PvE" }),
                 "Production Home should expose both the PvP route and the PvE route.");
@@ -61,7 +72,6 @@ namespace TicTacToeLab.PlayModeTests
             Assert.That(home.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production Home screen.");
             Assert.That(startCount, Is.EqualTo(1), "The production Home screen's PvP button should invoke the supplied action exactly once.");
 
-            Button pveButton = RequireButton(home, "PvE");
             pveButton.onClick.Invoke();
 
             // Assert

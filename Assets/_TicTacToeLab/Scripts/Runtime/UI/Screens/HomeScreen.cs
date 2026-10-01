@@ -6,7 +6,7 @@ namespace TicTacToeLab.Runtime
 {
     public sealed class HomeScreen : MonoBehaviour, IHomeScreen
     {
-        [SerializeField] private Button _startButton;
+        [SerializeField] private Button _pvpButton;
         [SerializeField] private Button _pveButton;
 
         private Action _onPvp;
@@ -14,12 +14,8 @@ namespace TicTacToeLab.Runtime
 
         private void Awake()
         {
-            _startButton.onClick.AddListener(OnPvpClicked);
-
-            if (_pveButton != null)
-            {
-                _pveButton.onClick.AddListener(OnPveClicked);
-            }
+            _pvpButton.onClick.AddListener(OnPvpClicked);
+            _pveButton.onClick.AddListener(OnPveClicked);
         }
 
         public void Setup(Action onPvp, Action onPve)
@@ -30,9 +26,9 @@ namespace TicTacToeLab.Runtime
 
         private void OnDestroy()
         {
-            if (_startButton != null)
+            if (_pvpButton != null)
             {
-                _startButton.onClick.RemoveListener(OnPvpClicked);
+                _pvpButton.onClick.RemoveListener(OnPvpClicked);
             }
 
             if (_pveButton != null)
