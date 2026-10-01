@@ -4,6 +4,13 @@ namespace TicTacToeLab.Runtime
 {
     public sealed class PveTurnController : IGameplayTurnController
     {
+        private enum TurnLifecycle
+        {
+            Active,
+            Paused,
+            Exited,
+        }
+
         private const float BOT_TURN_MINIMUM_DELAY_SECONDS = 0.4f;
         private const float BOT_TURN_MAXIMUM_DELAY_SECONDS = 1f;
 
@@ -33,11 +40,6 @@ namespace TicTacToeLab.Runtime
 
         public void Enter()
         {
-            if (_lifecycle != TurnLifecycle.Constructed)
-            {
-                return;
-            }
-
             _lifecycle = TurnLifecycle.Active;
             _boardPresenter.TurnChanged += HandleTurnChanged;
             SynchronizeWithBoard();
@@ -45,11 +47,6 @@ namespace TicTacToeLab.Runtime
 
         public void Pause()
         {
-            if (_lifecycle != TurnLifecycle.Active)
-            {
-                return;
-            }
-
             _lifecycle = TurnLifecycle.Paused;
             CancelPendingBotPlacement();
             _inputService.DisablePlayerPress();
@@ -57,22 +54,12 @@ namespace TicTacToeLab.Runtime
 
         public void Resume()
         {
-            if (_lifecycle != TurnLifecycle.Paused)
-            {
-                return;
-            }
-
             _lifecycle = TurnLifecycle.Active;
             SynchronizeWithBoard();
         }
 
         public void Exit()
         {
-            if (_lifecycle == TurnLifecycle.Exited)
-            {
-                return;
-            }
-
             _lifecycle = TurnLifecycle.Exited;
             CancelPendingBotPlacement();
             _boardPresenter.TurnChanged -= HandleTurnChanged;
