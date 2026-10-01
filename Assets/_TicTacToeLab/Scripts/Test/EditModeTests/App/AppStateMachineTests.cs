@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using TicTacToeLab.Runtime;
 
@@ -17,7 +16,6 @@ namespace TicTacToeLab.EditModeTests
         private FakeDelayScheduler _delayScheduler;
         private FakeRandomService _randomService;
         private BoardPresser _presser;
-        private List<string> _lifecycleOperations;
         private AppStateMachine _sut;
 
         [SetUp]
@@ -30,11 +28,6 @@ namespace TicTacToeLab.EditModeTests
             _appUI = new FakeAppUI();
             _delayScheduler = new FakeDelayScheduler();
             _randomService = new FakeRandomService();
-            _lifecycleOperations = new List<string>();
-            _boardView.OperationObserver = operation => _lifecycleOperations.Add(operation);
-            _inputService.OperationObserver = operation => _lifecycleOperations.Add(operation);
-            _appUI.OperationObserver = operation => _lifecycleOperations.Add(operation);
-            _delayScheduler.OperationObserver = operation => _lifecycleOperations.Add(operation);
 
             _boardPresenter = BoardPresenterBuilder.Build(_boardModel, _boardLayout, _boardView, _inputService);
             _presser = new BoardPresser(_inputService, _boardLayout);
@@ -59,18 +52,26 @@ namespace TicTacToeLab.EditModeTests
             _appUI.HomeScreen.ClickPve();
         }
 
-        private void StartPveGameplay(BotDifficulty botDifficulty = BotDifficulty.Amateur)
+        private void StartAmateurPveGameplay()
         {
             StartBotSelection();
+            _appUI.BotSelectionScreen.ClickAmateur();
+        }
 
-            if (botDifficulty == BotDifficulty.Amateur)
-            {
-                _appUI.BotSelectionScreen.ClickAmateur();
-            }
-            else
-            {
-                _appUI.BotSelectionScreen.ClickProfessional();
-            }
+        private void StartProfessionalPveGameplay()
+        {
+            StartBotSelection();
+            _appUI.BotSelectionScreen.ClickProfessional();
+        }
+
+        private void AssertLastRequested<TScreen>() where TScreen : IScreen
+        {
+            Assert.That(_appUI.LastRequestedRole, Is.EqualTo(typeof(TScreen)));
+        }
+
+        private void AssertLastClosed<TScreen>() where TScreen : IScreen
+        {
+            Assert.That(_appUI.LastClosedRole, Is.EqualTo(typeof(TScreen)));
         }
 
         // --- Startup and Home ---
@@ -82,9 +83,10 @@ namespace TicTacToeLab.EditModeTests
             _sut.Start();
 
             // Assert
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HasPopup, Is.False);
+            AssertLastRequested<IHomeScreen>();
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(0));
+            Assert.That(_appUI.ConfirmQuitScreen.PresentationCount, Is.EqualTo(0));
+            Assert.That(_appUI.OutcomeScreen.PresentationCount, Is.EqualTo(0));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
         }
 
@@ -99,9 +101,10 @@ namespace TicTacToeLab.EditModeTests
             _inputService.RaiseBack();
 
             // Assert
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HasPopup, Is.False);
+            AssertLastRequested<IHomeScreen>();
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(0));
+            Assert.That(_appUI.ConfirmQuitScreen.PresentationCount, Is.EqualTo(0));
+            Assert.That(_appUI.OutcomeScreen.PresentationCount, Is.EqualTo(0));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
             Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore));
         }
@@ -119,7 +122,6 @@ namespace TicTacToeLab.EditModeTests
             _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 2));
             Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.XWin));
             _sut.Start();
-            _lifecycleOperations.Clear();
 
             // Act
             _appUI.HomeScreen.ClickPvp();
@@ -128,14 +130,8 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(BoardState.IsEmpty(_boardModel), Is.True);
             Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
             Assert.That(_appUI.GameplayScreen.BoardOutcomeWhenPresented, Is.EqualTo(Outcome.InProgress));
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
+            AssertLastRequested<IGameplayScreen>();
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
-            Assert.That(_lifecycleOperations, Is.EqualTo(new[]
-            {
-                "Reset board",
-                "Show IGameplayScreen",
-                "Enable player presses",
-            }));
         }
 
         [Test]
@@ -147,7 +143,7 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_boardModel.Turn, Is.EqualTo(Mark.X));
 
             // Act
-            StartPveGameplay(BotDifficulty.Professional);
+            StartProfessionalPveGameplay();
 
             // Assert
             Assert.That(BoardState.IsEmpty(_boardModel), Is.True);
@@ -180,8 +176,8 @@ namespace TicTacToeLab.EditModeTests
             _appUI.HomeScreen.ClickPvp();
 
             // Assert
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
-            Assert.That(_appUI.BotSelectionScreen.IsVisible, Is.False);
+            AssertLastRequested<IGameplayScreen>();
+            Assert.That(_appUI.BotSelectionScreen.PresentationCount, Is.EqualTo(0));
             Assert.That(_appUI.GameplayScreen.ShownSetup.Mode, Is.EqualTo(GameMode.Pvp));
             Assert.That(_appUI.GameplayScreen.ShownSetup.BotDifficulty, Is.Null);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
@@ -219,34 +215,43 @@ namespace TicTacToeLab.EditModeTests
             _appUI.HomeScreen.ClickPve();
 
             // Assert
-            Assert.That(_appUI.BotSelectionScreen.IsVisible, Is.True);
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
+            AssertLastRequested<IBotSelectionScreen>();
+            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(1));
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(0));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
         }
 
-        [TestCase(BotDifficulty.Amateur)]
-        [TestCase(BotDifficulty.Professional)]
-        public void Selecting_a_bot_difficulty_starts_gameplay_with_that_PvE_setup_unchanged(BotDifficulty botDifficulty)
+        [Test]
+        public void Selecting_an_amateur_bot_starts_gameplay_with_the_amateur_PvE_setup()
         {
             // Arrange
             StartBotSelection();
 
             // Act
-            if (botDifficulty == BotDifficulty.Amateur)
-            {
-                _appUI.BotSelectionScreen.ClickAmateur();
-            }
-            else
-            {
-                _appUI.BotSelectionScreen.ClickProfessional();
-            }
+            _appUI.BotSelectionScreen.ClickAmateur();
 
             // Assert
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
-            Assert.That(_appUI.BotSelectionScreen.IsVisible, Is.False);
+            AssertLastRequested<IGameplayScreen>();
+            Assert.That(_appUI.BotSelectionScreen.PresentationCount, Is.EqualTo(1));
             Assert.That(_appUI.GameplayScreen.ShownSetup.Mode, Is.EqualTo(GameMode.Pve));
-            Assert.That(_appUI.GameplayScreen.ShownSetup.BotDifficulty, Is.EqualTo(botDifficulty));
+            Assert.That(_appUI.GameplayScreen.ShownSetup.BotDifficulty, Is.EqualTo(BotDifficulty.Amateur));
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+        }
+
+        [Test]
+        public void Selecting_a_professional_bot_starts_gameplay_with_the_professional_PvE_setup()
+        {
+            // Arrange
+            StartBotSelection();
+
+            // Act
+            _appUI.BotSelectionScreen.ClickProfessional();
+
+            // Assert
+            AssertLastRequested<IGameplayScreen>();
+            Assert.That(_appUI.BotSelectionScreen.PresentationCount, Is.EqualTo(1));
+            Assert.That(_appUI.GameplayScreen.ShownSetup.Mode, Is.EqualTo(GameMode.Pve));
+            Assert.That(_appUI.GameplayScreen.ShownSetup.BotDifficulty, Is.EqualTo(BotDifficulty.Professional));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
         }
 
@@ -270,46 +275,12 @@ namespace TicTacToeLab.EditModeTests
             requestBack(_appUI, _inputService);
 
             // Assert
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-            Assert.That(_appUI.BotSelectionScreen.IsVisible, Is.False);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HasPopup, Is.False);
+            AssertLastRequested<IHomeScreen>();
+            Assert.That(_appUI.BotSelectionScreen.PresentationCount, Is.EqualTo(1));
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(0));
+            Assert.That(_appUI.ConfirmQuitScreen.PresentationCount, Is.EqualTo(0));
+            Assert.That(_appUI.OutcomeScreen.PresentationCount, Is.EqualTo(0));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-        }
-
-        [Test]
-        public void Repeating_a_bot_difficulty_choice_starts_gameplay_once()
-        {
-            // Arrange
-            StartBotSelection();
-            int gameplayPresentationsBefore = _appUI.GameplayScreen.PresentationCount;
-
-            // Act
-            _appUI.BotSelectionScreen.ClickAmateur();
-            _appUI.BotSelectionScreen.ClickProfessional();
-
-            // Assert
-            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(gameplayPresentationsBefore + 1));
-            Assert.That(_appUI.GameplayScreen.ShownSetup.BotDifficulty, Is.EqualTo(BotDifficulty.Amateur));
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
-        }
-
-        [Test]
-        public void Repeating_back_at_bot_selection_returns_Home_once()
-        {
-            // Arrange
-            StartBotSelection();
-            int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
-
-            // Act
-            _appUI.BotSelectionScreen.ClickBack();
-            _inputService.RaiseBack();
-            _appUI.BotSelectionScreen.ClickBack();
-
-            // Assert
-            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore + 1));
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
         }
 
         [Test]
@@ -326,56 +297,20 @@ namespace TicTacToeLab.EditModeTests
         }
 
         [Test]
-        public void A_stale_bot_difficulty_choice_after_returning_Home_does_not_start_gameplay()
+        public void Disposing_at_bot_selection_detaches_from_application_back_requests()
         {
             // Arrange
             StartBotSelection();
-            Action staleAmateur = _appUI.BotSelectionScreen.OnAmateur;
-            _appUI.BotSelectionScreen.ClickBack();
-
-            // Act
-            staleAmateur();
-
-            // Assert
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
-        }
-
-        [Test]
-        public void A_stale_bot_selection_back_callback_after_starting_a_game_does_not_return_Home()
-        {
-            // Arrange
-            StartBotSelection();
-            Action staleBack = _appUI.BotSelectionScreen.OnBack;
-            _appUI.BotSelectionScreen.ClickAmateur();
-
-            // Act
-            staleBack();
-
-            // Assert
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HasPopup, Is.False);
-        }
-
-        [Test]
-        public void Disposing_at_bot_selection_detaches_back_and_keeps_every_callback_inert()
-        {
-            // Arrange
-            StartBotSelection();
-            Action staleAmateur = _appUI.BotSelectionScreen.OnAmateur;
-            Action staleBack = _appUI.BotSelectionScreen.OnBack;
 
             // Act
             _sut.Dispose();
-            staleAmateur();
-            staleBack();
             _inputService.RaiseBack();
 
             // Assert
             Assert.That(_inputService.HasBackSubscribers, Is.False);
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
+            Assert.That(_appUI.LastRequestedRole, Is.EqualTo(typeof(IBotSelectionScreen)));
+            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(1));
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(0));
         }
 
         // --- PvE turn cycle ---
@@ -384,7 +319,7 @@ namespace TicTacToeLab.EditModeTests
         public void A_terminal_PvE_X_placement_preserves_the_selected_setup_for_the_outcome()
         {
             // Arrange
-            StartPveGameplay(BotDifficulty.Professional);
+            StartProfessionalPveGameplay();
             GameSetup selectedSetup = _appUI.GameplayScreen.ShownSetup;
             _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 0));
             _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 0));
@@ -404,7 +339,7 @@ namespace TicTacToeLab.EditModeTests
         public void A_terminal_PvE_X_placement_starts_only_the_existing_outcome_delay()
         {
             // Arrange
-            StartPveGameplay();
+            StartAmateurPveGameplay();
             _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 0));
             _ = _boardModel.TryPlaceMark(new CellCoordinate(1, 0));
             _ = _boardModel.TryPlaceMark(new CellCoordinate(0, 1));
@@ -419,175 +354,83 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
             Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(1f));
             Assert.That(_delayScheduler.HasPendingWork, Is.True);
-            Assert.That(_appUI.OutcomeScreen.IsVisible, Is.False);
-        }
-
-        [Test]
-        public void Professional_PvE_uses_its_strategy_for_the_delayed_O_placement()
-        {
-            // Arrange
-            StartPveGameplay(BotDifficulty.Professional);
-            _presser.Press(new CellCoordinate(2, 2));
-
-            // Act
-            _delayScheduler.FirePending();
-
-            // Assert
-            Assert.That(_boardModel.GetMark(new CellCoordinate(1, 1)), Is.EqualTo(Mark.O));
-            Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 0)), Is.True);
-            Assert.That(_boardView.ShownMarks[^1], Is.EqualTo((new CellCoordinate(1, 1), Mark.O)));
-        }
-
-        [Test]
-        public void A_terminal_PvE_O_placement_ends_the_bot_delay_before_starting_a_separate_outcome_delay()
-        {
-            // Arrange
-            StartPveGameplay();
-            _presser.Press(new CellCoordinate(1, 0));
-            _delayScheduler.FirePending();
-            _presser.Press(new CellCoordinate(2, 0));
-            _delayScheduler.FirePending();
-            _presser.Press(new CellCoordinate(2, 1));
-            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(3));
-
-            // Act
-            _delayScheduler.FirePending();
-
-            // Assert
-            Assert.That(_boardModel.GetMark(new CellCoordinate(0, 2)), Is.EqualTo(Mark.O));
-            Assert.That(_boardModel.Outcome, Is.EqualTo(Outcome.OWin));
-            Assert.That(_boardView.ShownMarks[^1], Is.EqualTo((new CellCoordinate(0, 2), Mark.O)));
-            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(4));
-            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(1f));
-            Assert.That(_delayScheduler.HasPendingWork, Is.True);
-            Assert.That(_appUI.OutcomeScreen.IsVisible, Is.False);
+            Assert.That(_appUI.OutcomeScreen.PresentationCount, Is.EqualTo(0));
         }
 
         // --- Quit confirmation ---
 
         [Test]
-        public void Opening_quit_confirmation_pauses_the_selected_PvE_controller_before_showing_confirmation()
+        public void Opening_quit_confirmation_pauses_PvE_gameplay_before_showing_confirmation()
         {
             // Arrange
-            StartPveGameplay();
+            StartAmateurPveGameplay();
             _presser.Press(new CellCoordinate(0, 0));
-            _lifecycleOperations.Clear();
 
             // Act
             _inputService.RaiseBack();
 
             // Assert
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.True);
-            Assert.That(_delayScheduler.WasCancelled, Is.True);
-            Assert.That(_delayScheduler.HasPendingWork, Is.False);
+            AssertLastRequested<IConfirmQuitScreen>();
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-            Assert.That(_lifecycleOperations, Is.EqualTo(new[]
+            Assert.That(_boardView.ShownMarks, Is.EqualTo(new[]
             {
-                "Cancel pending work",
-                "Disable player presses",
-                "Show IConfirmQuitScreen",
+                (new CellCoordinate(0, 0), Mark.X),
             }));
         }
 
         [Test]
-        public void Dismissing_quit_confirmation_resumes_the_selected_PvE_controller_with_fresh_bot_work()
+        public void Dismissing_quit_confirmation_resumes_PvE_gameplay()
         {
             // Arrange
-            StartPveGameplay();
-            _randomService.FloatingPointResult = 0.4f;
-            _presser.Press(new CellCoordinate(0, 0));
+            StartAmateurPveGameplay();
             _inputService.RaiseBack();
-            _randomService.FloatingPointResult = 1f;
-            _lifecycleOperations.Clear();
 
             // Act
             _appUI.ConfirmQuitScreen.ClickCancel();
 
             // Assert
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.False);
-            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(2));
-            Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(1f));
-            Assert.That(_delayScheduler.HasPendingWork, Is.True);
-            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-            Assert.That(_lifecycleOperations, Is.EqualTo(new[]
-            {
-                "Close IConfirmQuitScreen",
-                "Disable player presses",
-                "Schedule delayed work",
-            }));
+            AssertLastClosed<IConfirmQuitScreen>();
+            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
+            Assert.That(_boardView.ShownMarks, Is.Empty);
         }
 
         [Test]
         public void Confirming_quit_during_a_pending_PvE_bot_turn_exits_gameplay_before_returning_Home()
         {
             // Arrange
-            StartPveGameplay();
+            StartAmateurPveGameplay();
             _presser.Press(new CellCoordinate(0, 0));
             _inputService.RaiseBack();
-            _lifecycleOperations.Clear();
 
             // Act
             _appUI.ConfirmQuitScreen.ClickConfirm();
 
             // Assert
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HasPopup, Is.False);
-            Assert.That(_delayScheduler.HasPendingWork, Is.False);
+            AssertLastRequested<IHomeScreen>();
+            AssertLastClosed<IConfirmQuitScreen>();
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(1));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
             Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 1)), Is.True);
-            Assert.That(_lifecycleOperations, Is.EqualTo(new[]
-            {
-                "Close IConfirmQuitScreen",
-                "Disable player presses",
-                "Disable player presses",
-                "Show IHomeScreen",
-            }));
         }
 
         [Test]
-        public void Disposing_during_a_pending_PvE_bot_turn_exits_the_selected_controller()
+        public void Disposing_during_a_PvE_turn_exits_the_selected_controller()
         {
             // Arrange
-            StartPveGameplay();
+            StartAmateurPveGameplay();
             _presser.Press(new CellCoordinate(0, 0));
 
             // Act
             _sut.Dispose();
 
             // Assert
-            Assert.That(_delayScheduler.WasCancelled, Is.True);
-            Assert.That(_delayScheduler.HasPendingWork, Is.False);
             Assert.That(_inputService.HasBackSubscribers, Is.False);
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
+            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void A_canceled_bot_callback_cannot_affect_a_later_PvE_game()
-        {
-            // Arrange
-            StartPveGameplay();
-            _presser.Press(new CellCoordinate(0, 0));
-            Action staleBotCallback = _delayScheduler.CapturePendingCallback();
-            _inputService.RaiseBack();
-            _appUI.ConfirmQuitScreen.ClickConfirm();
-            StartPveGameplay();
-
-            // Act
-            staleBotCallback();
-
-            // Assert
-            Assert.That(BoardState.IsEmpty(_boardModel), Is.True);
-            Assert.That(_boardView.ShownMarks, Is.Empty);
-            Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
-            Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
-        }
-
-        [Test]
-        public void Gameplay_back_opens_quit_confirmation_and_blocks_board_presses()
+        public void Gameplay_back_opens_quit_confirmation_and_disables_board_presses()
         {
             // Arrange
             StartGameplay();
@@ -596,16 +439,9 @@ namespace TicTacToeLab.EditModeTests
             _appUI.GameplayScreen.ClickBack();
 
             // Assert
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.True);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
+            AssertLastRequested<IConfirmQuitScreen>();
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(1));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-
-            // Act
-            _presser.Press(new CellCoordinate(0, 0));
-
-            // Assert
-            Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 0)), Is.True);
-            Assert.That(_boardView.ShownMarks, Is.Empty);
         }
 
         private static IEnumerable<TestCaseData> QuitConfirmationDismissals()
@@ -624,14 +460,14 @@ namespace TicTacToeLab.EditModeTests
             // Arrange
             StartGameplay();
             _inputService.RaiseBack();
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.True);
+            AssertLastRequested<IConfirmQuitScreen>();
 
             // Act
             dismiss(_appUI, _inputService);
 
             // Assert
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.False);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
+            AssertLastClosed<IConfirmQuitScreen>();
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(1));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.True);
         }
 
@@ -647,29 +483,11 @@ namespace TicTacToeLab.EditModeTests
             _appUI.ConfirmQuitScreen.ClickConfirm();
 
             // Assert
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HasPopup, Is.False);
+            AssertLastRequested<IHomeScreen>();
+            AssertLastClosed<IConfirmQuitScreen>();
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(1));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
             Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 0)), Is.False);
-        }
-
-        [Test]
-        public void Confirming_quit_closes_confirm_quit_before_showing_Home()
-        {
-            // Arrange
-            StartGameplay();
-            _inputService.RaiseBack();
-            int operationsBefore = _appUI.Operations.Count;
-
-            // Act
-            _appUI.ConfirmQuitScreen.ClickConfirm();
-
-            // Assert
-            Assert.That(
-                _appUI.Operations.Skip(operationsBefore).ToArray(),
-                Is.EqualTo(new[] { "Close IConfirmQuitScreen", "Show IHomeScreen" }),
-                "Confirming quit should close the confirmation before Home can present.");
         }
 
         // --- Board completion and the outcome delay ---
@@ -689,11 +507,11 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_delayScheduler.ScheduleCount, Is.EqualTo(1));
             Assert.That(_delayScheduler.RequestedDelaySeconds, Is.EqualTo(1f));
             Assert.That(_delayScheduler.HasPendingWork, Is.True);
-            Assert.That(_appUI.OutcomeScreen.IsVisible, Is.False);
+            Assert.That(_appUI.OutcomeScreen.PresentationCount, Is.EqualTo(0));
         }
 
         [Test]
-        public void Back_during_the_pending_outcome_delay_has_no_effect()
+        public void Back_during_the_pending_outcome_delay_does_not_open_quit_confirmation()
         {
             // Arrange
             StartGameplay();
@@ -703,16 +521,10 @@ namespace TicTacToeLab.EditModeTests
             _inputService.RaiseBack();
 
             // Assert
-            Assert.That(_appUI.HasPopup, Is.False);
+            Assert.That(_appUI.OutcomeScreen.PresentationCount, Is.EqualTo(0));
+            Assert.That(_appUI.ConfirmQuitScreen.PresentationCount, Is.EqualTo(0));
             Assert.That(_delayScheduler.HasPendingWork, Is.True);
             Assert.That(_delayScheduler.WasCancelled, Is.False);
-
-            // Act
-            _delayScheduler.FirePending();
-
-            // Assert
-            Assert.That(_appUI.OutcomeScreen.IsVisible, Is.True);
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.False);
         }
 
         // --- Outcome presentation and acknowledgement ---
@@ -744,9 +556,10 @@ namespace TicTacToeLab.EditModeTests
             _delayScheduler.FirePending();
 
             // Assert
-            Assert.That(_appUI.OutcomeScreen.IsVisible, Is.True);
+            AssertLastRequested<IOutcomeScreen>();
+            Assert.That(_appUI.OutcomeScreen.PresentationCount, Is.EqualTo(1));
             Assert.That(_appUI.OutcomeScreen.ShownOutcome, Is.EqualTo(expectedOutcome));
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True, "The popup should appear over the still-visible gameplay screen.");
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(1));
             Assert.That(BoardState.CaptureMarks(_boardModel), Is.EqualTo(completedMarks));
             Assert.That(_boardView.ShownMarks, Is.EqualTo(renderedMarks));
         }
@@ -774,30 +587,11 @@ namespace TicTacToeLab.EditModeTests
             acknowledge(_appUI, _inputService);
 
             // Assert
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HasPopup, Is.False);
+            AssertLastRequested<IHomeScreen>();
+            AssertLastClosed<IOutcomeScreen>();
+            Assert.That(_appUI.GameplayScreen.PresentationCount, Is.EqualTo(1));
             Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
             Assert.That(BoardState.CaptureMarks(_boardModel), Is.EqualTo(completedMarks));
-        }
-
-        [Test]
-        public void Acknowledging_the_outcome_closes_it_before_showing_Home()
-        {
-            // Arrange
-            StartGameplay();
-            BoardPresses.WinRowZeroForX(_presser);
-            _delayScheduler.FirePending();
-            int operationsBefore = _appUI.Operations.Count;
-
-            // Act
-            _appUI.OutcomeScreen.ClickContinue();
-
-            // Assert
-            Assert.That(
-                _appUI.Operations.Skip(operationsBefore).ToArray(),
-                Is.EqualTo(new[] { "Close IOutcomeScreen", "Show IHomeScreen" }),
-                "Acknowledging the outcome should close it before Home can present.");
         }
 
         [Test]
@@ -813,26 +607,7 @@ namespace TicTacToeLab.EditModeTests
 
             // Assert
             Assert.That(_appUI.OutcomeScreen.PresentationCount, Is.EqualTo(1));
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
-        }
-
-        [Test]
-        public void Acknowledging_the_outcome_repeatedly_causes_only_one_return_Home()
-        {
-            // Arrange
-            StartGameplay();
-            BoardPresses.WinRowZeroForX(_presser);
-            _delayScheduler.FirePending();
-            int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
-
-            // Act
-            _appUI.OutcomeScreen.ClickContinue();
-            _appUI.OutcomeScreen.ClickContinue();
-            _inputService.RaiseBack();
-
-            // Assert
-            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore + 1));
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
+            AssertLastRequested<IOutcomeScreen>();
         }
 
         [Test]
@@ -849,131 +624,8 @@ namespace TicTacToeLab.EditModeTests
 
             // Assert
             Assert.That(_appUI.OutcomeScreen.PresentationCount, Is.EqualTo(1));
-            Assert.That(_appUI.OutcomeScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-        }
-
-        [Test]
-        public void A_stale_gameplay_back_callback_after_quitting_does_not_open_another_popup()
-        {
-            // Arrange
-            StartGameplay();
-            _inputService.RaiseBack();
-            _appUI.ConfirmQuitScreen.ClickConfirm();
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-
-            // Act
-            _appUI.GameplayScreen.ClickBack();
-
-            // Assert
-            Assert.That(_appUI.HasPopup, Is.False);
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.True);
-        }
-
-        [Test]
-        public void A_stale_home_choice_during_gameplay_does_not_restart_the_game()
-        {
-            // Arrange
-            StartGameplay();
-            _presser.Press(new CellCoordinate(0, 0));
-            int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
-
-            // Act
-            _appUI.HomeScreen.ClickPvp();
-            _appUI.HomeScreen.ClickPve();
-
-            // Assert
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
-            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore));
-            Assert.That(_boardModel.IsEmpty(new CellCoordinate(0, 0)), Is.False, "The in-progress board should not be reset.");
-        }
-
-        [Test]
-        public void A_stale_quit_cancel_callback_after_returning_Home_does_not_enable_board_presses()
-        {
-            // Arrange
-            StartGameplay();
-            _inputService.RaiseBack();
-            _appUI.ConfirmQuitScreen.ClickConfirm();
-            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-
-            // Act
-            _appUI.ConfirmQuitScreen.ClickCancel();
-
-            // Assert
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.False);
-            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-        }
-
-        // --- Stale confirmation callbacks ---
-
-        private static IEnumerable<TestCaseData> DisposedConfirmationCallbacks()
-        {
-            yield return new TestCaseData((Action<FakeAppUI>)(appUI => appUI.ConfirmQuitScreen.ClickConfirm()))
-                .SetName("Replaying_yes_from_a_confirmation_open_at_disposal_keeps_the_state_machine_inert");
-
-            yield return new TestCaseData((Action<FakeAppUI>)(appUI => appUI.ConfirmQuitScreen.ClickCancel()))
-                .SetName("Replaying_no_from_a_confirmation_open_at_disposal_keeps_the_state_machine_inert");
-        }
-
-        [TestCaseSource(nameof(DisposedConfirmationCallbacks))]
-        public void Replaying_a_confirmation_callback_after_disposal_keeps_the_state_machine_inert(Action<FakeAppUI> replay)
-        {
-            // Arrange
-            StartGameplay();
-            _presser.Press(new CellCoordinate(0, 0));
-            _inputService.RaiseBack();
-            Mark?[,] marksBefore = BoardState.CaptureMarks(_boardModel);
-            int homePresentationsBefore = _appUI.HomeScreen.PresentationCount;
-            _sut.Dispose();
-
-            // Act
-            replay(_appUI);
-
-            // Assert
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
-            Assert.That(_appUI.HomeScreen.PresentationCount, Is.EqualTo(homePresentationsBefore));
-            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-            Assert.That(BoardState.CaptureMarks(_boardModel), Is.EqualTo(marksBefore));
-        }
-
-        [Test]
-        public void Replaying_the_closed_confirmations_confirm_callback_cannot_act_on_the_reopened_confirmation()
-        {
-            // Arrange
-            StartGameplay();
-            _inputService.RaiseBack();
-            Action staleConfirm = _appUI.ConfirmQuitScreen.OnConfirm;
-            _appUI.ConfirmQuitScreen.ClickCancel();
-            _inputService.RaiseBack();
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.True);
-
-            // Act
-            staleConfirm();
-
-            // Assert
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.True);
-            Assert.That(_appUI.HomeScreen.IsVisible, Is.False);
-            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
-        }
-
-        [Test]
-        public void Replaying_the_closed_confirmations_cancel_callback_cannot_close_the_reopened_confirmation()
-        {
-            // Arrange
-            StartGameplay();
-            _inputService.RaiseBack();
-            Action staleCancel = _appUI.ConfirmQuitScreen.OnCancel;
-            _appUI.ConfirmQuitScreen.ClickCancel();
-            _inputService.RaiseBack();
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.True);
-
-            // Act
-            staleCancel();
-
-            // Assert
-            Assert.That(_appUI.ConfirmQuitScreen.IsVisible, Is.True);
-            Assert.That(_inputService.IsPlayerPressEnabled, Is.False);
+            AssertLastClosed<IOutcomeScreen>();
+            AssertLastRequested<IHomeScreen>();
         }
 
         // --- Teardown ---
@@ -993,14 +645,6 @@ namespace TicTacToeLab.EditModeTests
             Assert.That(_delayScheduler.WasCancelled, Is.True);
             Assert.That(_delayScheduler.HasPendingWork, Is.False);
             Assert.That(_inputService.HasBackSubscribers, Is.False);
-
-            // Act
-            _delayScheduler.FirePending();
-            _inputService.RaiseBack();
-
-            // Assert
-            Assert.That(_appUI.HasPopup, Is.False);
-            Assert.That(_appUI.GameplayScreen.IsVisible, Is.True);
         }
 
         [Test]

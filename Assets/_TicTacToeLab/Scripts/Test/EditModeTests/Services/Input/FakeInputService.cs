@@ -11,7 +11,6 @@ namespace TicTacToeLab.EditModeTests
 
         public bool HasBackSubscribers => BackPressed != null;
         public bool IsPlayerPressEnabled { get; private set; } = true;
-        public Action<string> OperationObserver { get; set; }
 
         public void RaisePress(Vector2 screenPoint)
         {
@@ -31,13 +30,11 @@ namespace TicTacToeLab.EditModeTests
         public void EnablePlayerPress()
         {
             IsPlayerPressEnabled = true;
-            OperationObserver?.Invoke("Enable player presses");
         }
 
         public void DisablePlayerPress()
         {
             IsPlayerPressEnabled = false;
-            OperationObserver?.Invoke("Disable player presses");
         }
     }
 }

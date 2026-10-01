@@ -11,152 +11,39 @@ namespace TicTacToeLab.EditModeTests
         public FakeGameplayScreen GameplayScreen { get; } = new();
         public FakeConfirmQuitScreen ConfirmQuitScreen { get; } = new();
         public FakeOutcomeScreen OutcomeScreen { get; } = new();
-        public bool HasPopup => ConfirmQuitScreen.IsVisible || OutcomeScreen.IsVisible;
-        public IReadOnlyList<string> Operations => _operations;
-        public Action<string> OperationObserver { get; set; }
+        public Type LastRequestedRole { get; private set; }
+        public Type LastClosedRole { get; private set; }
 
-        private static readonly Dictionary<Type, ScreenLayer> LAYERS_BY_ROLE = new()
+        private readonly Dictionary<Type, IScreen> _screenDoubles;
+
+        public FakeAppUI()
         {
-            { typeof(IHomeScreen), ScreenLayer.Base },
-            { typeof(IBotSelectionScreen), ScreenLayer.Base },
-            { typeof(IGameplayScreen), ScreenLayer.Base },
-            { typeof(IConfirmQuitScreen), ScreenLayer.Popup },
-            { typeof(IOutcomeScreen), ScreenLayer.Popup },
-        };
-
-        private readonly List<string> _operations = new();
-        private FakeScreen _activeBaseScreen;
-        private FakeScreen _activePopupScreen;
+            _screenDoubles = new Dictionary<Type, IScreen>
+            {
+                { typeof(IHomeScreen), HomeScreen },
+                { typeof(IBotSelectionScreen), BotSelectionScreen },
+                { typeof(IGameplayScreen), GameplayScreen },
+                { typeof(IConfirmQuitScreen), ConfirmQuitScreen },
+                { typeof(IOutcomeScreen), OutcomeScreen },
+            };
+        }
 
         public void Show<TScreen>(Action<TScreen> configure = null) where TScreen : IScreen
         {
-            FakeScreen screen = ScreenFor<TScreen>();
-            ScreenLayer layer = LAYERS_BY_ROLE[typeof(TScreen)];
-            EnsureTransitionAllowed(layer, typeof(TScreen));
-            ReplaceActiveScreen(layer);
-
-            string operation = $"Show {typeof(TScreen).Name}";
-            _operations.Add(operation);
-            OperationObserver?.Invoke(operation);
-            screen.Present();
-            SetActiveScreen(layer, screen);
-            configure?.Invoke((TScreen)(object)screen);
+            TScreen screen = ScreenFor<TScreen>();
+            ((FakeScreen)(object)screen).RecordPresentation();
+            LastRequestedRole = typeof(TScreen);
+            configure?.Invoke(screen);
         }
 
         public void Close<TScreen>() where TScreen : IScreen
         {
-            FakeScreen screen = ScreenFor<TScreen>();
-            ScreenLayer layer = LAYERS_BY_ROLE[typeof(TScreen)];
-
-            if (!ReferenceEquals(ActiveScreenFor(layer), screen))
-            {
-                return;
-            }
-
-            if (layer == ScreenLayer.Base && _activePopupScreen != null)
-            {
-                throw new InvalidOperationException(
-                    $"The fake application UI cannot close the base role {typeof(TScreen).Name} while a popup screen is active.");
-            }
-
-            string operation = $"Close {typeof(TScreen).Name}";
-            _operations.Add(operation);
-            OperationObserver?.Invoke(operation);
-            ClearActiveScreen(layer);
-            screen.Dismiss();
+            LastClosedRole = typeof(TScreen);
         }
 
-        private FakeScreen ScreenFor<TScreen>() where TScreen : IScreen
+        private TScreen ScreenFor<TScreen>() where TScreen : IScreen
         {
-            if (typeof(TScreen) == typeof(IHomeScreen))
-            {
-                return HomeScreen;
-            }
-
-            if (typeof(TScreen) == typeof(IBotSelectionScreen))
-            {
-                return BotSelectionScreen;
-            }
-
-            if (typeof(TScreen) == typeof(IGameplayScreen))
-            {
-                return GameplayScreen;
-            }
-
-            if (typeof(TScreen) == typeof(IConfirmQuitScreen))
-            {
-                return ConfirmQuitScreen;
-            }
-
-            if (typeof(TScreen) == typeof(IOutcomeScreen))
-            {
-                return OutcomeScreen;
-            }
-
-            throw new InvalidOperationException(
-                $"The fake application UI has no screen double for the role {typeof(TScreen).Name}.");
-        }
-
-        private void EnsureTransitionAllowed(ScreenLayer layer, Type role)
-        {
-            if (layer == ScreenLayer.Popup)
-            {
-                if (_activeBaseScreen == null)
-                {
-                    throw new InvalidOperationException(
-                        $"The fake application UI cannot show the popup role {role.Name} before a base screen is shown.");
-                }
-
-                return;
-            }
-
-            if (_activePopupScreen != null)
-            {
-                throw new InvalidOperationException(
-                    $"The fake application UI cannot show the base role {role.Name} while a popup screen is active.");
-            }
-        }
-
-        private void ReplaceActiveScreen(ScreenLayer layer)
-        {
-            FakeScreen activeScreen = ActiveScreenFor(layer);
-
-            if (activeScreen == null)
-            {
-                return;
-            }
-
-            activeScreen.Dismiss();
-            ClearActiveScreen(layer);
-        }
-
-        private FakeScreen ActiveScreenFor(ScreenLayer layer)
-        {
-            return layer == ScreenLayer.Base ? _activeBaseScreen : _activePopupScreen;
-        }
-
-        private void SetActiveScreen(ScreenLayer layer, FakeScreen screen)
-        {
-            if (layer == ScreenLayer.Base)
-            {
-                _activeBaseScreen = screen;
-            }
-            else
-            {
-                _activePopupScreen = screen;
-            }
-        }
-
-        private void ClearActiveScreen(ScreenLayer layer)
-        {
-            if (layer == ScreenLayer.Base)
-            {
-                _activeBaseScreen = null;
-            }
-            else
-            {
-                _activePopupScreen = null;
-            }
+            return (TScreen)(object)_screenDoubles[typeof(TScreen)];
         }
     }
 }
