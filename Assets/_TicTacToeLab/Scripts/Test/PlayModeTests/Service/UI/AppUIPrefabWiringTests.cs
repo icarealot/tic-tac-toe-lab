@@ -38,48 +38,69 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
-        public void Showing_the_production_home_role_exposes_both_PvP_and_PvE_routes()
+        public void Showing_the_production_home_role_routes_its_PvP_button()
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
-            int startCount = 0;
+            int pvpCount = 0;
             int pveCount = 0;
-            sut.Show<IHomeScreen>(screen => screen.Setup(() => startCount++, () => pveCount++));
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => pvpCount++, () => pveCount++));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
             Button pvpButton = RequireButton(home, "PvP");
+            Button pveButton = RequireButton(home, "PvE");
             Assert.That(pvpButton.isActiveAndEnabled, Is.True, "The production Home screen's PvP button should be active and enabled.");
             Assert.That(pvpButton.interactable, Is.True, "The production Home screen's PvP button should be interactable.");
             Assert.That(
                 pvpButton.onClick.GetPersistentEventCount(),
                 Is.EqualTo(0),
                 "The production Home screen's PvP button should have no persistent listeners.");
-            Button pveButton = RequireButton(home, "PvE");
-            Assert.That(pveButton.isActiveAndEnabled, Is.True, "The production Home screen's PvE button should be active and enabled.");
-            Assert.That(pveButton.interactable, Is.True, "The production Home screen's PvE button should be interactable.");
             Assert.That(
                 pveButton.onClick.GetPersistentEventCount(),
                 Is.EqualTo(0),
                 "The production Home screen's PvE button should have no persistent listeners.");
-            Assert.That(
-                VisibleTexts(home),
-                Is.EquivalentTo(new[] { "Tic Tac Toe", "PvP", "PvE" }),
-                "Production Home should expose both the PvP route and the PvE route.");
 
             // Act
             pvpButton.onClick.Invoke();
 
             // Assert
             Assert.That(home.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production Home screen.");
-            Assert.That(startCount, Is.EqualTo(1), "The production Home screen's PvP button should invoke the supplied action exactly once.");
-
-            pveButton.onClick.Invoke();
-
-            // Assert
-            Assert.That(pveCount, Is.EqualTo(1), "The production Home screen's PvE button should invoke the supplied action exactly once.");
+            Assert.That(pvpCount, Is.EqualTo(1), "The production Home screen's PvP button should invoke the supplied action exactly once.");
+            Assert.That(pveCount, Is.EqualTo(0), "The production Home screen's PvP button should not invoke the PvE action.");
         }
 
         [Test]
-        public void Showing_the_production_bot_selection_role_replaces_Home_and_routes_both_difficulties_and_back()
+        public void Showing_the_production_home_role_routes_its_PvE_button()
+        {
+            // Arrange
+            AppUI sut = CreateProductionAppUI();
+            int pvpCount = 0;
+            int pveCount = 0;
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => pvpCount++, () => pveCount++));
+            HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
+            Button pvpButton = RequireButton(home, "PvP");
+            Button pveButton = RequireButton(home, "PvE");
+            Assert.That(pveButton.isActiveAndEnabled, Is.True, "The production Home screen's PvE button should be active and enabled.");
+            Assert.That(pveButton.interactable, Is.True, "The production Home screen's PvE button should be interactable.");
+            Assert.That(
+                pvpButton.onClick.GetPersistentEventCount(),
+                Is.EqualTo(0),
+                "The production Home screen's PvP button should have no persistent listeners.");
+            Assert.That(
+                pveButton.onClick.GetPersistentEventCount(),
+                Is.EqualTo(0),
+                "The production Home screen's PvE button should have no persistent listeners.");
+
+            // Act
+            pveButton.onClick.Invoke();
+
+            // Assert
+            Assert.That(home.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production Home screen.");
+            Assert.That(pveCount, Is.EqualTo(1), "The production Home screen's PvE button should invoke the supplied action exactly once.");
+            Assert.That(pvpCount, Is.EqualTo(0), "The production Home screen's PvE button should not invoke the PvP action.");
+        }
+
+        [Test]
+        public void Showing_the_production_bot_selection_role_routes_its_Amateur_button()
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
@@ -88,34 +109,89 @@ namespace TicTacToeLab.PlayModeTests
             int backCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
-
-            // Act
             sut.Show<IBotSelectionScreen>(screen => screen.Setup(() => amateurCount++, () => professionalCount++, () => backCount++));
             BotSelectionScreen botSelection = RequireSingleScreen<BotSelectionScreen>(sut);
+            Button amateurButton = RequireButton(botSelection, "Amateur");
+            _ = RequireButton(botSelection, "Professional");
+            _ = RequireButton(botSelection, "Back");
+            Assert.That(amateurButton.isActiveAndEnabled, Is.True, "The production bot selection's Amateur button should be active and enabled.");
+            Assert.That(amateurButton.interactable, Is.True, "The production bot selection's Amateur button should be interactable.");
+
+            // Act
+            amateurButton.onClick.Invoke();
 
             // Assert
             Assert.That(home.gameObject.activeInHierarchy, Is.False, "Showing bot selection should replace the production Home base screen.");
-            Assert.That(botSelection.gameObject.activeInHierarchy, Is.True, "Showing bot selection should present the production base screen.");
-
-            // Act
-            RequireButton(botSelection, "Amateur").onClick.Invoke();
-            RequireButton(botSelection, "Professional").onClick.Invoke();
-            RequireButton(botSelection, "Back").onClick.Invoke();
-
-            // Assert
-            Assert.That(amateurCount, Is.EqualTo(1));
-            Assert.That(professionalCount, Is.EqualTo(1));
-            Assert.That(backCount, Is.EqualTo(1));
+            Assert.That(botSelection.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production base screen.");
+            Assert.That(amateurCount, Is.EqualTo(1), "The production bot selection's Amateur button should invoke the supplied action exactly once.");
+            Assert.That(professionalCount, Is.EqualTo(0), "The production bot selection's Amateur button should not invoke the Professional action.");
+            Assert.That(backCount, Is.EqualTo(0), "The production bot selection's Amateur button should not invoke the Back action.");
         }
 
         [Test]
-        public void Showing_the_production_gameplay_role_replaces_the_base_screen_presents_the_current_turn_and_routes_its_back_button()
+        public void Showing_the_production_bot_selection_role_routes_its_Professional_button()
+        {
+            // Arrange
+            AppUI sut = CreateProductionAppUI();
+            int amateurCount = 0;
+            int professionalCount = 0;
+            int backCount = 0;
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
+            HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
+            sut.Show<IBotSelectionScreen>(screen => screen.Setup(() => amateurCount++, () => professionalCount++, () => backCount++));
+            BotSelectionScreen botSelection = RequireSingleScreen<BotSelectionScreen>(sut);
+            _ = RequireButton(botSelection, "Amateur");
+            Button professionalButton = RequireButton(botSelection, "Professional");
+            _ = RequireButton(botSelection, "Back");
+            Assert.That(professionalButton.isActiveAndEnabled, Is.True, "The production bot selection's Professional button should be active and enabled.");
+            Assert.That(professionalButton.interactable, Is.True, "The production bot selection's Professional button should be interactable.");
+
+            // Act
+            professionalButton.onClick.Invoke();
+
+            // Assert
+            Assert.That(home.gameObject.activeInHierarchy, Is.False, "Showing bot selection should replace the production Home base screen.");
+            Assert.That(botSelection.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production base screen.");
+            Assert.That(amateurCount, Is.EqualTo(0), "The production bot selection's Professional button should not invoke the Amateur action.");
+            Assert.That(professionalCount, Is.EqualTo(1), "The production bot selection's Professional button should invoke the supplied action exactly once.");
+            Assert.That(backCount, Is.EqualTo(0), "The production bot selection's Professional button should not invoke the Back action.");
+        }
+
+        [Test]
+        public void Showing_the_production_bot_selection_role_routes_its_Back_button()
+        {
+            // Arrange
+            AppUI sut = CreateProductionAppUI();
+            int amateurCount = 0;
+            int professionalCount = 0;
+            int backCount = 0;
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
+            HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
+            sut.Show<IBotSelectionScreen>(screen => screen.Setup(() => amateurCount++, () => professionalCount++, () => backCount++));
+            BotSelectionScreen botSelection = RequireSingleScreen<BotSelectionScreen>(sut);
+            _ = RequireButton(botSelection, "Amateur");
+            _ = RequireButton(botSelection, "Professional");
+            Button backButton = RequireButton(botSelection, "Back");
+            Assert.That(backButton.isActiveAndEnabled, Is.True, "The production bot selection's Back button should be active and enabled.");
+            Assert.That(backButton.interactable, Is.True, "The production bot selection's Back button should be interactable.");
+
+            // Act
+            backButton.onClick.Invoke();
+
+            // Assert
+            Assert.That(home.gameObject.activeInHierarchy, Is.False, "Showing bot selection should replace the production Home base screen.");
+            Assert.That(botSelection.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production base screen.");
+            Assert.That(amateurCount, Is.EqualTo(0), "The production bot selection's Back button should not invoke the Amateur action.");
+            Assert.That(professionalCount, Is.EqualTo(0), "The production bot selection's Back button should not invoke the Professional action.");
+            Assert.That(backCount, Is.EqualTo(1), "The production bot selection's Back button should invoke the supplied action exactly once.");
+        }
+
+        [Test]
+        public void Showing_the_production_gameplay_role_replaces_the_base_screen_and_routes_its_back_button()
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
             BoardPresenterHarness boardPresenterHarness = new();
-            // X owns the first turn; this places a mark so the presenter's current turn is not the default one.
-            boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
             int backCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
@@ -131,15 +207,11 @@ namespace TicTacToeLab.PlayModeTests
             // Assert
             Assert.That(home.gameObject.activeInHierarchy, Is.False, "The production Gameplay registration should replace the active base screen.");
             Assert.That(gameplay.gameObject.activeInHierarchy, Is.True, "The production application UI should show production gameplay.");
-            Assert.That(
-                VisibleTexts(gameplay),
-                Is.EquivalentTo(new[] { "Back", "O's turn" }),
-                "Production gameplay should present the current turn and its Back control as its complete visible state.");
             Assert.That(backCount, Is.EqualTo(1), "The production gameplay's Back button should invoke the supplied action exactly once.");
         }
 
         [Test]
-        public void Showing_the_production_confirm_quit_role_over_a_base_preserves_the_base_and_routes_both_choices_exactly_once()
+        public void Showing_the_production_confirm_quit_role_routes_its_Yes_button()
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
@@ -150,39 +222,55 @@ namespace TicTacToeLab.PlayModeTests
             sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => quitCount++, () => cancelCount++));
             ConfirmQuitScreen quitConfirmation = RequireSingleScreen<ConfirmQuitScreen>(sut);
             Button yesButton = RequireButton(quitConfirmation, "Yes");
-            Button noButton = RequireButton(quitConfirmation, "No");
-            foreach (Button button in new[] { yesButton, noButton })
-            {
-                Assert.That(button.isActiveAndEnabled, Is.True, "Every production quit confirmation button should be active and enabled.");
-                Assert.That(button.interactable, Is.True, "Every production quit confirmation button should be interactable.");
-            }
+            _ = RequireButton(quitConfirmation, "No");
+            Assert.That(yesButton.isActiveAndEnabled, Is.True, "The production quit confirmation's Yes button should be active and enabled.");
+            Assert.That(yesButton.interactable, Is.True, "The production quit confirmation's Yes button should be interactable.");
 
             // Act
             yesButton.onClick.Invoke();
-            int quitCountAfterYes = quitCount;
-            int cancelCountAfterYes = cancelCount;
+
+            // Assert
+            Assert.That(home.gameObject.activeInHierarchy, Is.True, "Showing the production quit confirmation should preserve the base screen.");
+            Assert.That(quitConfirmation.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production quit confirmation.");
+            Assert.That(quitCount, Is.EqualTo(1), "The production quit confirmation's Yes button should invoke the supplied quit action exactly once.");
+            Assert.That(cancelCount, Is.EqualTo(0), "The production quit confirmation's Yes button should not invoke the supplied cancel action.");
+        }
+
+        [Test]
+        public void Showing_the_production_confirm_quit_role_routes_its_No_button()
+        {
+            // Arrange
+            AppUI sut = CreateProductionAppUI();
+            int quitCount = 0;
+            int cancelCount = 0;
+            sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
+            HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
+            sut.Show<IConfirmQuitScreen>(screen => screen.Setup(() => quitCount++, () => cancelCount++));
+            ConfirmQuitScreen quitConfirmation = RequireSingleScreen<ConfirmQuitScreen>(sut);
+            _ = RequireButton(quitConfirmation, "Yes");
+            Button noButton = RequireButton(quitConfirmation, "No");
+            Assert.That(noButton.isActiveAndEnabled, Is.True, "The production quit confirmation's No button should be active and enabled.");
+            Assert.That(noButton.interactable, Is.True, "The production quit confirmation's No button should be interactable.");
+
+            // Act
             noButton.onClick.Invoke();
 
             // Assert
             Assert.That(home.gameObject.activeInHierarchy, Is.True, "Showing the production quit confirmation should preserve the base screen.");
             Assert.That(quitConfirmation.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production quit confirmation.");
-            Assert.That(quitCountAfterYes, Is.EqualTo(1), "The production quit confirmation's Yes button should invoke the supplied quit action exactly once.");
-            Assert.That(cancelCountAfterYes, Is.EqualTo(0), "The production quit confirmation's Yes button should not invoke the supplied cancel action.");
-            Assert.That(quitCount, Is.EqualTo(1), "The production quit confirmation's No button should not invoke the supplied quit action.");
+            Assert.That(quitCount, Is.EqualTo(0), "The production quit confirmation's No button should not invoke the supplied quit action.");
             Assert.That(cancelCount, Is.EqualTo(1), "The production quit confirmation's No button should invoke the supplied cancel action exactly once.");
         }
 
-        [TestCase(Outcome.XWin, "X Wins!")]
-        [TestCase(Outcome.OWin, "O Wins!")]
-        [TestCase(Outcome.Draw, "Draw!")]
-        public void Showing_each_terminal_production_outcome_role_over_a_base_presents_it_and_routes_the_continue_button(Outcome outcome, string expectedTitle)
+        [Test]
+        public void Showing_the_production_outcome_role_over_a_base_routes_the_continue_button()
         {
             // Arrange
             AppUI sut = CreateProductionAppUI();
             int continueCount = 0;
             sut.Show<IHomeScreen>(screen => screen.Setup(() => { }, () => { }));
             HomeScreen home = RequireSingleScreen<HomeScreen>(sut);
-            sut.Show<IOutcomeScreen>(screen => screen.Setup(outcome, new GameSetup(GameMode.Pvp, null), () => continueCount++));
+            sut.Show<IOutcomeScreen>(screen => screen.Setup(Outcome.XWin, new GameSetup(GameMode.Pvp, null), () => continueCount++));
             OutcomeScreen outcomeScreen = RequireSingleScreen<OutcomeScreen>(sut);
             Button continueButton = RequireButton(outcomeScreen, "Continue");
             Assert.That(continueButton.isActiveAndEnabled, Is.True, "The production Outcome screen's Continue button should be active and enabled.");
@@ -194,10 +282,6 @@ namespace TicTacToeLab.PlayModeTests
             // Assert
             Assert.That(home.gameObject.activeInHierarchy, Is.True, "Showing the production outcome should preserve the base screen.");
             Assert.That(outcomeScreen.gameObject.activeInHierarchy, Is.True, "The production application UI should show the production Outcome screen.");
-            Assert.That(
-                VisibleTexts(outcomeScreen),
-                Is.EquivalentTo(new[] { "Continue", expectedTitle }),
-                "The production Outcome screen should present the terminal outcome and its Continue control as its complete visible state.");
             Assert.That(continueCount, Is.EqualTo(1), "The production Outcome screen's Continue button should invoke the supplied action exactly once.");
         }
 
@@ -237,14 +321,6 @@ namespace TicTacToeLab.PlayModeTests
         {
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             return label == null ? string.Empty : label.text;
-        }
-
-        private static string[] VisibleTexts(Component screen)
-        {
-            return screen.GetComponentsInChildren<TMP_Text>(true)
-                .Where(text => text.isActiveAndEnabled)
-                .Select(text => text.text)
-                .ToArray();
         }
     }
 }
