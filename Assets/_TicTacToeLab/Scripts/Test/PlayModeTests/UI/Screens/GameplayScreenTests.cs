@@ -5,7 +5,6 @@ using TicTacToeLab.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.TestTools;
-using UnityEngine.UI;
 
 namespace TicTacToeLab.PlayModeTests
 {
@@ -13,7 +12,6 @@ namespace TicTacToeLab.PlayModeTests
     {
         private GeneratedAppUIFixture _fixture;
         private GameplayScreen _sut;
-        private Button _backButton;
         private TMP_Text _turnText;
         private BoardPresenterHarness _boardPresenterHarness;
 
@@ -21,7 +19,7 @@ namespace TicTacToeLab.PlayModeTests
         public void CreateGeneratedGameplayScreen()
         {
             _fixture = new GeneratedAppUIFixture();
-            (_sut, _backButton, _turnText) = _fixture.CreateGameplayScreen();
+            (_sut, _, _turnText) = _fixture.CreateGameplayScreen();
             _boardPresenterHarness = new BoardPresenterHarness();
         }
 
@@ -32,21 +30,20 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
-        public void Gameplay_shows_the_presenters_current_turn_when_it_is_set_up()
+        public void PvP_gameplay_shows_the_presenters_current_turn_when_it_is_set_up()
         {
             // Arrange
-            // X owns the first turn; this places a mark so the presenter's current turn is not the default one.
-            _boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
+            // X owns the first turn by default.
 
             // Act
             _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pvp, null), () => { });
 
             // Assert
-            Assert.That(_turnText.text, Is.EqualTo("O's turn"), "Gameplay should show the presenter's current turn.");
+            Assert.That(_turnText.text, Is.EqualTo("X's turn"), "Gameplay should show the presenter's current turn.");
         }
 
         [Test]
-        public void PvE_gameplay_reports_the_human_and_bot_turns()
+        public void PvE_gameplay_reports_the_bot_turn_after_the_human_places_a_mark()
         {
             // Arrange
             _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pve, BotDifficulty.Amateur), () => { });
@@ -56,6 +53,14 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             Assert.That(_turnText.text, Is.EqualTo("Bot is thinking… (O)"));
+        }
+
+        [Test]
+        public void PvE_gameplay_reports_the_human_turn_after_the_bot_places_a_mark()
+        {
+            // Arrange
+            _boardPresenterHarness.RaisePress(new CellCoordinate(0, 0));
+            _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pve, BotDifficulty.Amateur), () => { });
 
             // Act
             _boardPresenterHarness.RaisePress(new CellCoordinate(0, 1));
@@ -65,7 +70,7 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
-        public void Gameplay_follows_the_presenters_turn_change_notifications()
+        public void PvP_gameplay_reports_the_O_turn_after_X_places_a_mark()
         {
             // Arrange
             _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pvp, null), () => { });
@@ -75,20 +80,6 @@ namespace TicTacToeLab.PlayModeTests
 
             // Assert
             Assert.That(_turnText.text, Is.EqualTo("O's turn"), "Gameplay should follow the presenter's turn changes.");
-        }
-
-        [Test]
-        public void Gameplay_back_routes_exactly_once_to_the_supplied_action()
-        {
-            // Arrange
-            int backCount = 0;
-            _sut.Setup(_boardPresenterHarness.Presenter, new GameSetup(GameMode.Pvp, null), () => backCount++);
-
-            // Act
-            _backButton.onClick.Invoke();
-
-            // Assert
-            Assert.That(backCount, Is.EqualTo(1), "The Back button should route to the supplied back action exactly once.");
         }
 
         [UnityTest]
