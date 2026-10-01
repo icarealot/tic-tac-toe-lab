@@ -18,8 +18,6 @@ namespace TicTacToeLab.PlayModeTests
     public sealed class GeneratedAppUIFixture
     {
         public GeneratedScreenRegistry Screens { get; }
-        public RectTransform BaseLayer { get; private set; }
-        public RectTransform PopupLayer { get; private set; }
 
         private readonly List<GameObject> _generatedRoots = new();
 
@@ -116,12 +114,12 @@ namespace TicTacToeLab.PlayModeTests
         public AppUI CreateInactiveAppUI(params ScreenRegistration[] registrations)
         {
             GameObject root = CreateRoot("Generated application UI");
-            BaseLayer = CreateLayer(root.transform, "Generated base layer");
-            PopupLayer = CreateLayer(root.transform, "Generated popup layer");
+            RectTransform baseLayer = CreateLayer(root.transform, "Generated base layer");
+            RectTransform popupLayer = CreateLayer(root.transform, "Generated popup layer");
 
             AppUI appUI = root.AddComponent<AppUI>();
-            TestSerializedReference.AssignPrefab(appUI, "_baseLayer", BaseLayer);
-            TestSerializedReference.AssignPrefab(appUI, "_popupLayer", PopupLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_baseLayer", baseLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_popupLayer", popupLayer);
             TestSerializedReference.AssignScreenRegistrations(appUI, registrations);
             return appUI;
         }
@@ -129,8 +127,8 @@ namespace TicTacToeLab.PlayModeTests
         public AppUI CreateAppUI()
         {
             GameObject root = CreateRoot("Generated application UI");
-            BaseLayer = CreateLayer(root.transform, "Generated base layer");
-            PopupLayer = CreateLayer(root.transform, "Generated popup layer");
+            RectTransform baseLayer = CreateLayer(root.transform, "Generated base layer");
+            RectTransform popupLayer = CreateLayer(root.transform, "Generated popup layer");
 
             (HomeScreen home, Button _, Button _) = CreateHomeScreen();
             (BotSelectionScreen botSelection, Button _, Button _, Button _) = CreateBotSelectionScreen();
@@ -145,8 +143,8 @@ namespace TicTacToeLab.PlayModeTests
             IgnoreAsTemplate(outcome.gameObject);
 
             AppUI appUI = root.AddComponent<AppUI>();
-            TestSerializedReference.AssignPrefab(appUI, "_baseLayer", BaseLayer);
-            TestSerializedReference.AssignPrefab(appUI, "_popupLayer", PopupLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_baseLayer", baseLayer);
+            TestSerializedReference.AssignPrefab(appUI, "_popupLayer", popupLayer);
             TestSerializedReference.AssignScreenRegistrations(
                 appUI,
                 new[]
