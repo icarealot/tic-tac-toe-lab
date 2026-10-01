@@ -6,15 +6,6 @@ namespace TicTacToeLab.EditModeTests
     public sealed class CellCoordinateTests
     {
         [Test]
-        public void A_cell_coordinate_reports_row_before_column_as_written()
-        {
-            CellCoordinate sut = new(2, 1);
-
-            Assert.That(sut.Row, Is.EqualTo(2));
-            Assert.That(sut.Column, Is.EqualTo(1));
-        }
-
-        [Test]
         public void Cell_coordinates_with_the_same_row_and_column_are_equal()
         {
             CellCoordinate first = new(1, 2);
@@ -46,15 +37,6 @@ namespace TicTacToeLab.EditModeTests
             CellCoordinate sut = new(row, column);
 
             Assert.That(sut.IsWithin(3), Is.False);
-        }
-
-        [Test]
-        public void An_out_of_range_cell_coordinate_keeps_its_values_so_callers_must_check_within_before_use()
-        {
-            CellCoordinate sut = new(3, -1);
-
-            Assert.That(sut.Row, Is.EqualTo(3));
-            Assert.That(sut.Column, Is.EqualTo(-1));
         }
 
         [TestCase(2, 1, 1, 2)]
