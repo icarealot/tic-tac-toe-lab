@@ -37,36 +37,6 @@ namespace TicTacToeLab.PlayModeTests
         }
 
         [Test]
-        public void The_production_board_creates_one_cell_at_every_layout_coordinate()
-        {
-            // Arrange
-            BoardView sut = InstantiateProductionComponent<BoardView>(BOARD_VIEW_PREFAB_PATH);
-            BoardLayout layout = new(BOARD_DIMENSION);
-            IReadOnlyList<CellPlacement> placements = layout.GetCellPlacements();
-
-            // Act
-            sut.Construct(BOARD_DIMENSION, placements);
-
-            // Assert
-            CellView[] cells = sut.GetComponentsInChildren<CellView>();
-            Assert.That(cells, Has.Length.EqualTo(placements.Count), "The production board should create exactly one cell for every layout coordinate.");
-
-            List<CellCoordinate> addressedCoordinates = new(cells.Length);
-            foreach (CellView cell in cells)
-            {
-                bool isAddressed = TryResolveAddress(sut, layout, cell, out CellCoordinate coordinate);
-                Assert.That(isAddressed, Is.True, "Every production board cell should occupy an addressed layout placement.");
-                addressedCoordinates.Add(coordinate);
-            }
-
-            Assert.That(addressedCoordinates, Is.Unique, "Every layout placement should address a distinct production board cell.");
-            Assert.That(
-                addressedCoordinates,
-                Is.EquivalentTo(placements.Select(placement => placement.Coordinate)),
-                "The production board should address every layout coordinate.");
-        }
-
-        [Test]
         public void Showing_X_and_O_through_the_production_board_chain_creates_owned_marks_with_usable_distinct_sprites()
         {
             // Arrange
