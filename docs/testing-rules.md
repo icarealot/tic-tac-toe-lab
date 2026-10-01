@@ -61,6 +61,7 @@ Use human playtesting for presentation, feel, audio, controls, camera behavior, 
 - Derive expected values independently from production calculations.
 - Prefer passing values before introducing interfaces; when substitution requires one, use a narrow project-owned interface.
 - Synchronize PlayMode tests on observable outcomes with bounded timeouts.
+- Keep passing runs free of deliberately generated warnings, errors, and exceptions; assert expected failures through a caller-visible synchronous seam with `Throws`.
 
 ## Don't
 
@@ -69,3 +70,4 @@ Use human playtesting for presentation, feel, audio, controls, camera behavior, 
 - Don't use arbitrary frame counts or real-time delays to prove completion or visual timing.
 - Don't add tests solely for coverage or test-count targets, bug history, trivial construction, logic-free wrappers, or glue without meaningful behavior.
 - Don't retain duplicate tests when a cheaper owning seam provides the same evidence.
+- Don't deliberately trigger Unity lifecycle exceptions; `LogAssert.Expect` asserts them but does not suppress their Console output.
