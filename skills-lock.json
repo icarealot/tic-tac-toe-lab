@@ -13,6 +13,12 @@
       "skillPath": "skills/ui-ugui/SKILL.md",
       "computedHash": "38d02555a21352f6f71f2d248c3eb01eb628f6a1676047e17ece57b43b556f1a"
     },
+    "unity-audit": {
+      "source": "icarealot/dotfiles",
+      "sourceType": "github",
+      "skillPath": "ai/skills/unity/unity-audit/SKILL.md",
+      "computedHash": "b505b58510e016950aec6dc9b8bfcbd80a4c73e0c7d05fbff7d8023665a5fcbe"
+    },
     "unity-cli": {
       "source": "Unity-Technologies/skills",
       "sourceType": "github",
